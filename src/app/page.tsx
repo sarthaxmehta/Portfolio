@@ -1,9 +1,28 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react';
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  useMotionValue,
+  useInView,
+  AnimatePresence,
+  stagger,
+  animate,
+} from 'framer-motion';
 import Image from 'next/image';
 
-// ---------- DATA ----------
+/* ─────────────────────────────────────────────
+   DATA
+───────────────────────────────────────────── */
 
 const skills = [
   'Next.js', 'React', 'TypeScript', 'Python',
@@ -15,34 +34,34 @@ const projects = [
   {
     num: '[01]',
     title: 'ChiefOS',
-    desc: 'AI Operating System acting as an Executive Chief of Staff',
+    detail:
+      'Built a premium AI Operating System with a multi-engine intelligence architecture (Intent, Scheduling, Risk, Memory Engines). Powered by Gemini 2.5 Flash for executive-level daily briefings.',
     tags: ['Next.js', 'Gemini AI', 'Prisma', 'SQLite', 'TypeScript'],
     url: 'https://github.com/sarthaxmehta/ChiefOS',
-    detail: 'Built a premium AI OS with a multi-engine intelligence architecture (Intent, Scheduling, Risk, and Memory Engines). Powered by Gemini 2.5 Flash for executive-level daily briefings and strategy recommendations.',
   },
   {
     num: '[02]',
     title: 'UrbanNet',
-    desc: 'Geospatial AI pipeline for satellite imagery analysis',
+    detail:
+      'End-to-end geospatial AI pipeline extracting building footprints from Sentinel-2 imagery. Random Forest at 93.7% accuracy + custom U-Net for pixel-level delineation.',
     tags: ['PyTorch', 'U-Net', 'Google Earth Engine', 'QGIS', 'NumPy'],
     url: 'https://github.com/sarthaxmehta/UrbanNet',
-    detail: 'End-to-end geospatial AI pipeline extracting building footprints from Sentinel-2 imagery. Random Forest classifier at 93.7% accuracy + custom U-Net deep learning model for pixel-level delineation.',
   },
   {
     num: '[03]',
     title: 'Vital Archive',
-    desc: 'Medical informatics & AI-powered analytics platform',
+    detail:
+      'Automated ingestion pipeline extracting structured data from lab PDFs via Gemini 2.5. Semantic normalizer for biomarker names + analytics dashboard with longitudinal trend analysis.',
     tags: ['FastAPI', 'Next.js', 'Gemini AI', 'Sentence Transformers', 'Recharts'],
     url: 'https://github.com/sarthaxmehta/Vital-Archive',
-    detail: 'Automated ingestion pipeline extracting structured data from lab PDFs via Gemini 2.5. Built a semantic normalizer for biomarker names + a full analytics dashboard with longitudinal trend analysis.',
   },
   {
     num: '[04]',
     title: 'Zenvvy',
-    desc: 'Restaurant management system, desktop-native',
+    detail:
+      'Full-stack POS, KDS, table management and inventory system packaged as a native desktop app via Electron. Runs 100% offline with local SQLite. Built for NIT Jalandhar.',
     tags: ['Next.js', 'Electron', 'Prisma', 'SQLite', 'React'],
     url: 'https://github.com/sarthaxmehta/Zenvvy',
-    detail: 'Full-stack POS, KDS, table management, and inventory system packaged as a native desktop app via Electron. Runs 100% offline with local SQLite. Built for NIT Jalandhar as an educational showcase.',
   },
 ];
 
@@ -55,7 +74,7 @@ const howWork = [
   {
     num: '02',
     title: 'Two Weeks',
-    desc: 'LIKE DEV TEAMS, I WORK IN FOCUSED TWO-WEEK SPRINTS. ONCE I\'VE HONED IN ON A PROBLEM, I SPEND TWO WEEKS SOLVING IT. THEN, I MOVE ON TO THE NEXT.',
+    desc: "LIKE DEV TEAMS, I WORK IN FOCUSED TWO-WEEK SPRINTS. ONCE I'VE HONED IN ON A PROBLEM, I SPEND TWO WEEKS SOLVING IT. THEN, I MOVE ON TO THE NEXT.",
   },
   {
     num: '03',
@@ -80,7 +99,7 @@ const sprintPhases = [
   {
     label: 'Phase 03: The Exhibition',
     number: '03. The Exhibition',
-    desc: 'I PRESENT THE WORK. YOU LIVE WITH IT. TEST IT. BREAK IT. EVERY ENTERPRISE WORTH ITS WEIGHT IN GOLD MAKES PIVOTS — AND I ALWAYS ANSWER THE DOOR.',
+    desc: 'I PRESENT THE WORK. YOU LIVE WITH IT. TEST IT. BREAK IT. EVERY GREAT SYSTEM WORTH ITS WEIGHT MAKES PIVOTS — AND I ALWAYS ANSWER THE DOOR.',
     color: '#50c878',
   },
   {
@@ -98,7 +117,7 @@ const rules = [
   { num: '004.', text: 'Be original.' },
   { num: '005.', text: "If you can't be original, be better than original." },
   { num: '006.', text: "Don't ship junk." },
-  { num: '007.', text: 'Move at startup speed even if you aren\'t one.' },
+  { num: '007.', text: "Move at startup speed even if you aren't one." },
   { num: '008.', text: 'Every pixel is a decision. Make it count.' },
   { num: '009.', text: 'The best documentation is working code.' },
   { num: '010.', text: 'Solve the hardest problem first.' },
@@ -111,109 +130,430 @@ const faqs = [
   },
   {
     q: 'What technologies do you specialize in?',
-    a: 'Next.js, React, TypeScript, Python, FastAPI, PyTorch, Prisma, and the Google AI ecosystem. I\'m also deeply experienced in geospatial tooling — Google Earth Engine, QGIS, and satellite imagery processing.',
+    a: "Next.js, React, TypeScript, Python, FastAPI, PyTorch, Prisma, and the Google AI ecosystem. I'm also deeply experienced in geospatial tooling — Google Earth Engine, QGIS, and satellite imagery processing.",
   },
   {
     q: 'Are you available for internships or full-time roles?',
-    a: 'Yes. I\'m currently a 2nd-year student at NIT Jalandhar (B.Tech, 2024–2028) and actively seeking internships in software engineering, AI/ML, and product development.',
+    a: "Yes. I'm currently a 2nd-year student at NIT Jalandhar (B.Tech, 2024–2028) and actively seeking internships in software engineering, AI/ML, and product development.",
   },
   {
-    q: 'What\'s the fastest way to reach you?',
-    a: 'Drop me a message at sarthakm.cs.24@nitj.ac.in — I respond fast. You can also connect on LinkedIn or check out my GitHub to see the work first.',
+    q: "What's the fastest way to reach you?",
+    a: "Drop me a message at sarthakm.cs.24@nitj.ac.in — I respond fast. You can also connect on LinkedIn or check out my GitHub to see the work first.",
   },
   {
     q: 'Do you work on AI/ML projects specifically?',
-    a: 'Absolutely. AI is at the core of most of my recent work — from LLM-powered OS systems to deep learning segmentation models and semantic NLP pipelines. If there\'s an AI angle, I\'m interested.',
+    a: "Absolutely. AI is at the core of most of my recent work — from LLM-powered OS systems to deep learning segmentation models and semantic NLP pipelines. If there's an AI angle, I'm interested.",
   },
 ];
 
-// ---------- COMPONENTS ----------
+/* ─────────────────────────────────────────────
+   ANIMATION VARIANTS
+───────────────────────────────────────────── */
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 48 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.7, ease: 'easeOut' } },
+};
+
+const staggerChildren = {
+  visible: { transition: { staggerChildren: 0.12 } },
+};
+
+const staggerChildrenFast = {
+  visible: { transition: { staggerChildren: 0.06 } },
+};
+
+/* ─────────────────────────────────────────────
+   CUSTOM CURSOR
+───────────────────────────────────────────── */
+
+function CustomCursor() {
+  const cursorX = useMotionValue(-100);
+  const cursorY = useMotionValue(-100);
+
+  const springX = useSpring(cursorX, { stiffness: 300, damping: 30 });
+  const springY = useSpring(cursorY, { stiffness: 300, damping: 30 });
+
+  const dotX = useSpring(cursorX, { stiffness: 900, damping: 35 });
+  const dotY = useSpring(cursorY, { stiffness: 900, damping: 35 });
+
+  const [isPointer, setIsPointer] = useState(false);
+
+  useEffect(() => {
+    const move = (e: MouseEvent) => {
+      cursorX.set(e.clientX);
+      cursorY.set(e.clientY);
+    };
+    const checkPointer = () => {
+      const el = document.elementFromPoint(cursorX.get(), cursorY.get());
+      setIsPointer(
+        !!el && (
+          getComputedStyle(el).cursor === 'pointer' ||
+          el.closest('a, button, [data-cursor-pointer]') !== null
+        )
+      );
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mousemove', checkPointer);
+    return () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mousemove', checkPointer);
+    };
+  }, [cursorX, cursorY]);
+
+  return (
+    <>
+      {/* outer ring */}
+      <motion.div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          x: springX,
+          y: springY,
+          translateX: '-50%',
+          translateY: '-50%',
+          width: isPointer ? 48 : 36,
+          height: isPointer ? 48 : 36,
+          borderRadius: '50%',
+          border: '1.5px solid rgba(255,255,255,0.45)',
+          pointerEvents: 'none',
+          zIndex: 9999,
+          mixBlendMode: 'difference',
+        }}
+        animate={{
+          scale: isPointer ? 1.3 : 1,
+          opacity: isPointer ? 0.6 : 0.4,
+        }}
+        transition={{ duration: 0.2 }}
+      />
+      {/* inner dot */}
+      <motion.div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          x: dotX,
+          y: dotY,
+          translateX: '-50%',
+          translateY: '-50%',
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          backgroundColor: 'white',
+          pointerEvents: 'none',
+          zIndex: 9999,
+          mixBlendMode: 'difference',
+        }}
+      />
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   SCROLL REVEAL WRAPPER
+───────────────────────────────────────────── */
+
+function Reveal({
+  children,
+  delay = 0,
+  className,
+}: {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-10% 0px' });
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial="hidden"
+      animate={inView ? 'visible' : 'hidden'}
+      variants={{
+        hidden: { opacity: 0, y: 40 },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1], delay },
+        },
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   WORD-BY-WORD TEXT REVEAL
+───────────────────────────────────────────── */
+
+function SplitText({
+  text,
+  className,
+  wordClassName,
+  delay = 0,
+  staggerDelay = 0.035,
+}: {
+  text: string;
+  className?: string;
+  wordClassName?: string;
+  delay?: number;
+  staggerDelay?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+  const words = text.split(' ');
+
+  return (
+    <span ref={ref} className={className} style={{ display: 'block' }}>
+      {words.map((word, i) => (
+        <motion.span
+          key={i}
+          style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'bottom' }}
+        >
+          <motion.span
+            style={{ display: 'inline-block' }}
+            initial={{ y: '105%', opacity: 0 }}
+            animate={
+              inView
+                ? { y: 0, opacity: 1 }
+                : { y: '105%', opacity: 0 }
+            }
+            transition={{
+              duration: 0.75,
+              ease: [0.16, 1, 0.3, 1],
+              delay: delay + i * staggerDelay,
+            }}
+          >
+            {word}
+            {i < words.length - 1 ? '\u00a0' : ''}
+          </motion.span>
+        </motion.span>
+      ))}
+    </span>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   MARQUEE
+───────────────────────────────────────────── */
+
+function Marquee({
+  children,
+  speed = 40,
+  reverse = false,
+}: {
+  children: ReactNode;
+  speed?: number;
+  reverse?: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (ref.current) setWidth(ref.current.scrollWidth / 2);
+  }, []);
+
+  return (
+    <div style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}>
+      <motion.div
+        ref={ref}
+        style={{ display: 'inline-flex' }}
+        animate={{ x: reverse ? [0, width] : [0, -width] }}
+        transition={{
+          repeat: Infinity,
+          ease: 'linear',
+          duration: width / speed,
+        }}
+      >
+        {children}
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   SPRINT SECTION
+───────────────────────────────────────────── */
 
 function SprintSection() {
   const [active, setActive] = useState(0);
   const phase = sprintPhases[active];
+
   return (
-    <section className="sprint-section">
-      <div className="section-header" style={{ padding: '20px 60px 0', marginBottom: '0' }}>
-        <span className="section-counter">[ 06 / 07 ]</span>
-        <span className="section-label">HOW I SPRINT</span>
-      </div>
+    <section style={{ paddingBottom: '100px' }}>
+      <Reveal>
+        <div
+          className="section-header"
+          style={{ padding: '20px 60px 0', marginBottom: '0' }}
+        >
+          <span className="section-counter">[ 06 / 07 ]</span>
+          <span className="section-label">HOW I SPRINT</span>
+        </div>
+      </Reveal>
       <div className="sprint-inner">
         <div className="sprint-left">
           {sprintPhases.map((p, i) => (
-            <div
+            <motion.div
               key={i}
               className={`sprint-phase-item${active === i ? ' active' : ''}`}
               onClick={() => setActive(i)}
+              whileHover={{ x: 4 }}
+              transition={{ duration: 0.2 }}
             >
-              <div
+              <motion.div
                 className="sprint-phase-dot"
-                style={{ background: active === i ? p.color : undefined }}
+                animate={{ background: active === i ? p.color : '#2a2a2a' }}
+                transition={{ duration: 0.4 }}
               />
               <span className="sprint-phase-label">{p.label}</span>
-            </div>
+            </motion.div>
           ))}
         </div>
         <div className="sprint-right">
-          <div className="sprint-phase-number">{phase.number}</div>
-          <div className="sprint-phase-desc-box">
-            <p className="sprint-phase-desc">{phase.desc}</p>
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={active}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="sprint-phase-number">{phase.number}</div>
+              <div className="sprint-phase-desc-box">
+                <p className="sprint-phase-desc">{phase.desc}</p>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </section>
   );
 }
 
+/* ─────────────────────────────────────────────
+   FAQ
+───────────────────────────────────────────── */
+
 function FaqSection() {
   const [open, setOpen] = useState<number | null>(null);
+
   return (
     <div className="faq-list">
       {faqs.map((item, i) => (
-        <div key={i} className={`faq-item${open === i ? ' open' : ''}`}>
-          <div className="faq-question" onClick={() => setOpen(open === i ? null : i)}>
-            <span>{item.q}</span>
-            <span className="faq-toggle">+</span>
+        <Reveal key={i} delay={i * 0.05}>
+          <div className={`faq-item${open === i ? ' open' : ''}`}>
+            <div
+              className="faq-question"
+              onClick={() => setOpen(open === i ? null : i)}
+            >
+              <span>{item.q}</span>
+              <motion.span
+                className="faq-toggle"
+                animate={{ rotate: open === i ? 45 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                +
+              </motion.span>
+            </div>
+            <AnimatePresence>
+              {open === i && (
+                <motion.div
+                  className="faq-answer"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <div style={{ paddingTop: '16px' }}>{item.a}</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-          <div className="faq-answer">{item.a}</div>
-        </div>
+        </Reveal>
       ))}
     </div>
   );
 }
 
-// ---------- MAIN PAGE ----------
+/* ─────────────────────────────────────────────
+   HERO PARALLAX HOOK
+───────────────────────────────────────────── */
+
+function HeroImage() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start start', 'end start'],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
+  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  return (
+    <motion.div
+      ref={ref}
+      className="hero-image-container"
+      style={{ y, opacity }}
+    >
+      <motion.div
+        initial={{ scale: 0.85, opacity: 0, y: 40 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <Image
+          src="/hero-visual.png"
+          alt="3D honeycomb sculpture"
+          width={500}
+          height={500}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'bottom' }}
+          priority
+        />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   MAIN PAGE
+───────────────────────────────────────────── */
 
 export default function Home() {
-  const aboutTextRef = useRef<HTMLParagraphElement>(null);
+  const [mounted, setMounted] = useState(false);
 
-  // Scroll-reveal for about text dim/bright effect (simplified via intersection)
   useEffect(() => {
-    const el = aboutTextRef.current;
-    if (!el) return;
-    const spans = el.querySelectorAll('.dim-text');
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            spans.forEach((s, i) => {
-              setTimeout(() => {
-                (s as HTMLElement).style.color = 'rgba(255,255,255,0.95)';
-              }, i * 80);
-            });
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+    setMounted(true);
+    // Hide default cursor
+    document.body.style.cursor = 'none';
+    return () => { document.body.style.cursor = ''; };
   }, []);
 
   return (
     <>
+      {/* CUSTOM CURSOR */}
+      {mounted && <CustomCursor />}
+
       {/* NAV */}
-      <nav className="nav">
+      <motion.nav
+        className="nav"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
+      >
         <div className="nav-brand">
           <span className="nav-brand-name">sarthak—</span>
           <span className="nav-brand-year">©2025</span>
@@ -223,146 +563,264 @@ export default function Home() {
             <span className="nav-link-dot" />
             sarthakm.cs.24@nitj.ac.in
           </a>
-          <a href="https://github.com/sarthaxmehta" className="nav-link" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://github.com/sarthaxmehta"
+            className="nav-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <span className="nav-link-dot" />
             GITHUB
           </a>
-          <a href="https://www.linkedin.com/in/sarthak-mehta-698457310/" className="nav-link" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://www.linkedin.com/in/sarthak-mehta-698457310/"
+            className="nav-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <span className="nav-link-dot" />
             LINKEDIN
           </a>
         </div>
-        <a href="mailto:sarthakm.cs.24@nitj.ac.in" className="nav-cta">HIRE ME</a>
-      </nav>
+        <motion.a
+          href="mailto:sarthakm.cs.24@nitj.ac.in"
+          className="nav-cta"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          HIRE ME
+        </motion.a>
+      </motion.nav>
 
-      {/* HERO */}
+      {/* ── HERO ── */}
       <section className="hero">
-        <div className="hero-image-container">
-          <Image
-            src="/hero-visual.png"
-            alt="Abstract hero visual"
-            width={500}
-            height={500}
-            style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'bottom' }}
-            priority
-          />
-        </div>
+        <HeroImage />
         <div className="hero-text">
-          <h1 className="hero-headline">
+          <motion.h1
+            className="hero-headline"
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.7 }}
+          >
             Build things that matter.<br />Ship them fast.
-          </h1>
+          </motion.h1>
         </div>
       </section>
 
-      {/* PARTNERS IN CRIME */}
-      <div className="partners">
+      {/* ── SKILLS MARQUEE ── */}
+      <motion.div
+        className="partners"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, delay: 1.1 }}
+      >
         <p className="partners-label">TECHNOLOGIES &amp; TOOLS</p>
-        <div className="partners-logos">
-          {skills.map((s) => (
-            <span key={s} className="partner-logo">{s}</span>
-          ))}
+        <div className="partners-logos" style={{ overflow: 'hidden', position: 'relative' }}>
+          <Marquee speed={55}>
+            {skills.map((s) => (
+              <motion.span
+                key={s}
+                className="partner-logo"
+                style={{ paddingRight: '48px' }}
+                whileHover={{ opacity: 0.85 }}
+              >
+                {s}
+              </motion.span>
+            ))}
+          </Marquee>
         </div>
-      </div>
+      </motion.div>
 
-      {/* DARK CONTAINER STARTS */}
+      {/* ── DARK ROUNDED CONTAINER ── */}
       <div className="dark-container">
 
-        {/* ABOUT */}
-        <section className="about">
-          <span className="about-tag">ABOUT</span>
-          <p className="about-text" ref={aboutTextRef}>
-            Sarthak Mehta is a{' '}
-            <span className="dim-text">hyper-focused, full-stack engineer and AI builder who moves at startup speed</span>
-            {' '}from NIT Jalandhar.{' '}
-            <span className="dim-text">He engineers geospatial intelligence pipelines, premium AI-powered systems, and products that feel as good as they perform.</span>
-          </p>
-          <a
-            href="https://github.com/sarthaxmehta"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="outline-btn"
-          >
-            SEE THE WORK <span className="outline-btn-icon">↗</span>
-          </a>
-        </section>
+        {/* ── ABOUT ── */}
+        <motion.section
+          className="about"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: '-10%' }}
+          transition={{ duration: 0.6 }}
+        >
+          <Reveal>
+            <span className="about-tag">ABOUT</span>
+          </Reveal>
 
-        {/* SERVICES */}
-        <section className="services">
-          <div className="section-header" style={{ padding: '0 60px', marginBottom: '0' }}>
-            <span className="section-counter">[ 02 / 07 ]</span>
-            <span className="section-label">WHAT I BUILD</span>
+          <div className="about-text" style={{ overflow: 'hidden' }}>
+            <SplitText
+              text="Sarthak Mehta is a hyper-focused, full-stack engineer and AI builder who moves at startup speed from NIT Jalandhar."
+              staggerDelay={0.032}
+              delay={0.1}
+            />
+            <br />
+            <SplitText
+              text="He engineers geospatial intelligence pipelines, premium AI-powered systems, and products that feel as good as they perform."
+              staggerDelay={0.03}
+              delay={0.5}
+            />
           </div>
+
+          <Reveal delay={0.9}>
+            <motion.a
+              href="https://github.com/sarthaxmehta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="outline-btn"
+              whileHover={{ x: 6 }}
+              transition={{ duration: 0.2 }}
+            >
+              SEE THE WORK <span className="outline-btn-icon">↗</span>
+            </motion.a>
+          </Reveal>
+        </motion.section>
+
+        {/* ── SERVICES ── */}
+        <section className="services">
+          <Reveal>
+            <div className="section-header" style={{ padding: '0 60px', marginBottom: '0' }}>
+              <span className="section-counter">[ 02 / 07 ]</span>
+              <span className="section-label">WHAT I BUILD</span>
+            </div>
+          </Reveal>
           <div className="services-inner">
             <div className="services-left">
               <div>
-                <h2 className="services-headline">
-                  I write, design and build for startups and enterprises.
-                </h2>
-                <p className="services-body">
-                  Full-stack systems that make your users feel something. AI pipelines that extract value from
-                  raw data. Geospatial intelligence that turns satellite imagery into insight. Desktop apps that
-                  work offline without compromise. And a whole lot of other things I can&rsquo;t put on a resume.
-                </p>
+                <Reveal>
+                  <h2 className="services-headline">
+                    I write, design and build for startups and enterprises.
+                  </h2>
+                </Reveal>
+                <Reveal delay={0.1}>
+                  <p className="services-body">
+                    Full-stack systems that make your users feel something. AI pipelines that extract value
+                    from raw data. Geospatial intelligence that turns satellite imagery into insight.
+                    Desktop apps that work offline without compromise.
+                  </p>
+                </Reveal>
               </div>
-              <a href="mailto:sarthakm.cs.24@nitj.ac.in" className="outline-btn">
-                LET&rsquo;S TALK <span className="outline-btn-icon">↗</span>
-              </a>
+              <Reveal delay={0.2}>
+                <motion.a
+                  href="mailto:sarthakm.cs.24@nitj.ac.in"
+                  className="outline-btn"
+                  whileHover={{ x: 6 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  LET&rsquo;S TALK <span className="outline-btn-icon">↗</span>
+                </motion.a>
+              </Reveal>
             </div>
             <div className="services-right">
-              <ul className="services-list">
-                {[
-                  'Full-Stack Web',
-                  'AI / ML Systems',
-                  'Geospatial AI',
-                  'Desktop Apps',
-                  'Data Pipelines',
-                  'UI/UX Design',
-                ].map((s, i) => (
-                  <li key={s} className={`services-list-item${i > 3 ? ' dim' : ''}`}>{s}</li>
-                ))}
-              </ul>
+              <motion.ul
+                className="services-list"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-10%' }}
+                variants={staggerChildren}
+              >
+                {['Full-Stack Web', 'AI / ML Systems', 'Geospatial AI', 'Desktop Apps', 'Data Pipelines', 'UI/UX Design'].map(
+                  (s, i) => (
+                    <motion.li
+                      key={s}
+                      className={`services-list-item${i > 3 ? ' dim' : ''}`}
+                      variants={fadeUp}
+                      whileHover={i <= 3 ? { x: 12, color: '#ffffff' } : {}}
+                      transition={{ duration: 0.25 }}
+                    >
+                      {s}
+                    </motion.li>
+                  )
+                )}
+              </motion.ul>
             </div>
           </div>
         </section>
 
-        {/* HOW I WORK */}
+        {/* ── HOW I WORK ── */}
         <section className="how-work">
-          <div className="section-header" style={{ padding: '0 60px', marginBottom: '0' }}>
-            <span className="section-counter">[ 03 / 07 ]</span>
-            <span className="section-label">HOW I WORK</span>
-          </div>
-          <div className="how-work-bg" />
+          <Reveal>
+            <div className="section-header" style={{ padding: '0 60px', marginBottom: '0' }}>
+              <span className="section-counter">[ 03 / 07 ]</span>
+              <span className="section-label">HOW I WORK</span>
+            </div>
+          </Reveal>
           <div className="how-work-items">
-            {howWork.map((item) => (
-              <div key={item.num} className="how-work-item">
-                <div className="how-work-number">{item.num}</div>
-                <div className="how-work-title">{item.title}</div>
-                <div className="how-work-divider" />
-                <p className="how-work-desc">{item.desc}</p>
-              </div>
+            {howWork.map((item, i) => (
+              <Reveal key={item.num} delay={i * 0.12}>
+                <motion.div
+                  className="how-work-item"
+                  whileHover={{ backgroundColor: 'rgba(255,255,255,0.015)' }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="how-work-number">{item.num}</div>
+                  <SplitText
+                    text={item.title}
+                    className="how-work-title"
+                    staggerDelay={0.05}
+                  />
+                  <div className="how-work-divider" />
+                  <p className="how-work-desc">{item.desc}</p>
+                </motion.div>
+              </Reveal>
             ))}
           </div>
         </section>
 
-        {/* PROJECTS — BEFORE / AFTER */}
+        {/* ── SELECTED WORK ── */}
         <section className="projects-section">
-          <div className="section-header" style={{ padding: '0 60px', marginBottom: '0' }}>
-            <span className="section-counter">[ 04 / 07 ]</span>
-            <span className="section-label">SELECTED WORK</span>
-          </div>
-          <div className="before-after-header" style={{ position: 'relative', background: 'var(--black)', padding: '0', overflow: 'visible' }}>
-            <div className="stars-bg" style={{ position: 'absolute', inset: 0, minHeight: '500px', zIndex: 0 }} />
-            <div style={{ position: 'relative', zIndex: 1, padding: '80px 0 40px', textAlign: 'center' }}>
-              <div className="before-after-title">
-                <span>SELECTED</span>
-                <span>// WORK©</span>
-              </div>
+          <Reveal>
+            <div className="section-header" style={{ padding: '0 60px', marginBottom: '0' }}>
+              <span className="section-counter">[ 04 / 07 ]</span>
+              <span className="section-label">SELECTED WORK</span>
             </div>
+          </Reveal>
+
+          {/* Ghost title background with parallax */}
+          <div
+            style={{
+              position: 'relative',
+              background: 'var(--black)',
+              padding: '0',
+              overflow: 'hidden',
+              minHeight: '480px',
+            }}
+          >
+            <div className="stars-bg" style={{ position: 'absolute', inset: 0, minHeight: '480px', zIndex: 0 }} />
+            <Reveal>
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  padding: '80px 0 40px',
+                  textAlign: 'center',
+                }}
+              >
+                <div className="before-after-title">
+                  <span>SELECTED</span>
+                  <span>// WORK©</span>
+                </div>
+              </div>
+            </Reveal>
           </div>
+
           <div className="project-cards-area">
-            <div className="project-cards-grid">
+            <motion.div
+              className="project-cards-grid"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-5%' }}
+              variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+            >
               {projects.map((p) => (
-                <div key={p.num} className="project-card">
+                <motion.div
+                  key={p.num}
+                  className="project-card"
+                  variants={fadeUp}
+                  whileHover={{
+                    y: -8,
+                    borderColor: 'rgba(255,255,255,0.18)',
+                    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] },
+                  }}
+                >
                   <div className="project-card-number">{p.num}</div>
                   <h3 className="project-card-title">{p.title}</h3>
                   <p className="project-card-desc">{p.detail}</p>
@@ -371,160 +829,207 @@ export default function Home() {
                       <span key={t} className="project-tag">{t}</span>
                     ))}
                   </div>
-                  <a
+                  <motion.a
                     href={p.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="project-card-link"
                     aria-label={`View ${p.title} on GitHub`}
+                    whileHover={{ rotate: 15, scale: 1.15 }}
+                    transition={{ duration: 0.2 }}
                   >
                     ↗
-                  </a>
-                </div>
+                  </motion.a>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </section>
 
-        {/* EDUCATION */}
+        {/* ── EDUCATION ── */}
         <section className="edu-section">
-          <div className="section-header" style={{ padding: '0', marginBottom: '48px' }}>
-            <span className="section-counter">[ 05 / 07 ]</span>
-            <span className="section-label">EDUCATION &amp; CERTS</span>
-          </div>
-          <div className="edu-grid">
-            <div className="edu-card">
-              <div className="edu-card-label">B.Tech Computer Science</div>
-              <div className="edu-card-title">NIT Jalandhar</div>
-              <div className="edu-card-sub">
-                Dr. B.R. Ambedkar NIT · 2024–2028<br />
-                GPA: 8.63 / 10<br />
-                Core Member, E-Cell · Core Member, Q&apos;Mania Quantum Club
-              </div>
+          <Reveal>
+            <div className="section-header" style={{ padding: '0', marginBottom: '48px' }}>
+              <span className="section-counter">[ 05 / 07 ]</span>
+              <span className="section-label">EDUCATION &amp; CERTS</span>
             </div>
-            <div className="edu-card">
-              <div className="edu-card-label">Experience</div>
-              <div className="edu-card-title">Remote Sensing & GIS Intern</div>
-              <div className="edu-card-sub">
-                India Space Academy · Jan–Feb 2026<br />
-                Built a geospatial AI pipeline for building footprint extraction from Sentinel-2 imagery using PyTorch U-Net + GEE Random Forest.
-              </div>
-            </div>
-            <div className="edu-card">
-              <div className="edu-card-label">Certification</div>
-              <div className="edu-card-title">Machine Learning Specialization</div>
-              <div className="edu-card-sub">
-                Stanford Online &amp; DeepLearning.AI<br />
-                Andrew Ng · Coursera
-              </div>
-            </div>
-            <div className="edu-card">
-              <div className="edu-card-label">Certification</div>
-              <div className="edu-card-title">Meta Front-End Developer</div>
-              <div className="edu-card-sub">
-                Professional Certificate<br />
-                Meta · Coursera
-              </div>
-            </div>
-          </div>
+          </Reveal>
+          <motion.div
+            className="edu-grid"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-5%' }}
+            variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+          >
+            {[
+              {
+                label: 'B.Tech Computer Science',
+                title: 'NIT Jalandhar',
+                sub: 'Dr. B.R. Ambedkar NIT · 2024–2028\nGPA: 8.63 / 10\nCore Member, E-Cell · Core Member, Q\'Mania Quantum Club',
+              },
+              {
+                label: 'Experience',
+                title: 'Remote Sensing & GIS Intern',
+                sub: 'India Space Academy · Jan–Feb 2026\nBuilt a geospatial AI pipeline for building footprint extraction from Sentinel-2 imagery using PyTorch U-Net + GEE Random Forest.',
+              },
+              {
+                label: 'Certification',
+                title: 'Machine Learning Specialization',
+                sub: 'Stanford Online & DeepLearning.AI\nAndrew Ng · Coursera',
+              },
+              {
+                label: 'Certification',
+                title: 'Meta Front-End Developer',
+                sub: 'Professional Certificate\nMeta · Coursera',
+              },
+            ].map((card, i) => (
+              <motion.div
+                key={i}
+                className="edu-card"
+                variants={fadeUp}
+                whileHover={{
+                  borderColor: 'rgba(255,255,255,0.18)',
+                  y: -4,
+                  transition: { duration: 0.25 },
+                }}
+              >
+                <div className="edu-card-label">{card.label}</div>
+                <div className="edu-card-title">{card.title}</div>
+                <div className="edu-card-sub" style={{ whiteSpace: 'pre-line' }}>{card.sub}</div>
+              </motion.div>
+            ))}
+          </motion.div>
         </section>
 
-        {/* SPRINT SECTION */}
+        {/* ── SPRINT ── */}
         <SprintSection />
 
-        {/* RULES TICKER + LIST */}
+        {/* ── PRINCIPLES ── */}
         <section className="rules-section">
-          <div className="section-header" style={{ padding: '20px 60px 0', marginBottom: '0' }}>
-            <span className="section-counter">[ 07 / 07 ]</span>
-            <span className="section-label">PRINCIPLES</span>
-          </div>
-          <div className="rules-ticker">
-            <div className="rules-ticker-inner">
-              {[...Array(4)].map((_, i) => (
-                <span key={`a-${i}`} style={{ display: 'inline-flex', alignItems: 'center' }}>
-                  <span className="rules-ticker-text">PRINCIPLES</span>
-                  <span className="rules-ticker-dot">✦</span>
-                  <span className="rules-ticker-text">HOW I OPERATE</span>
-                  <span className="rules-ticker-dot">✦</span>
-                </span>
-              ))}
+          <Reveal>
+            <div className="section-header" style={{ padding: '20px 60px 0', marginBottom: '0' }}>
+              <span className="section-counter">[ 07 / 07 ]</span>
+              <span className="section-label">PRINCIPLES</span>
             </div>
+          </Reveal>
+
+          <div className="rules-ticker" style={{ padding: '14px 0', overflow: 'hidden' }}>
+            <Marquee speed={80}>
+              <span className="rules-ticker-text">PRINCIPLES</span>
+              <span className="rules-ticker-dot" style={{ padding: '0 32px', fontSize: 'clamp(52px,7vw,90px)', fontWeight: 900, color: '#e05a4e' }}>✦</span>
+              <span className="rules-ticker-text">HOW I OPERATE</span>
+              <span className="rules-ticker-dot" style={{ padding: '0 32px', fontSize: 'clamp(52px,7vw,90px)', fontWeight: 900, color: '#e05a4e' }}>✦</span>
+              <span className="rules-ticker-text">PRINCIPLES</span>
+              <span className="rules-ticker-dot" style={{ padding: '0 32px', fontSize: 'clamp(52px,7vw,90px)', fontWeight: 900, color: '#e05a4e' }}>✦</span>
+              <span className="rules-ticker-text">HOW I OPERATE</span>
+              <span className="rules-ticker-dot" style={{ padding: '0 32px', fontSize: 'clamp(52px,7vw,90px)', fontWeight: 900, color: '#e05a4e' }}>✦</span>
+            </Marquee>
           </div>
+
           <div className="rules-body">
-            <p className="rules-intro">
-              At every great project, there&rsquo;s a set of operating principles that keep things from
-              getting too out of hand. These are mine — forged from shipping real products, writing
-              real code, and learning from engineers I deeply respect.
-            </p>
+            <Reveal>
+              <p className="rules-intro">
+                At every great project, there&rsquo;s a set of operating principles that keep things from
+                getting too out of hand. These are mine — forged from shipping real products, writing
+                real code, and learning from engineers I deeply respect.
+              </p>
+            </Reveal>
             <div className="rules-divider" />
-            <ul className="rules-list">
-              {rules.map((r) => (
-                <li key={r.num} className="rules-list-item">
+            <motion.ul
+              className="rules-list"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-5%' }}
+              variants={{ visible: { transition: { staggerChildren: 0.07 } } }}
+            >
+              {rules.map((r, i) => (
+                <motion.li
+                  key={r.num}
+                  className="rules-list-item"
+                  variants={fadeUp}
+                  whileHover={{ color: 'rgba(255,255,255,0.9)', x: 8 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <span className="rules-list-num">{r.num}</span>
                   {r.text}
-                </li>
+                </motion.li>
               ))}
-            </ul>
+            </motion.ul>
           </div>
         </section>
 
-        {/* CONTACT / FAQ */}
+        {/* ── CONTACT / FAQ ── */}
         <section className="contact-section">
           <div className="contact-inner">
-            <div className="section-header" style={{ padding: '0', marginBottom: '48px' }}>
-              <span className="section-counter">[ CONTACT ]</span>
-              <span className="section-label">FAQ</span>
-            </div>
-            <h2 className="contact-headline">
-              Feeling ambitious?<br />Let&rsquo;s build something.
-            </h2>
+            <Reveal>
+              <div className="section-header" style={{ padding: '0', marginBottom: '48px' }}>
+                <span className="section-counter">[ CONTACT ]</span>
+                <span className="section-label">FAQ</span>
+              </div>
+            </Reveal>
+
+            <SplitText
+              text="Feeling ambitious? Let's build something."
+              className="contact-headline"
+              staggerDelay={0.04}
+            />
+
+            <br />
             <FaqSection />
           </div>
         </section>
 
-        {/* FOOTER */}
+        {/* ── FOOTER ── */}
         <footer className="footer">
-          <div className="footer-top">
-            <div className="footer-brand">
-              <div className="footer-brand-name">Sarthak Mehta</div>
-              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>
-                Full-Stack Engineer &amp; AI Builder<br />
-                NIT Jalandhar · Class of 2028
+          {/* Top bar — WHERE DO I CONNECT? + HERE button */}
+          <Reveal>
+            <div className="footer-connect-bar">
+              <div className="footer-connect-label">WHERE DO I CONNECT?</div>
+              <motion.a
+                href="/connect"
+                className="footer-here-btn"
+                whileHover={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+                transition={{ duration: 0.2 }}
+              >
+                HERE ↗↗↗
+              </motion.a>
+            </div>
+          </Reveal>
+
+          {/* Giant "honey" wordmark */}
+          <Reveal delay={0.05}>
+            <div className="footer-wordmark-wrap">
+              <div className="footer-wordmark">honey</div>
+            </div>
+          </Reveal>
+
+          {/* Bottom strip */}
+          <Reveal delay={0.1}>
+            <div className="footer-bottom">
+              <span className="footer-copy">© 2025 Sarthak Mehta. All rights reserved.</span>
+              <div className="footer-links">
+                {[
+                  { label: 'GitHub', href: 'https://github.com/sarthaxmehta' },
+                  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/sarthak-mehta-698457310/' },
+                  { label: 'Email', href: 'mailto:sarthakm.cs.24@nitj.ac.in' },
+                ].map((l) => (
+                  <motion.a
+                    key={l.label}
+                    href={l.href}
+                    target={l.href.startsWith('mailto') ? undefined : '_blank'}
+                    rel={l.href.startsWith('mailto') ? undefined : 'noopener noreferrer'}
+                    className="footer-link"
+                    whileHover={{ color: 'rgba(255,255,255,0.9)' }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {l.label}
+                  </motion.a>
+                ))}
               </div>
             </div>
-            <div className="footer-cta-area">
-              <div className="footer-cta-label">WANT TO WORK TOGETHER?</div>
-              <a href="mailto:sarthakm.cs.24@nitj.ac.in" className="footer-cta-link">
-                sarthakm.cs.24@nitj.ac.in
-              </a>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <span className="footer-copy">© 2025 Sarthak Mehta. All rights reserved.</span>
-            <div className="footer-links">
-              <a
-                href="https://github.com/sarthaxmehta"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="footer-link"
-              >
-                GitHub
-              </a>
-              <a
-                href="https://www.linkedin.com/in/sarthak-mehta-698457310/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="footer-link"
-              >
-                LinkedIn
-              </a>
-              <a href="mailto:sarthakm.cs.24@nitj.ac.in" className="footer-link">Email</a>
-            </div>
-          </div>
+          </Reveal>
         </footer>
-
       </div>
-      {/* DARK CONTAINER ENDS */}
     </>
   );
 }
