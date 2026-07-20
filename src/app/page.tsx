@@ -233,7 +233,6 @@ function ScrollProgressBar() {
   return <motion.div className="scroll-progress" style={{ scaleX }} />;
 }
 
-// ── Custom Cursor ──────────────────────────────────────────
 function CustomCursor() {
   const cx = useMotionValue(-200);
   const cy = useMotionValue(-200);
@@ -242,8 +241,23 @@ function CustomCursor() {
   const dotX  = useSpring(cx, { stiffness: 900, damping: 32 });
   const dotY  = useSpring(cy, { stiffness: 900, damping: 32 });
   const [hover, setHover] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
 
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(
+        window.matchMedia('(max-width: 768px)').matches || 
+        ('ontouchstart' in window) || 
+        navigator.maxTouchPoints > 0
+      );
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) return;
     const onMove = (e: MouseEvent) => {
       cx.set(e.clientX); cy.set(e.clientY);
       const el = document.elementFromPoint(e.clientX, e.clientY);
@@ -251,7 +265,9 @@ function CustomCursor() {
     };
     window.addEventListener('mousemove', onMove);
     return () => window.removeEventListener('mousemove', onMove);
-  }, [cx, cy]);
+  }, [cx, cy, isMobile]);
+
+  if (isMobile) return null;
 
   return (
     <>
