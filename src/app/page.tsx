@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useCallback,
   ReactNode,
 } from 'react';
 import {
@@ -77,7 +78,7 @@ const staticProjects = [
       'Built interactive React dashboard with organ system metrics and longitudinal biomarker trend charts',
       'Integrated AI-generated plain-language summaries and context-aware chat for medical history queries',
     ],
-    challenge: 'Resolving highly variable biomarker naming across different clinics ("Hgb", "H.G.B.", "Hemoglobin, Total") — solved by computing cosine similarities against a canonical medical dictionary using high-dimensional vector embeddings.',
+    challenge: 'Resolving highly variable biomarker naming across different clinics — solved by computing cosine similarities against a canonical medical dictionary using high-dimensional vector embeddings.',
   },
   {
     id: 'zenvvy',
@@ -102,7 +103,7 @@ const timelineItems = [
     date: '2024 — Present',
     title: 'NIT Jalandhar',
     subtitle: 'B.Tech Computer Science · GPA 8.65 / 10',
-    body: 'Studying at Dr. B.R. Ambedkar National Institute of Technology Jalandhar. Core Member of E-Cell and Q\'Mania Quantum Club. Relevant coursework: DSA, OOP, DBMS, Computer Networks, DAA, COA, Digital Circuits.',
+    body: "Studying at Dr. B.R. Ambedkar National Institute of Technology Jalandhar. Core Member of E-Cell and Q'Mania Quantum Club. Relevant coursework: DSA, OOP, DBMS, Computer Networks, DAA, COA, Digital Circuits.",
   },
   {
     date: 'Jan 2026 — Feb 2026',
@@ -113,16 +114,76 @@ const timelineItems = [
 ];
 
 const principles = [
-  { num: '001', text: 'Ship things that matter.' },
-  { num: '002', text: 'Have a point of view.' },
-  { num: '003', text: 'Take no shortcuts.' },
-  { num: '004', text: 'Be original.' },
-  { num: '005', text: "If you can't be original, be better than original." },
-  { num: '006', text: "Don't ship junk." },
-  { num: '007', text: "Move at startup speed even if you aren't one." },
-  { num: '008', text: 'Every pixel is a decision. Make it count.' },
-  { num: '009', text: 'The best documentation is working code.' },
-  { num: '010', text: 'Solve the hardest problem first.' },
+  {
+    num: '001',
+    text: 'SHIP THINGS THAT MATTER.',
+    person: 'Steve Jobs',
+    role: '// Apple · NeXT',
+    img: '/portraits/visionary.png',
+  },
+  {
+    num: '002',
+    text: 'HAVE A POINT OF VIEW.',
+    person: 'Steve Jobs',
+    role: '// Apple · NeXT',
+    img: '/portraits/visionary.png',
+  },
+  {
+    num: '003',
+    text: 'TAKE NO SHORTCUTS.',
+    person: 'Kobe Bryant',
+    role: '// 1978 – 2020',
+    img: '/portraits/athlete.png',
+  },
+  {
+    num: '004',
+    text: 'BE ORIGINAL.',
+    person: 'Pablo Picasso',
+    role: '// 1881 – 1973',
+    img: '/portraits/artist.png',
+  },
+  {
+    num: '005',
+    text: "IF YOU CAN'T BE ORIGINAL, BE BETTER THAN ORIGINAL.",
+    person: 'C.S. Lewis',
+    role: '// 1898 – 1963',
+    img: '/portraits/scholar.png',
+  },
+  {
+    num: '006',
+    text: "DON'T SHIP JUNK.",
+    person: 'Jeff Bezos',
+    role: '// Amazon · Blue Origin',
+    img: '/portraits/ceo.png',
+  },
+  {
+    num: '007',
+    text: "MOVE AT STARTUP SPEED EVEN IF YOU AREN'T ONE.",
+    person: 'Sam Altman',
+    role: '// OpenAI · Y Combinator',
+    img: '/portraits/ceo.png',
+  },
+  {
+    num: '008',
+    text: 'EVERY PIXEL IS A DECISION. MAKE IT COUNT.',
+    person: 'Jony Ive',
+    role: '// Apple Design',
+    img: '/portraits/visionary.png',
+  },
+  {
+    num: '009',
+    text: 'THE BEST DOCUMENTATION IS WORKING CODE.',
+    person: 'Richard Feynman',
+    role: '// 1918 – 1988',
+    img: '/portraits/physicist.png',
+  },
+  {
+    num: '010',
+    text: 'SOLVE THE HARDEST PROBLEM FIRST.',
+    person: 'Richard Feynman',
+    role: '// 1918 – 1988',
+    img: '/portraits/physicist.png',
+  },
 ];
 
 const faqs = [
@@ -140,7 +201,7 @@ const faqs = [
   },
   {
     q: "What's the fastest way to reach you?",
-    a: "Email at sarthakm.cs.24@nitj.ac.in — I respond fast. You can also connect on LinkedIn or explore my GitHub to see what I'm building.",
+    a: "Email at sarthakm.cs.24@nitj.ac.in — I respond fast. You can also connect on LinkedIn or explore my GitHub.",
   },
 ];
 
@@ -151,22 +212,21 @@ const faqs = [
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
   visible: {
-    opacity: 1,
-    y: 0,
+    opacity: 1, y: 0,
     transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] },
   },
 };
 
 const staggerChildren = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
+  visible: { transition: { staggerChildren: 0.07 } },
 };
 
 /* ═══════════════════════════════════════════════════════════
    UTILITY COMPONENTS
 ═══════════════════════════════════════════════════════════ */
 
-// ── Scroll Progress Bar ────────────────────────────────────
+// ── Scroll Progress ────────────────────────────────────────
 function ScrollProgressBar() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 400, damping: 35 });
@@ -175,86 +235,59 @@ function ScrollProgressBar() {
 
 // ── Custom Cursor ──────────────────────────────────────────
 function CustomCursor() {
-  const cursorX = useMotionValue(-200);
-  const cursorY = useMotionValue(-200);
-
-  const ringX = useSpring(cursorX, { stiffness: 420, damping: 26 });
-  const ringY = useSpring(cursorY, { stiffness: 420, damping: 26 });
-  const dotX  = useSpring(cursorX, { stiffness: 900, damping: 32 });
-  const dotY  = useSpring(cursorY, { stiffness: 900, damping: 32 });
-
+  const cx = useMotionValue(-200);
+  const cy = useMotionValue(-200);
+  const ringX = useSpring(cx, { stiffness: 420, damping: 26 });
+  const ringY = useSpring(cy, { stiffness: 420, damping: 26 });
+  const dotX  = useSpring(cx, { stiffness: 900, damping: 32 });
+  const dotY  = useSpring(cy, { stiffness: 900, damping: 32 });
   const [hover, setHover] = useState(false);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
+      cx.set(e.clientX); cy.set(e.clientY);
       const el = document.elementFromPoint(e.clientX, e.clientY);
-      setHover(!!el?.closest('a, button, [data-hover], input, textarea, select'));
+      setHover(!!el?.closest('a,button,[data-hover],input,textarea,select,[data-cursor]'));
     };
     window.addEventListener('mousemove', onMove);
     return () => window.removeEventListener('mousemove', onMove);
-  }, [cursorX, cursorY]);
+  }, [cx, cy]);
 
   return (
     <>
-      <motion.div
-        style={{
-          position: 'fixed', top: 0, left: 0,
-          x: ringX, y: ringY,
-          translateX: '-50%', translateY: '-50%',
-          borderRadius: '50%',
-          border: '1.5px solid rgba(255, 76, 36, 0.65)',
-          pointerEvents: 'none', zIndex: 9999,
-        }}
-        animate={{
-          width:  hover ? 46 : 22,
-          height: hover ? 46 : 22,
-          borderColor: hover
-            ? 'rgba(255, 76, 36, 0.85)'
-            : 'rgba(255, 76, 36, 0.55)',
-        }}
-        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      <motion.div style={{
+        position: 'fixed', top: 0, left: 0,
+        x: ringX, y: ringY, translateX: '-50%', translateY: '-50%',
+        borderRadius: '50%', border: '1.5px solid rgba(255,76,36,0.6)',
+        pointerEvents: 'none', zIndex: 9999,
+      }}
+        animate={{ width: hover ? 46 : 22, height: hover ? 46 : 22, borderColor: hover ? 'rgba(255,76,36,0.9)' : 'rgba(255,76,36,0.5)' }}
+        transition={{ duration: 0.18 }}
       />
-      <motion.div
-        style={{
-          position: 'fixed', top: 0, left: 0,
-          x: dotX, y: dotY,
-          translateX: '-50%', translateY: '-50%',
-          width: 4, height: 4, borderRadius: '50%',
-          background: '#FF4C24',
-          pointerEvents: 'none', zIndex: 9999,
-        }}
-      />
+      <motion.div style={{
+        position: 'fixed', top: 0, left: 0,
+        x: dotX, y: dotY, translateX: '-50%', translateY: '-50%',
+        width: 4, height: 4, borderRadius: '50%', background: '#FF4C24',
+        pointerEvents: 'none', zIndex: 9999,
+      }} />
     </>
   );
 }
 
 // ── Scroll Reveal ──────────────────────────────────────────
 function Reveal({
-  children,
-  delay = 0,
-  className,
+  children, delay = 0, className,
 }: {
-  children: ReactNode;
-  delay?: number;
-  className?: string;
+  children: ReactNode; delay?: number; className?: string;
 }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-8% 0px' });
-
   return (
-    <motion.div
-      ref={ref}
-      className={className}
-      initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
+    <motion.div ref={ref} className={className}
+      initial="hidden" animate={inView ? 'visible' : 'hidden'}
       variants={{
         hidden: { opacity: 0, y: 36 },
-        visible: {
-          opacity: 1, y: 0,
-          transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1], delay },
-        },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1], delay } },
       }}
     >
       {children}
@@ -262,20 +295,12 @@ function Reveal({
   );
 }
 
-// ── Hero Name Line (clip-reveal) ───────────────────────────
-function HeroNameLine({
-  text,
-  delay,
-}: {
-  text: string;
-  delay: number;
-}) {
+// ── Hero Name Line (clip reveal) ───────────────────────────
+function HeroNameLine({ text, delay }: { text: string; delay: number }) {
   return (
     <span className="hero-name-line">
-      <motion.span
-        className="hero-name-inner"
-        initial={{ y: '105%' }}
-        animate={{ y: 0 }}
+      <motion.span className="hero-name-inner"
+        initial={{ y: '105%' }} animate={{ y: 0 }}
         transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay }}
       >
         {text}
@@ -285,82 +310,124 @@ function HeroNameLine({
 }
 
 // ── Infinite Marquee ───────────────────────────────────────
-function Marquee({
-  children,
-  speed = 40,
-  reverse = false,
-}: {
-  children: ReactNode;
-  speed?: number;
-  reverse?: boolean;
-}) {
+function Marquee({ children, speed = 40, reverse = false }: { children: ReactNode; speed?: number; reverse?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    if (ref.current) setWidth(ref.current.scrollWidth / 2);
-  }, []);
-
+  useEffect(() => { if (ref.current) setWidth(ref.current.scrollWidth / 2); }, []);
   return (
     <div style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}>
-      <motion.div
-        ref={ref}
-        style={{ display: 'inline-flex' }}
+      <motion.div ref={ref} style={{ display: 'inline-flex' }}
         animate={{ x: reverse ? [0, width] : [0, -width] }}
         transition={{ repeat: Infinity, ease: 'linear', duration: width / speed }}
       >
-        {children}
-        {children}
+        {children}{children}
       </motion.div>
     </div>
   );
 }
 
 // ── Animated Stat Counter ──────────────────────────────────
-function StatCounter({
-  target,
-  decimals = 0,
-  suffix = '',
-  prefix = '',
-}: {
-  target: number;
-  decimals?: number;
-  suffix?: string;
-  prefix?: string;
+function StatCounter({ target, decimals = 0, suffix = '', prefix = '' }: {
+  target: number; decimals?: number; suffix?: string; prefix?: string;
 }) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-10%' });
-
   useEffect(() => {
     if (!inView) return;
-    let startTime: number;
-    const duration = 1800;
-
-    const step = (ts: number) => {
-      if (!startTime) startTime = ts;
-      const progress = Math.min((ts - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 4);
-      setCount(parseFloat((eased * target).toFixed(decimals)));
-      if (progress < 1) requestAnimationFrame(step);
+    let t0: number;
+    const dur = 1800;
+    const tick = (ts: number) => {
+      if (!t0) t0 = ts;
+      const p = Math.min((ts - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 4);
+      setCount(parseFloat((e * target).toFixed(decimals)));
+      if (p < 1) requestAnimationFrame(tick);
     };
-    requestAnimationFrame(step);
+    requestAnimationFrame(tick);
   }, [inView, target, decimals]);
+  return <span ref={ref}>{prefix}{count.toFixed(decimals)}{suffix}</span>;
+}
+
+// ── Magnetic Button ────────────────────────────────────────
+function MagneticBtn({
+  children, href, className, style, target, rel,
+}: {
+  children: ReactNode; href: string; className?: string;
+  style?: React.CSSProperties; target?: string; rel?: string;
+}) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 280, damping: 18 });
+  const sy = useSpring(y, { stiffness: 280, damping: 18 });
+
+  const onMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    x.set((e.clientX - r.left - r.width / 2) * 0.28);
+    y.set((e.clientY - r.top - r.height / 2) * 0.28);
+  };
+  const onLeave = () => { x.set(0); y.set(0); };
 
   return (
-    <span ref={ref}>
-      {prefix}{count.toFixed(decimals)}{suffix}
-    </span>
+    <motion.a
+      ref={ref}
+      href={href}
+      className={className}
+      style={{ ...style, x: sx, y: sy, display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      target={target}
+      rel={rel}
+      data-hover="true"
+    >
+      {children}
+    </motion.a>
+  );
+}
+
+// ── 3D Tilt Card ───────────────────────────────────────────
+function TiltCard({
+  children, className, onClick,
+}: {
+  children: ReactNode; className?: string; onClick?: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const rx = useMotionValue(0);
+  const ry = useMotionValue(0);
+  const srx = useSpring(rx, { stiffness: 180, damping: 22 });
+  const sry = useSpring(ry, { stiffness: 180, damping: 22 });
+
+  const onMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    const nx = (e.clientX - r.left) / r.width;
+    const ny = (e.clientY - r.top) / r.height;
+    rx.set((ny - 0.5) * -9);
+    ry.set((nx - 0.5) * 9);
+  };
+  const reset = () => { rx.set(0); ry.set(0); };
+
+  return (
+    <motion.div
+      ref={ref}
+      style={{ rotateX: srx, rotateY: sry, transformPerspective: 1000 }}
+      onMouseMove={onMove} onMouseLeave={reset}
+      className={`${className} tilt-card`}
+      onClick={onClick}
+      data-hover="true"
+    >
+      {children}
+    </motion.div>
   );
 }
 
 // ── Project Modal ──────────────────────────────────────────
 function ProjectModal({
-  project,
-  onClose,
+  project, onClose,
 }: {
-  project: typeof staticProjects[0] | null;
-  onClose: () => void;
+  project: typeof staticProjects[0] | null; onClose: () => void;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -368,83 +435,54 @@ function ProjectModal({
       window.addEventListener('keydown', onKey);
       document.body.style.overflow = 'hidden';
     }
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
-    };
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
   }, [project, onClose]);
 
   return (
     <AnimatePresence>
       {project && (
-        <motion.div
-          className="modal-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+        <motion.div className="modal-overlay"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           transition={{ duration: 0.28 }}
           onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
-          <motion.div
-            className="modal-panel"
+          <motion.div className="modal-panel"
             initial={{ opacity: 0, y: 48, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.97 }}
             transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Header */}
             <div className="modal-header">
               <div>
                 <div className="modal-num">Project {project.num}</div>
                 <div className="modal-title">{project.title}</div>
               </div>
-              <button className="modal-close" onClick={onClose} data-hover="true">
-                ×
-              </button>
+              <button className="modal-close" onClick={onClose} data-hover="true">×</button>
             </div>
-
-            {/* Body */}
             <div className="modal-body">
-              {/* Architecture */}
               <div>
                 <div className="modal-section-label">Stack & Architecture</div>
                 <p className="modal-text">{project.architecture}</p>
               </div>
-
-              {/* Key Contributions */}
               <div>
                 <div className="modal-section-label">What I Built</div>
                 <ul className="modal-list">
-                  {project.contributions.map((c, i) => (
-                    <li key={i}>{c}</li>
-                  ))}
+                  {project.contributions.map((c, i) => <li key={i}>{c}</li>)}
                 </ul>
               </div>
-
-              {/* Challenge */}
               <div>
                 <div className="modal-section-label">Biggest Engineering Challenge</div>
                 <p className="modal-text">{project.challenge}</p>
               </div>
-
-              {/* Tags */}
               <div>
                 <div className="modal-section-label">Technologies</div>
                 <div className="modal-tags-wrap">
-                  {project.tags.map((t) => (
-                    <span key={t} className="modal-tag">{t}</span>
-                  ))}
+                  {project.tags.map((t) => <span key={t} className="modal-tag">{t}</span>)}
                 </div>
               </div>
-
-              {/* Footer actions */}
               <div className="modal-footer">
-                <a
-                  href={project.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary"
-                  style={{ fontSize: '13px', padding: '11px 26px' }}
+                <a href={project.url} target="_blank" rel="noopener noreferrer"
+                  className="btn-primary" style={{ fontSize: '13px', padding: '11px 26px' }}
                   data-hover="true"
                 >
                   View on GitHub ↗
@@ -458,33 +496,92 @@ function ProjectModal({
   );
 }
 
+// ── Principles Section (withhoney style) ──────────────────
+function PrinciplesSection() {
+  const [hovIdx, setHovIdx] = useState<number | null>(null);
+  const px = useMotionValue(-400);
+  const py = useMotionValue(-400);
+  const spx = useSpring(px, { stiffness: 220, damping: 20 });
+  const spy = useSpring(py, { stiffness: 220, damping: 20 });
+
+  const onSectionMove = useCallback((e: React.MouseEvent) => {
+    px.set(e.clientX + 24);
+    py.set(e.clientY - 80);
+  }, [px, py]);
+
+  return (
+    <section className="principles-dark" onMouseMove={onSectionMove}>
+      {/* Section heading */}
+      <div className="section" style={{ paddingBottom: '48px' }}>
+        <Reveal>
+          <div className="section-label">How I work</div>
+        </Reveal>
+        <Reveal delay={0.05}>
+          <h2 className="section-title">My principles.</h2>
+        </Reveal>
+      </div>
+
+      {/* The list */}
+      <div className="principles-full-list">
+        {principles.map((p, i) => (
+          <div
+            key={p.num}
+            className="principle-row"
+            onMouseEnter={() => setHovIdx(i)}
+            onMouseLeave={() => setHovIdx(null)}
+          >
+            <span className="principle-row-num">{p.num}.</span>
+            <span className="principle-row-text">{p.text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Floating portrait tooltip */}
+      <AnimatePresence>
+        {hovIdx !== null && (
+          <motion.div
+            className="floating-portrait"
+            style={{ left: 0, top: 0, x: spx, y: spy }}
+            initial={{ opacity: 0, scale: 0.86 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={principles[hovIdx].img}
+              alt={principles[hovIdx].person}
+            />
+            <div className="floating-portrait-info">
+              <div className="floating-portrait-name">{principles[hovIdx].person}</div>
+              <div className="floating-portrait-role">{principles[hovIdx].role}</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}
+
 // ── FAQ Accordion ──────────────────────────────────────────
 function FaqSection() {
   const [open, setOpen] = useState<number | null>(null);
-
   return (
     <div className="faq-list">
       {faqs.map((item, i) => (
         <div key={i} className={`faq-item${open === i ? ' open' : ''}`}>
-          <div
-            className="faq-question"
+          <div className="faq-question"
             onClick={() => setOpen(open === i ? null : i)}
-            data-hover="true"
-            style={{ cursor: 'default' }}
+            data-hover="true" style={{ cursor: 'default' }}
           >
             <span>{item.q}</span>
-            <motion.span
-              className="faq-toggle"
-              animate={{ rotate: open === i ? 45 : 0 }}
-              transition={{ duration: 0.28 }}
-            >
+            <motion.span className="faq-toggle" animate={{ rotate: open === i ? 45 : 0 }} transition={{ duration: 0.28 }}>
               +
             </motion.span>
           </div>
           <AnimatePresence>
             {open === i && (
-              <motion.div
-                className="faq-answer"
+              <motion.div className="faq-answer"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -501,6 +598,57 @@ function FaqSection() {
   );
 }
 
+// ── Timeline with draw animation ──────────────────────────
+function TimelineSection() {
+  const sectionRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end center'] });
+  const lineScaleY = useSpring(
+    useTransform(scrollYProgress, [0, 1], [0, 1]),
+    { stiffness: 60, damping: 20 }
+  );
+
+  return (
+    <section className="section" id="timeline" ref={sectionRef}>
+      <Reveal>
+        <div className="section-label">Education &amp; experience</div>
+      </Reveal>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '80px', alignItems: 'start' }}>
+        <Reveal delay={0.05}>
+          <h2 className="section-title">Where I've<br />been.</h2>
+        </Reveal>
+        <Reveal delay={0.12}>
+          <div className="timeline-wrap" style={{ position: 'relative' }}>
+            {/* Background ghost spine */}
+            <div className="timeline-spine" />
+            {/* Animated spine overlay */}
+            <motion.div
+              className="timeline-spine-animated"
+              style={{
+                height: `calc(100% - 24px)`,
+                scaleY: lineScaleY,
+              }}
+            />
+            {timelineItems.map((item, i) => (
+              <motion.div key={i} className="timeline-item"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-5%' }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: i * 0.14 }}
+              >
+                <div className="timeline-dot" />
+                <div className="timeline-date">{item.date}</div>
+                <div className="timeline-title">{item.title}</div>
+                <div className="timeline-subtitle">{item.subtitle}</div>
+                <div className="timeline-body">{item.body}</div>
+              </motion.div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════
    MAIN PAGE
 ═══════════════════════════════════════════════════════════ */
@@ -510,174 +658,127 @@ export default function Home() {
   const [projectData, setProjectData] = useState(staticProjects);
   const [activeProject, setActiveProject] = useState<typeof staticProjects[0] | null>(null);
 
+  // Parallax
+  const { scrollY } = useScroll();
+  const glowY = useTransform(scrollY, [0, 600], [0, -90]);
+
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
+    name: '', email: '', company: '',
     budget: 'Just saying hello 👋',
     timeline: 'Developer / Engineer',
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<{
-    success?: boolean;
-    id?: string;
-  } | null>(null);
+  const [submitStatus, setSubmitStatus] = useState<{ success?: boolean; id?: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
     document.body.style.cursor = 'none';
-
-    // Fetch dynamic projects
     const fetchProjects = async () => {
       try {
         const res = await getProjects();
-        if (res.success && res.projects && res.projects.length > 0) {
+        if (res.success && res.projects?.length > 0) {
           const mapped = res.projects.map((p: any, i: number) => ({
             id: p.id || p.title.toLowerCase().replace(/\s/g, '-'),
             num: String(i + 1).padStart(2, '0'),
-            title: p.title,
-            desc: p.description,
+            title: p.title, desc: p.description,
             tags: typeof p.tags === 'string' ? p.tags.split(',').map((t: string) => t.trim()) : p.tags,
             url: p.githubUrl || p.projectUrl || 'https://github.com/sarthaxmehta',
-            architecture: '',
-            contributions: [],
-            challenge: '',
+            architecture: '', contributions: [], challenge: '',
           }));
-          // Merge with detailed static data
           const merged = mapped.map((mp: any) => {
-            const staticMatch = staticProjects.find(
-              sp => sp.title.toLowerCase() === mp.title.toLowerCase()
-            );
-            return staticMatch ? { ...mp, ...staticMatch } : mp;
+            const sm = staticProjects.find(sp => sp.title.toLowerCase() === mp.title.toLowerCase());
+            return sm ? { ...mp, ...sm } : mp;
           });
           setProjectData(merged);
         }
-      } catch {
-        // Silently use static data
-      }
+      } catch { /* silently use static */ }
     };
     fetchProjects();
-
     return () => { document.body.style.cursor = ''; };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) {
-      alert('Please complete all required fields.');
-      return;
-    }
+    if (!formData.name || !formData.email || !formData.message) { alert('Please fill all required fields.'); return; }
     setIsSubmitting(true);
     try {
       const res = await submitInquiry(formData);
-      if (res.success) {
-        setSubmitStatus({ success: true, id: res.inquiryId });
-      } else {
-        alert(res.error || 'Something went wrong. Try again.');
-      }
-    } catch {
-      alert('An error occurred. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+      if (res.success) setSubmitStatus({ success: true, id: res.inquiryId });
+      else alert(res.error || 'Something went wrong. Try again.');
+    } catch { alert('An error occurred.'); }
+    finally { setIsSubmitting(false); }
   };
 
   return (
     <>
-      {/* ── GLOBAL OVERLAYS ── */}
       <ScrollProgressBar />
       {mounted && <CustomCursor />}
 
-      {/* ── NAVIGATION ── */}
-      <motion.nav
-        className="nav"
+      {/* ── NAV ── */}
+      <motion.nav className="nav"
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
       >
         <Link href="/" className="nav-brand">sarthak mehta</Link>
         <div className="nav-links">
-          <a href="#about"    className="nav-link">About</a>
-          <a href="#work"     className="nav-link">Work</a>
-          <a href="#timeline" className="nav-link">Experience</a>
-          <a href="#contact"  className="nav-link">Connect</a>
+          {['About', 'Work', 'Experience', 'Connect'].map((l) => (
+            <a key={l} href={`#${l.toLowerCase()}`} className="nav-link">{l}</a>
+          ))}
         </div>
         <a href="#contact" className="nav-cta" data-hover="true">Say hello ↗</a>
       </motion.nav>
 
-      {/* ═══════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════
           HERO
       ═════════════════════════════════════════════════════ */}
       <section className="hero">
-        {/* Atmospheric background */}
-        <div className="hero-atmosphere" />
+        <motion.div className="hero-atmosphere" style={{ y: glowY }} />
         <div className="hero-grain" />
 
         <div className="hero-content">
-          {/* Eyebrow */}
-          <motion.div
-            className="hero-eyebrow"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <motion.div className="hero-eyebrow"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
             <span className="hero-eyebrow-dot" />
             NIT Jalandhar · B.Tech CS · 2024–2028
           </motion.div>
 
-          {/* Name — two-line clip reveal */}
           <h1 className="hero-name">
             <HeroNameLine text="Sarthak" delay={0.5} />
             <HeroNameLine text="Mehta"   delay={0.65} />
           </h1>
 
-          {/* Separator */}
-          <motion.div
-            className="hero-separator"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
+          <motion.div className="hero-separator"
+            initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.9 }}
             style={{ transformOrigin: 'left' }}
           />
 
-          {/* Role */}
-          <motion.p
-            className="hero-role"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+          <motion.p className="hero-role"
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.0 }}
           >
             Full-Stack Engineer & AI/ML Enthusiast
           </motion.p>
 
-          {/* CTA buttons */}
-          <motion.div
-            className="hero-actions"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+          <motion.div className="hero-actions"
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.15 }}
           >
-            <a href="#work" className="btn-primary" data-hover="true">
+            <MagneticBtn href="#work" className="btn-primary">
               View my work ↓
-            </a>
-            <a
-              href="https://github.com/sarthaxmehta"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-secondary"
-              data-hover="true"
-            >
+            </MagneticBtn>
+            <MagneticBtn href="https://github.com/sarthaxmehta" target="_blank" rel="noopener noreferrer" className="btn-secondary">
               GitHub ↗
-            </a>
+            </MagneticBtn>
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
-        <motion.div
-          className="scroll-indicator"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+        <motion.div className="scroll-indicator"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.5 }}
         >
           <span>scroll</span>
@@ -685,18 +786,16 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════
           SKILLS MARQUEE
       ═════════════════════════════════════════════════════ */}
-      <motion.div
-        className="marquee-section"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+      <motion.div className="marquee-section"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.6 }}
       >
         <Marquee speed={50}>
           {skills.map((s) => (
-            <span key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 0 }}>
+            <span key={s} style={{ display: 'inline-flex', alignItems: 'center' }}>
               <span className="marquee-item">{s}</span>
               <span className="marquee-sep">◆</span>
             </span>
@@ -704,21 +803,15 @@ export default function Home() {
         </Marquee>
       </motion.div>
 
-      {/* ═══════════════════════════════════════════════════
-          MAIN CONTENT WRAPPER
+      {/* ══════════════════════════════════════════════════════
+          MAIN CONTENT
       ═════════════════════════════════════════════════════ */}
       <div className="main-wrap">
 
-        {/* ════════════════════════════════════════════════
-            ABOUT
-        ════════════════════════════════════════════════ */}
+        {/* ── ABOUT ── */}
         <section className="section" id="about">
-          <Reveal>
-            <div className="section-label">About me</div>
-          </Reveal>
-
+          <Reveal><div className="section-label">About me</div></Reveal>
           <div className="about-grid">
-            {/* Left: text */}
             <Reveal delay={0.05}>
               <h2 className="section-title" style={{ marginBottom: '28px' }}>
                 Building systems that<br />actually work.
@@ -727,137 +820,92 @@ export default function Home() {
                 I'm a <strong>second-year Computer Science student</strong> at NIT Jalandhar,
                 building things at the intersection of full-stack engineering and artificial
                 intelligence. I've shipped AI-powered operating systems, geospatial deep learning
-                pipelines, medical informatics platforms, and native desktop apps — each one
-                solving a real, hard problem.
+                pipelines, medical informatics platforms, and native desktop apps — each solving a
+                real, hard problem.
               </p>
               <p className="about-text">
-                I move fast, care deeply about code quality, and believe great software is
-                as much about the craft as it is about the outcome.
+                I move fast, care deeply about code quality, and believe great software is as much
+                about the craft as it is about the outcome.
               </p>
               <div className="about-cta-row">
-                <a
-                  href="https://github.com/sarthaxmehta"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary"
-                  data-hover="true"
-                >
+                <MagneticBtn href="https://github.com/sarthaxmehta" target="_blank" rel="noopener noreferrer" className="btn-primary">
                   GitHub ↗
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/sarthak-mehta-698457310/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary"
-                  data-hover="true"
-                >
+                </MagneticBtn>
+                <MagneticBtn href="https://www.linkedin.com/in/sarthak-mehta-698457310/" target="_blank" rel="noopener noreferrer" className="btn-secondary">
                   LinkedIn ↗
-                </a>
+                </MagneticBtn>
               </div>
             </Reveal>
 
-            {/* Right: stats */}
             <Reveal delay={0.15}>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-number">
-                    <StatCounter target={8.65} decimals={2} />
-                    <span className="stat-accent" style={{ fontSize: '0.45em' }}>/10</span>
-                  </div>
-                  <div className="stat-label">GPA at<br />NIT Jalandhar</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-number">
-                    <StatCounter target={4} /><span className="stat-accent">+</span>
-                  </div>
-                  <div className="stat-label">Projects<br />shipped</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-number">
-                    <StatCounter target={1} />
-                  </div>
-                  <div className="stat-label">Internship<br />completed</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-number">
-                    <StatCounter target={2} />
-                  </div>
-                  <div className="stat-label">AI models<br />trained &amp; deployed</div>
-                </div>
-              </div>
+              <motion.div className="stats-grid"
+                initial="hidden" whileInView="visible" viewport={{ once: true }}
+                variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
+              >
+                {[
+                  { num: <><StatCounter target={8.65} decimals={2} /><span className="stat-accent" style={{ fontSize: '0.45em' }}>/10</span></>, label: 'GPA at\nNIT Jalandhar' },
+                  { num: <><StatCounter target={4} /><span className="stat-accent">+</span></>, label: 'Projects\nshipped' },
+                  { num: <StatCounter target={1} />, label: 'Internship\ncompleted' },
+                  { num: <StatCounter target={2} />, label: 'AI models\ntrained & deployed' },
+                ].map((s, i) => (
+                  <motion.div key={i} className="stat-card"
+                    variants={{ hidden: { opacity: 0, scale: 0.92 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } } }}
+                  >
+                    <div className="stat-number">{s.num}</div>
+                    <div className="stat-label" style={{ whiteSpace: 'pre-line' }}>{s.label}</div>
+                  </motion.div>
+                ))}
+              </motion.div>
             </Reveal>
           </div>
         </section>
 
         <div className="section-divider-line" />
 
-        {/* ════════════════════════════════════════════════
-            SKILLS
-        ════════════════════════════════════════════════ */}
+        {/* ── SKILLS ── */}
         <div className="skills-wrap">
-          <Reveal>
-            <div className="section-label">Tech stack</div>
-          </Reveal>
-          <motion.div
-            className="skills-chips"
-            initial="hidden"
-            whileInView="visible"
+          <Reveal><div className="section-label">Tech stack</div></Reveal>
+          <motion.div className="skills-chips"
+            initial="hidden" whileInView="visible"
             viewport={{ once: true, margin: '-5%' }}
             variants={staggerChildren}
           >
             {skills.map((s) => (
-              <motion.span
-                key={s}
-                className="skill-chip"
-                variants={fadeUp}
-              >
-                {s}
-              </motion.span>
+              <motion.span key={s} className="skill-chip" variants={fadeUp}>{s}</motion.span>
             ))}
           </motion.div>
         </div>
 
         <div className="section-divider-line" />
 
-        {/* ════════════════════════════════════════════════
-            PROJECTS
-        ════════════════════════════════════════════════ */}
+        {/* ── PROJECTS ── */}
         <section className="section" id="work">
-          <Reveal>
-            <div className="section-label">Selected work</div>
-          </Reveal>
+          <Reveal><div className="section-label">Selected work</div></Reveal>
           <Reveal delay={0.05}>
-            <h2 className="section-title" style={{ marginBottom: '52px' }}>
-              Things I've built.
-            </h2>
+            <h2 className="section-title" style={{ marginBottom: '52px' }}>Things I've built.</h2>
           </Reveal>
 
-          <motion.div
-            className="projects-grid"
-            initial="hidden"
-            whileInView="visible"
+          <motion.div className="projects-grid"
+            initial="hidden" whileInView="visible"
             viewport={{ once: true, margin: '-5%' }}
             variants={staggerChildren}
           >
             {projectData.map((p) => (
-              <motion.div
-                key={p.id}
-                className="project-card"
-                variants={fadeUp}
-                onClick={() => setActiveProject(p)}
-                data-hover="true"
-              >
-                <div className="project-card-top">
-                  <span className="project-num">{p.num}</span>
-                  <span className="project-arrow">↗</span>
-                </div>
-                <h3 className="project-title">{p.title}</h3>
-                <p className="project-desc">{p.desc}</p>
-                <div className="project-tags">
-                  {p.tags.slice(0, 4).map((t) => (
-                    <span key={t} className="project-tag">{t}</span>
-                  ))}
-                </div>
+              <motion.div key={p.id} variants={fadeUp}>
+                <TiltCard
+                  className="project-card"
+                  onClick={() => setActiveProject(p)}
+                >
+                  <div className="project-card-top">
+                    <span className="project-num">{p.num}</span>
+                    <span className="project-arrow">↗</span>
+                  </div>
+                  <h3 className="project-title">{p.title}</h3>
+                  <p className="project-desc">{p.desc}</p>
+                  <div className="project-tags">
+                    {p.tags.slice(0, 4).map((t) => <span key={t} className="project-tag">{t}</span>)}
+                  </div>
+                </TiltCard>
               </motion.div>
             ))}
           </motion.div>
@@ -865,148 +913,47 @@ export default function Home() {
 
         <div className="section-divider-line" />
 
-        {/* ════════════════════════════════════════════════
-            TIMELINE — EDUCATION & EXPERIENCE
-        ════════════════════════════════════════════════ */}
-        <section className="section" id="timeline">
-          <Reveal>
-            <div className="section-label">Education &amp; experience</div>
-          </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '80px', alignItems: 'start' }}>
-            <Reveal delay={0.05}>
-              <h2 className="section-title">
-                Where I've<br />been.
-              </h2>
-            </Reveal>
-            <Reveal delay={0.12}>
-              <div className="timeline-wrap">
-                <div className="timeline-spine" />
-                {timelineItems.map((item, i) => (
-                  <motion.div
-                    key={i}
-                    className="timeline-item"
-                    initial={{ opacity: 0, x: -16 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, margin: '-5%' }}
-                    transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: i * 0.12 }}
-                  >
-                    <div className="timeline-dot" />
-                    <div className="timeline-date">{item.date}</div>
-                    <div className="timeline-title">{item.title}</div>
-                    <div className="timeline-subtitle">{item.subtitle}</div>
-                    <div className="timeline-body">{item.body}</div>
-                  </motion.div>
-                ))}
-              </div>
-            </Reveal>
-          </div>
-        </section>
+        {/* ── TIMELINE ── */}
+        <TimelineSection />
 
         <div className="section-divider-line" />
 
-        {/* ════════════════════════════════════════════════
-            PRINCIPLES
-        ════════════════════════════════════════════════ */}
-        <section style={{ paddingBottom: '0' }}>
-          {/* Giant ticker */}
-          <div className="principles-marquee-wrap">
-            <Marquee speed={90}>
-              <span className="principles-ticker-text">PRINCIPLES</span>
-              <span className="principles-ticker-sep">✦</span>
-              <span className="principles-ticker-text">HOW I OPERATE</span>
-              <span className="principles-ticker-sep">✦</span>
-              <span className="principles-ticker-text">PRINCIPLES</span>
-              <span className="principles-ticker-sep">✦</span>
-              <span className="principles-ticker-text">HOW I OPERATE</span>
-              <span className="principles-ticker-sep">✦</span>
-            </Marquee>
-          </div>
-
-          <div className="section" style={{ paddingTop: '80px' }}>
-            <Reveal>
-              <div className="section-label">How I work</div>
-            </Reveal>
-            <motion.ul
-              className="principles-list"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-5%' }}
-              variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
-            >
-              {principles.map((p) => (
-                <motion.li
-                  key={p.num}
-                  className="principle-item"
-                  variants={fadeUp}
-                >
-                  <span className="principle-num">{p.num}</span>
-                  <span className="principle-text">{p.text}</span>
-                </motion.li>
-              ))}
-            </motion.ul>
-          </div>
-        </section>
+        {/* ── PRINCIPLES (withhoney style) ── */}
+        <PrinciplesSection />
 
         <div className="section-divider-line" />
 
-        {/* ════════════════════════════════════════════════
-            CONTACT
-        ════════════════════════════════════════════════ */}
+        {/* ── CONTACT ── */}
         <section className="section" id="contact">
-          <Reveal>
-            <div className="section-label">Get in touch</div>
-          </Reveal>
+          <Reveal><div className="section-label">Get in touch</div></Reveal>
 
           <div className="contact-grid">
-            {/* Left side */}
             <div>
               <Reveal delay={0.05}>
-                <h2 className="contact-headline">
-                  Let's<br />connect.
-                </h2>
+                <h2 className="contact-headline">Let's<br />connect.</h2>
                 <p className="contact-sub">
-                  Whether you want to collaborate on a project, talk about AI, or just say hi
-                  — I'd love to hear from you.
+                  Whether you want to collaborate on a project, talk about AI, or just say
+                  hi — I'd love to hear from you.
                 </p>
               </Reveal>
-
               <Reveal delay={0.1}>
                 <div className="social-links">
                   {[
-                    {
-                      label: 'GitHub',
-                      href: 'https://github.com/sarthaxmehta',
-                      icon: 'GH',
-                    },
-                    {
-                      label: 'LinkedIn',
-                      href: 'https://www.linkedin.com/in/sarthak-mehta-698457310/',
-                      icon: 'in',
-                    },
-                    {
-                      label: 'sarthakm.cs.24@nitj.ac.in',
-                      href: 'mailto:sarthakm.cs.24@nitj.ac.in',
-                      icon: '@',
-                    },
+                    { label: 'GitHub', href: 'https://github.com/sarthaxmehta', icon: 'GH' },
+                    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/sarthak-mehta-698457310/', icon: 'in' },
+                    { label: 'sarthakm.cs.24@nitj.ac.in', href: 'mailto:sarthakm.cs.24@nitj.ac.in', icon: '@' },
                   ].map((s) => (
-                    <a
-                      key={s.label}
-                      href={s.href}
+                    <a key={s.label} href={s.href}
                       target={s.href.startsWith('mailto') ? undefined : '_blank'}
                       rel={s.href.startsWith('mailto') ? undefined : 'noopener noreferrer'}
-                      className="social-link"
-                      data-hover="true"
+                      className="social-link" data-hover="true"
                     >
-                      <span className="social-icon"
-                        style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
-                        {s.icon}
-                      </span>
+                      <span className="social-icon" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>{s.icon}</span>
                       {s.label}
                     </a>
                   ))}
                 </div>
 
-                {/* FAQ below social links */}
                 <div style={{ marginTop: '48px' }}>
                   <div className="section-label" style={{ marginBottom: '24px' }}>FAQ</div>
                   <FaqSection />
@@ -1014,32 +961,18 @@ export default function Home() {
               </Reveal>
             </div>
 
-            {/* Right side: form */}
             <Reveal delay={0.1}>
               <div className="contact-form">
                 {submitStatus ? (
-                  /* Success state */
                   <div className="success-state">
                     <div className="success-icon">✓</div>
                     <div className="success-title">Message received.</div>
                     <p className="success-body">
                       Thanks, {formData.name}. I'll get back to you at{' '}
-                      <strong style={{ color: 'var(--text-1)' }}>{formData.email}</strong>{' '}
-                      as soon as I can.
+                      <strong style={{ color: 'var(--text-1)' }}>{formData.email}</strong> soon.
                     </p>
-                    <button
-                      className="btn-secondary"
-                      style={{ marginTop: '8px' }}
-                      data-hover="true"
-                      onClick={() => {
-                        setSubmitStatus(null);
-                        setFormData({
-                          name: '', email: '', company: '',
-                          budget: 'Just saying hello 👋',
-                          timeline: 'Developer / Engineer',
-                          message: '',
-                        });
-                      }}
+                    <button className="btn-secondary" style={{ marginTop: '8px' }} data-hover="true"
+                      onClick={() => { setSubmitStatus(null); setFormData({ name: '', email: '', company: '', budget: 'Just saying hello 👋', timeline: 'Developer / Engineer', message: '' }); }}
                     >
                       Send another
                     </button>
@@ -1049,86 +982,60 @@ export default function Home() {
                     <div className="form-row">
                       <div className="form-group">
                         <label className="form-label">Name *</label>
-                        <input
-                          type="text"
-                          required
-                          value={formData.name}
+                        <input type="text" required value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="form-input"
-                          placeholder="Your name"
-                        />
+                          className="form-input" placeholder="Your name" />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Email *</label>
-                        <input
-                          type="email"
-                          required
-                          value={formData.email}
+                        <input type="email" required value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="form-input"
-                          placeholder="your@email.com"
-                        />
+                          className="form-input" placeholder="your@email.com" />
                       </div>
                     </div>
 
                     <div className="form-group">
                       <label className="form-label">Organization / School</label>
-                      <input
-                        type="text"
-                        value={formData.company}
+                      <input type="text" value={formData.company}
                         onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                        className="form-input"
-                        placeholder="Where are you from? (optional)"
-                      />
+                        className="form-input" placeholder="Where are you from? (optional)" />
                     </div>
 
                     <div className="form-row">
                       <div className="form-group">
                         <label className="form-label">Reason for reaching out</label>
-                        <select
-                          value={formData.budget}
+                        <select value={formData.budget}
                           onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
                           className="form-select"
                         >
-                          <option value="Just saying hello 👋">Just saying hello 👋</option>
-                          <option value="Technical collaboration 🤝">Technical collaboration 🤝</option>
-                          <option value="NIT Jalandhar discussion 🎓">NIT Jalandhar discussion 🎓</option>
-                          <option value="General Q&A or chat 💻">General Q&amp;A or chat 💻</option>
+                          <option>Just saying hello 👋</option>
+                          <option>Technical collaboration 🤝</option>
+                          <option>NIT Jalandhar discussion 🎓</option>
+                          <option>General Q&A or chat 💻</option>
                         </select>
                       </div>
                       <div className="form-group">
                         <label className="form-label">Your affiliation</label>
-                        <select
-                          value={formData.timeline}
+                        <select value={formData.timeline}
                           onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
                           className="form-select"
                         >
-                          <option value="Developer / Engineer">Developer / Engineer</option>
-                          <option value="Researcher / Student">Researcher / Student</option>
-                          <option value="Recruiter / Tech Manager">Recruiter / Tech Manager</option>
-                          <option value="Tech Enthusiast">Tech Enthusiast</option>
+                          <option>Developer / Engineer</option>
+                          <option>Researcher / Student</option>
+                          <option>Recruiter / Tech Manager</option>
+                          <option>Tech Enthusiast</option>
                         </select>
                       </div>
                     </div>
 
                     <div className="form-group">
                       <label className="form-label">Message *</label>
-                      <textarea
-                        required
-                        rows={5}
-                        value={formData.message}
+                      <textarea required rows={5} value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        className="form-textarea"
-                        placeholder="What's on your mind?"
-                      />
+                        className="form-textarea" placeholder="What's on your mind?" />
                     </div>
 
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="form-submit"
-                      data-hover="true"
-                    >
+                    <button type="submit" disabled={isSubmitting} className="form-submit" data-hover="true">
                       {isSubmitting ? 'Sending…' : 'Send message →'}
                     </button>
                   </form>
@@ -1138,14 +1045,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ════════════════════════════════════════════════
-            FOOTER
-        ════════════════════════════════════════════════ */}
+        {/* ── FOOTER ── */}
         <footer className="footer">
           <Reveal>
             <div className="footer-wordmark">Sarthak Mehta</div>
           </Reveal>
-
           <Reveal delay={0.05}>
             <div className="footer-bottom">
               <span className="footer-copy">© 2026 Sarthak Mehta. All rights reserved.</span>
@@ -1156,13 +1060,10 @@ export default function Home() {
                   { label: 'Email',    href: 'mailto:sarthakm.cs.24@nitj.ac.in' },
                   { label: 'Admin',    href: '/manager' },
                 ].map((l) => (
-                  <a
-                    key={l.label}
-                    href={l.href}
+                  <a key={l.label} href={l.href}
                     target={l.href.startsWith('http') ? '_blank' : undefined}
                     rel={l.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className="footer-link"
-                    data-hover="true"
+                    className="footer-link" data-hover="true"
                   >
                     {l.label}
                   </a>
@@ -1175,10 +1076,7 @@ export default function Home() {
       </div>{/* /.main-wrap */}
 
       {/* ── PROJECT MODAL ── */}
-      <ProjectModal
-        project={activeProject}
-        onClose={() => setActiveProject(null)}
-      />
+      <ProjectModal project={activeProject} onClose={() => setActiveProject(null)} />
     </>
   );
 }
