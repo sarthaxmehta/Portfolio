@@ -19,6 +19,11 @@ import {
   animate,
 } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
+
+// Import Database Server Actions
+import { getProjects } from '../actions/project';
+import { submitInquiry } from '../actions/inquiry';
 
 /* ─────────────────────────────────────────────
    DATA
@@ -147,10 +152,100 @@ const faqs = [
 ];
 
 /* ─────────────────────────────────────────────
+   PROJECT DETAILED SCHEMAS & SIMULATOR LOGS
+───────────────────────────────────────────── */
+
+const projectTechOverlays: Record<string, {
+  architecture: string;
+  contributions: string[];
+  challenges: string;
+  logs: string[];
+}> = {
+  'ChiefOS': {
+    architecture: 'Next.js 16 (App Router) + SQLite + Prisma ORM + Groq Llama 3.3 + Gemini 2.5 Flash / Gemma 4.',
+    contributions: [
+      'Designed multi-engine AI scheduler orchestrator (Intent, Scheduling, Risk, Memory Engines).',
+      'Built deterministic timezone offsets algorithm resolving LLM UTC outputs to local user time.',
+      'Created high-capacity fallback pipeline switching query workloads seamlessly under rate limits.'
+    ],
+    challenges: 'Bridging the gap between unpredictable model completions and strict database transactions. Resolved by building Zod-based parser engines that validate LLM inputs synchronously before execution.',
+    logs: [
+      'INITIALIZING CHIEF_OS ORCHESTRATION LAYER...',
+      'CONNECTING SQLite LOCAL STORAGE: dev.db... OK',
+      'INTENT_ENGINE: LOADING SCHEMA RULES... OK',
+      'SCHEDULER: MAPPING FOCUS BUFFERS... OK',
+      'SYSTEM STATUS: ONLINE // CHIEF_ENGINE ENGAGED'
+    ]
+  },
+  'UrbanNet': {
+    architecture: 'PyTorch (Custom U-Net ConvNet) + Google Earth Engine API + QGIS + NumPy + Rasterio.',
+    contributions: [
+      'Engineered cloud-based multispectral composite feature engineering workflows (NDVI, NDWI, NDBI, GLCM).',
+      'Trained Random Forest ensemble baseline achieving 93.7% accuracy (Kappa 0.91+).',
+      'Built PyTorch semantic segmentation pipeline delineating high-resolution structural boundaries.'
+    ],
+    challenges: 'Data pipe transition from cloud GEE raster blocks down to local PyTorch tensor arrays without geo-spatial metadata loss. Solved by custom raster block mapping using python Rasterio.',
+    logs: [
+      'COPERNICUS/S2_SR COMPOSITING Delhi_NCR... OK',
+      'COMPUTING GLCM SPATIAL TEXTURES... DONE',
+      'RUNNING RANDOM FOREST ENSEMBLE... ACCURACY: 93.7%',
+      'PYTORCH_UNET: PROCESSING 897 IMAGERY PATCHES...',
+      'VECTORIZING IN QGIS: SHAPEFILE GENERATED.'
+    ]
+  },
+  'Vital Archive': {
+    architecture: 'Python (FastAPI) + Next.js + SQLite + SQLAlchemy + Sentence Transformers + Gemini AI.',
+    contributions: [
+      'Created automated medical lab PDF parser extracting matrices via pdfplumber and Gemini extraction.',
+      'Developed semantic normalization pipeline running local Sentence Transformers vector embeddings.',
+      'Built interactive React charts tracing historical biomarker trends over time.'
+    ],
+    challenges: 'Resolving variation in biomarker naming (e.g. "Hgb", "Hemoglobin", "HGB total") across different clinics. Solved by mapping test names into high-dimensional vector spaces and computing cosine similarities against canonical lists.',
+    logs: [
+      'STARTING FASTAPI REST SERVER... PORT 8000 OK',
+      'PDFPLUMBER: PARSING UPLOADED DOCUMENT MATRIX...',
+      'EXTRACTING STRUCTURED SCHEMAS VIA GEMINI LITE... DONE',
+      'SEMANTIC SEARCH: normalizer models loaded... OK',
+      'NORMALIZING DISPARATE TEST NAMES against canonical dict...'
+    ]
+  },
+  'Zenvvy': {
+    architecture: 'Next.js App Router + React 19 + Electron Container + Prisma ORM + SQLite.',
+    contributions: [
+      'Built POS, kitchen display system (KDS), and inventory tracker running 100% offline.',
+      'Integrated simulated, passwordless authentication using React session persistence.',
+      'Created bundle configurations for packaging database runtimes inside macOS & Windows installers.'
+    ],
+    challenges: 'Ensuring Next.js Server Actions and Prisma SQLite client paths resolve correctly in a packaged offline desktop container on both macOS and Windows. Resolved via custom native node module bundling and relative path overrides.',
+    logs: [
+      'BOOTING ELECTRON SHELL... WINDOW CREATED',
+      'SPAWNING OFFLINE NEXTJS CORE PROTOCOL...',
+      'RESOLVING LOCAL SQLite PATH IN PRODUCTION... OK',
+      'SIMULATION_CONTEXT: LOADING STUDENT SESSION... SUCCESS',
+      'KITCHEN DISPLAY ACTIVE // TABLE CHANNELS VERIFIED'
+    ]
+  },
+  'AgriMarket Profit Optimizer': {
+    architecture: 'Python + FastAPI + Next.js + Geopy API + Pandas.',
+    contributions: [
+      'Created logic engine processing 325 agricultural commodities with distance mapping.',
+      'Integrated Geopy to dynamically compute transport costs and determine net profit margins.'
+    ],
+    challenges: 'Real-time computation of geographical distance and logistics deductions across large agricultural datasets. Optimized using caching layers.',
+    logs: [
+      'PARSING COMMODITY DATASET... 325 ITEMS LOGGED',
+      'GEOPY: CONNECTING NOMINATIM GEOLOCATOR...',
+      'CALCULATING TRANSPORTATION LOGISTICS COSTS...',
+      'MAP REDUCE NET PROFIT OPTIMIZATION... COMPLETE'
+    ]
+  }
+};
+
+/* ─────────────────────────────────────────────
    ANIMATION VARIANTS
 ───────────────────────────────────────────── */
 
-const fadeUp = {
+const fadeUp: any = {
   hidden: { opacity: 0, y: 48 },
   visible: {
     opacity: 1,
@@ -180,11 +275,11 @@ function CustomCursor() {
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
 
-  const springX = useSpring(cursorX, { stiffness: 300, damping: 30 });
-  const springY = useSpring(cursorY, { stiffness: 300, damping: 30 });
+  const springX = useSpring(cursorX, { stiffness: 350, damping: 25 });
+  const springY = useSpring(cursorY, { stiffness: 350, damping: 25 });
 
-  const dotX = useSpring(cursorX, { stiffness: 900, damping: 35 });
-  const dotY = useSpring(cursorY, { stiffness: 900, damping: 35 });
+  const dotX = useSpring(cursorX, { stiffness: 900, damping: 30 });
+  const dotY = useSpring(cursorY, { stiffness: 900, damping: 30 });
 
   const [isPointer, setIsPointer] = useState(false);
 
@@ -198,7 +293,7 @@ function CustomCursor() {
       setIsPointer(
         !!el && (
           getComputedStyle(el).cursor === 'pointer' ||
-          el.closest('a, button, [data-cursor-pointer]') !== null
+          el.closest('a, button, [data-cursor-pointer], .console-cabinet-card, select, input, textarea') !== null
         )
       );
     };
@@ -212,7 +307,7 @@ function CustomCursor() {
 
   return (
     <>
-      {/* outer ring */}
+      {/* outer glowing target ring */}
       <motion.div
         style={{
           position: 'fixed',
@@ -222,21 +317,22 @@ function CustomCursor() {
           y: springY,
           translateX: '-50%',
           translateY: '-50%',
-          width: isPointer ? 48 : 36,
-          height: isPointer ? 48 : 36,
+          width: isPointer ? 44 : 28,
+          height: isPointer ? 44 : 28,
           borderRadius: '50%',
-          border: '1.5px solid rgba(255,255,255,0.45)',
+          border: '1.5px solid rgba(255, 76, 36, 0.65)',
           pointerEvents: 'none',
           zIndex: 9999,
-          mixBlendMode: 'difference',
+          boxShadow: isPointer ? '0 0 15px rgba(255, 76, 36, 0.4)' : 'none',
         }}
         animate={{
-          scale: isPointer ? 1.3 : 1,
-          opacity: isPointer ? 0.6 : 0.4,
+          scale: isPointer ? 1.25 : 1,
+          borderColor: isPointer ? 'rgba(36, 219, 255, 0.8)' : 'rgba(255, 76, 36, 0.65)',
+          boxShadow: isPointer ? '0 0 15px rgba(36, 219, 255, 0.4)' : 'none',
         }}
         transition={{ duration: 0.2 }}
       />
-      {/* inner dot */}
+      {/* inner glow dot */}
       <motion.div
         style={{
           position: 'fixed',
@@ -246,13 +342,17 @@ function CustomCursor() {
           y: dotY,
           translateX: '-50%',
           translateY: '-50%',
-          width: 6,
-          height: 6,
+          width: 5,
+          height: 5,
           borderRadius: '50%',
-          backgroundColor: 'white',
+          backgroundColor: '#ff4c24',
           pointerEvents: 'none',
           zIndex: 9999,
-          mixBlendMode: 'difference',
+          boxShadow: '0 0 8px #ff4c24',
+        }}
+        animate={{
+          backgroundColor: isPointer ? '#24dbff' : '#ff4c24',
+          boxShadow: isPointer ? '0 0 8px #24dbff' : '0 0 8px #ff4c24',
         }}
       />
     </>
@@ -509,11 +609,12 @@ function HeroImage() {
       className="hero-image-container"
       style={{ y, opacity }}
     >
+      <div className="hero-image-backdrop" />
       <motion.div
         initial={{ scale: 0.85, opacity: 0, y: 40 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', position: 'relative' }}
       >
         <Image
           src="/hero-visual.png"
@@ -534,76 +635,181 @@ function HeroImage() {
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [projectData, setProjectData] = useState<any[]>([]);
+  const [activeProjectIndex, setActiveProjectIndex] = useState(0);
+  const [timeStr, setTimeStr] = useState('19:40:30');
+  const [mousePos, setMousePos] = useState({ x: -200, y: -200 });
+  
+  // Inquiry form states
+  const [inquiryData, setInquiryData] = useState({
+    name: '',
+    email: '',
+    company: '',
+    budget: 'Just saying hello 👋',
+    timeline: 'Developer / Engineer',
+    message: '',
+  });
+  const [submittingInquiry, setSubmittingInquiry] = useState(false);
+  const [inquiryStatus, setInquiryStatus] = useState<{
+    success?: boolean;
+    inquiryId?: string;
+  } | null>(null);
+
+  // System status animations for terminal HUD
+  const [hudMessage, setHudMessage] = useState('INTENT_AGENT: STANDBY');
 
   useEffect(() => {
     setMounted(true);
     // Hide default cursor
     document.body.style.cursor = 'none';
-    return () => { document.body.style.cursor = ''; };
+
+    // Fetch dynamic project list
+    const fetchProj = async () => {
+      try {
+        const res = await getProjects();
+        if (res.success && res.projects) {
+          const mapped = res.projects.map((p: any, i: number) => ({
+            num: `[0${i + 1}]`,
+            title: p.title,
+            detail: p.description,
+            tags: p.tags.split(','),
+            url: p.githubUrl || p.projectUrl || 'https://github.com/sarthaxmehta',
+          }));
+          setProjectData(mapped);
+        } else {
+          setProjectData(projects);
+        }
+      } catch (e) {
+        setProjectData(projects);
+      }
+    };
+    fetchProj();
+
+    // System clock timer
+    const timer = setInterval(() => {
+      const now = new Date();
+      setTimeStr(now.toLocaleTimeString('en-US', { hour12: false }));
+    }, 1000);
+
+    // Mouse movement tracker
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
+    // Dynamic HUD terminal logger messages
+    const hudMessages = [
+      'SYS_AGENTS: POLLING CHIEF_OS PROCESSES... [OK]',
+      'GEOSPATIAL: COMPUTING SENTINEL-2 NDVI CHANNELS... [OK]',
+      'VITAL_ARCHIVE: RUNNING VECTOR SEMANTIC MAPPER... [OK]',
+      'INTENT_AGENT: READY FOR USER INQUIRY...',
+      'SYSTEM STATUS: ONLINE // MEHTA_OS ACTIVE'
+    ];
+    let msgIdx = 0;
+    const hudInterval = setInterval(() => {
+      setHudMessage(hudMessages[msgIdx]);
+      msgIdx = (msgIdx + 1) % hudMessages.length;
+    }, 4500);
+
+    return () => {
+      document.body.style.cursor = '';
+      clearInterval(timer);
+      clearInterval(hudInterval);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
   }, []);
 
   return (
     <>
+      {/* BACKGROUND GRAPHIC HUD CONSOLE */}
+      <div className="console-grid-bg" />
+      <div className="ambient-glow-orb" style={{ top: '10%', left: '5%', background: 'var(--glow-orange)' }} />
+      <div className="ambient-glow-orb" style={{ top: '50%', right: '5%', background: 'var(--glow-purple)' }} />
+
+      {/* INTERACTIVE MOUSE SPOTLIGHT OVERLAY */}
+      {mounted && (
+        <div 
+          className="mouse-spotlight" 
+          style={{ 
+            left: mousePos.x, 
+            top: mousePos.y 
+          }} 
+        />
+      )}
+
       {/* CUSTOM CURSOR */}
       {mounted && <CustomCursor />}
 
-      {/* NAV */}
+      {/* FLOATING CAPSULE NAVIGATION (DYNAMIC ISLAND) */}
       <motion.nav
-        className="nav"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+        className="nav-capsule"
+        initial={{ opacity: 0, y: -20, x: '-50%' }}
+        animate={{ opacity: 1, y: 0, x: '-50%' }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
       >
-        <div className="nav-brand">
-          <span className="nav-brand-name">sarthak—</span>
-          <span className="nav-brand-year">©2025</span>
+        <Link href="/" className="nav-capsule-brand">
+          <span>sarthak</span>
+          <span className="nav-capsule-dot" />
+          <span className="nav-capsule-year">2026</span>
+        </Link>
+        <div className="nav-capsule-links">
+          <a href="#about" className="nav-capsule-link">About</a>
+          <a href="#work" className="nav-capsule-link">Work</a>
+          <a href="#contact" className="nav-capsule-link">Connect</a>
+          <Link href="/manager" className="nav-capsule-link admin">Console</Link>
         </div>
-        <div className="nav-links">
-          <a href="mailto:sarthakm.cs.24@nitj.ac.in" className="nav-link">
-            <span className="nav-link-dot" />
-            sarthakm.cs.24@nitj.ac.in
-          </a>
-          <a
-            href="https://github.com/sarthaxmehta"
-            className="nav-link"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span className="nav-link-dot" />
-            GITHUB
-          </a>
-          <a
-            href="https://www.linkedin.com/in/sarthak-mehta-698457310/"
-            className="nav-link"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span className="nav-link-dot" />
-            LINKEDIN
-          </a>
-        </div>
-        <motion.a
-          href="mailto:sarthakm.cs.24@nitj.ac.in"
-          className="nav-cta"
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.97 }}
-        >
-          HIRE ME
-        </motion.a>
+        <a href="#contact" className="nav-capsule-cta">
+          CONNECT
+        </a>
       </motion.nav>
 
       {/* ── HERO ── */}
-      <section className="hero">
+      <section className="hero" style={{ height: '100vh', minHeight: '750px', display: 'flex', alignItems: 'center', position: 'relative' }}>
         <HeroImage />
-        <div className="hero-text">
+        
+        {/* HUD Frame Corner Sight Crosshairs */}
+        <div className="hud-corner-crosshair top-left" />
+        <div className="hud-corner-crosshair top-right" />
+        <div className="hud-corner-crosshair bottom-left" />
+        <div className="hud-corner-crosshair bottom-right" />
+
+        {/* Floating OS Console HUD Frame in Hero */}
+        <div style={{ position: 'absolute', top: '100px', left: '50px', right: '50px', zIndex: 1, pointerEvents: 'none' }} className="inquiry-grid-form">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            {/* Top Left: System info */}
+            <div className="hud-frame" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '10px', fontFamily: 'var(--mono)', color: 'rgba(255,255,255,0.4)', background: 'rgba(5, 5, 5, 0.45)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#50c878', display: 'inline-block', boxShadow: '0 0 8px #50c878' }}></span>
+              <span>SYS_KERNEL // ONLINE</span>
+              <span style={{ opacity: 0.3 }}>|</span>
+              <span>DB_SYNC: SQLite_LOCAL</span>
+            </div>
+
+            {/* Top Right: System Clock */}
+            <div className="hud-frame" style={{ padding: '8px 16px', fontSize: '10px', fontFamily: 'var(--mono)', color: 'rgba(255, 255, 255, 0.8)', background: 'rgba(5, 5, 5, 0.45)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <span>TIME // {timeStr}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-text" style={{ paddingBottom: '6vh', zIndex: 2 }}>
           <motion.h1
             className="hero-headline"
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.7 }}
           >
-            Build things that matter.<br />Ship them fast.
+            Build things that <span className="text-gradient-neon" style={{ fontWeight: 800 }}>matter</span>.<br />
+            Ship them <span className="text-gradient-neon-cyan" style={{ fontWeight: 800 }}>fast</span>.
           </motion.h1>
+
+          {/* Simulated HUD Typewriter prompt */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '28px' }}>
+            <div className="hud-frame" style={{ padding: '10px 24px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'rgba(255,255,255,0.7)', maxWidth: '600px', display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(5, 5, 5, 0.45)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ color: 'var(--accent)' }}>&gt;</span>
+              <span>{hudMessage}</span>
+              <span className="terminal-cursor"></span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -634,215 +840,254 @@ export default function Home() {
       {/* ── DARK ROUNDED CONTAINER ── */}
       <div className="dark-container">
 
-        {/* ── ABOUT ── */}
-        <motion.section
-          className="about"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: '-10%' }}
-          transition={{ duration: 0.6 }}
-        >
+        {/* ── BENTO GRID CONSOLE (ABOUT / SERVICES / PROCESS) ── */}
+        <section style={{ padding: '80px 60px 40px' }} id="about">
           <Reveal>
-            <span className="about-tag">ABOUT</span>
-          </Reveal>
-
-          <div className="about-text" style={{ overflow: 'hidden' }}>
-            <SplitText
-              text="Sarthak Mehta is a hyper-focused, full-stack engineer and AI builder who moves at startup speed from NIT Jalandhar."
-              staggerDelay={0.032}
-              delay={0.1}
-            />
-            <br />
-            <SplitText
-              text="He engineers geospatial intelligence pipelines, premium AI-powered systems, and products that feel as good as they perform."
-              staggerDelay={0.03}
-              delay={0.5}
-            />
-          </div>
-
-          <Reveal delay={0.9}>
-            <motion.a
-              href="https://github.com/sarthaxmehta"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="outline-btn"
-              whileHover={{ x: 6 }}
-              transition={{ duration: 0.2 }}
-            >
-              SEE THE WORK <span className="outline-btn-icon">↗</span>
-            </motion.a>
-          </Reveal>
-        </motion.section>
-
-        {/* ── SERVICES ── */}
-        <section className="services">
-          <Reveal>
-            <div className="section-header" style={{ padding: '0 60px', marginBottom: '0' }}>
+            <div className="section-header" style={{ padding: '0', marginBottom: '40px' }}>
               <span className="section-counter">[ 02 / 07 ]</span>
-              <span className="section-label">WHAT I BUILD</span>
+              <span className="section-label">OPERATOR // ARCHITECTURE</span>
             </div>
           </Reveal>
-          <div className="services-inner">
-            <div className="services-left">
+
+          <div className="bento-grid">
+            {/* Card 1: First Person Introduction (span 2) */}
+            <div className="bento-card bento-span-2 liquid-glass-panel" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '20px' }}>
+              <div className="specular-glare" />
               <div>
-                <Reveal>
-                  <h2 className="services-headline">
-                    I write, design and build for startups and enterprises.
-                  </h2>
-                </Reveal>
-                <Reveal delay={0.1}>
-                  <p className="services-body">
-                    Full-stack systems that make your users feel something. AI pipelines that extract value
-                    from raw data. Geospatial intelligence that turns satellite imagery into insight.
-                    Desktop apps that work offline without compromise.
-                  </p>
-                </Reveal>
+                <span className="about-tag" style={{ background: 'rgba(255, 76, 36, 0.12)', border: '1px solid rgba(255, 76, 36, 0.25)', color: '#ff4c24', marginBottom: '16px' }}>
+                  OPERATOR PROFILE // ACTIVE
+                </span>
+                <h2 style={{ fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em', marginTop: '12px', lineHeight: '1.2' }}>
+                  I'm Sarthak Mehta.
+                </h2>
+                <h3 style={{ fontSize: '18px', fontWeight: 400, color: 'rgba(255,255,255,0.6)', marginTop: '8px', fontFamily: 'var(--mono)' }}>
+                  Full-Stack Engineer &amp; AI Builder
+                </h3>
+                <p style={{ marginTop: '20px', fontSize: '15px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.7' }}>
+                  I build end-to-end geospatial intelligence pipelines, premium AI-powered operating systems, and local-first desktop apps. I'm currently studying Computer Science at **Dr. B.R. Ambedkar National Institute of Technology Jalandhar (NITJ)**.
+                </p>
+                <p style={{ marginTop: '12px', fontSize: '15px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.7' }}>
+                  I operate at startup speed, tackling the hardest technical problems first, and packing complex features into high-fidelity user interfaces.
+                </p>
               </div>
-              <Reveal delay={0.2}>
-                <motion.a
-                  href="mailto:sarthakm.cs.24@nitj.ac.in"
-                  className="outline-btn"
-                  whileHover={{ x: 6 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  LET&rsquo;S TALK <span className="outline-btn-icon">↗</span>
-                </motion.a>
-              </Reveal>
+              <div style={{ display: 'flex', gap: '16px', marginTop: 'auto' }}>
+                <a href="https://github.com/sarthaxmehta" target="_blank" rel="noopener noreferrer" className="glass-capsule capsule-glow-orange" style={{ padding: '10px 20px', fontSize: '12px', textDecoration: 'none' }}>
+                  View Github ↗
+                </a>
+                <a href="#contact" className="glass-capsule capsule-glow-cyan" style={{ padding: '10px 20px', fontSize: '12px', textDecoration: 'none' }}>
+                  Get In Touch ↗
+                </a>
+              </div>
             </div>
-            <div className="services-right">
-              <motion.ul
-                className="services-list"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-10%' }}
-                variants={staggerChildren}
-              >
-                {['Full-Stack Web', 'AI / ML Systems', 'Geospatial AI', 'Desktop Apps', 'Data Pipelines', 'UI/UX Design'].map(
-                  (s, i) => (
-                    <motion.li
+
+            {/* Card 2: Interactive Tech Stack Matrix (span 1) */}
+            <div className="bento-card liquid-glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="specular-glare" />
+              <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em' }}>
+                TECH_STACK // LOADED
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                {skills.map((s) => {
+                  // Determine glow colors for tags
+                  let colorClass = 'capsule-glow-orange';
+                  if (['PyTorch', 'TensorFlow', 'Google Earth Engine'].includes(s)) colorClass = 'capsule-glow-green';
+                  else if (['FastAPI', 'TypeScript', 'Electron'].includes(s)) colorClass = 'capsule-glow-cyan';
+                  else if (['React', 'Next.js'].includes(s)) colorClass = 'capsule-glow-orange';
+                  else colorClass = 'capsule-glow-purple';
+
+                  return (
+                    <span
                       key={s}
-                      className={`services-list-item${i > 3 ? ' dim' : ''}`}
-                      variants={fadeUp}
-                      whileHover={i <= 3 ? { x: 12, color: '#ffffff' } : {}}
-                      transition={{ duration: 0.25 }}
+                      className={`glass-capsule ${colorClass}`}
+                      style={{ padding: '6px 14px', fontSize: '11px', display: 'inline-flex', cursor: 'default' }}
                     >
                       {s}
-                    </motion.li>
-                  )
-                )}
-              </motion.ul>
+                    </span>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </section>
 
-        {/* ── HOW I WORK ── */}
-        <section className="how-work">
-          <Reveal>
-            <div className="section-header" style={{ padding: '0 60px', marginBottom: '0' }}>
-              <span className="section-counter">[ 03 / 07 ]</span>
-              <span className="section-label">HOW I WORK</span>
+            {/* Card 3: What I Build (span 1) */}
+            <div className="bento-card liquid-glass-panel" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div className="specular-glare" />
+              <div>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em' }}>
+                  SERVICES // SYSTEM_SCOPES
+                </span>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, marginTop: '16px', letterSpacing: '-0.01em' }}>
+                  Dynamic Development
+                </h3>
+                <p style={{ marginTop: '12px', fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
+                  I write clean code and build responsive, accessible layouts, robust FastAPI backends, semantic indexing engines, local-first Electron wrappers, and geospatial calculations.
+                </p>
+              </div>
             </div>
-          </Reveal>
-          <div className="how-work-items">
-            {howWork.map((item, i) => (
-              <Reveal key={item.num} delay={i * 0.12}>
-                <motion.div
-                  className="how-work-item"
-                  whileHover={{ backgroundColor: 'rgba(255,255,255,0.015)' }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="how-work-number">{item.num}</div>
-                  <SplitText
-                    text={item.title}
-                    className="how-work-title"
-                    staggerDelay={0.05}
-                  />
-                  <div className="how-work-divider" />
-                  <p className="how-work-desc">{item.desc}</p>
-                </motion.div>
-              </Reveal>
-            ))}
+
+            {/* Card 4: Operating Sprint Loop (span 2) */}
+            <div className="bento-card bento-span-2 liquid-glass-panel" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '20px' }}>
+              <div className="specular-glare" />
+              <div>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em' }}>
+                  WORK_PROCESS // TWO_WEEK_SPRINT_CYCLE
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginTop: '20px' }} className="inquiry-grid-form">
+                  <div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--accent)', fontWeight: 'bold' }}>01 / DISCOVERY</div>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '6px', lineHeight: '1.5' }}>
+                      Deep dive into technical parameters, databases, user needs, and architectural boundaries.
+                    </p>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: '#e8c84a', fontWeight: 'bold' }}>02 / BUILD</div>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '6px', lineHeight: '1.5' }}>
+                      Heads-down rapid iteration. Coding deterministic algorithms, structuring DB tables, designing high-fidelity glass UI elements.
+                    </p>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: '#50c878', fontWeight: 'bold' }}>03 / SHIP</div>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '6px', lineHeight: '1.5' }}>
+                      Publishing optimized builds to production. Verification audits, code handoffs, and operational refinement.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* ── SELECTED WORK ── */}
-        <section className="projects-section">
+        <section className="projects-section" id="work">
           <Reveal>
-            <div className="section-header" style={{ padding: '0 60px', marginBottom: '0' }}>
+            <div className="section-header" style={{ padding: '0 60px', marginBottom: '40px' }}>
               <span className="section-counter">[ 04 / 07 ]</span>
               <span className="section-label">SELECTED WORK</span>
             </div>
           </Reveal>
 
-          {/* Ghost title background with parallax */}
-          <div
-            style={{
-              position: 'relative',
-              background: 'var(--black)',
-              padding: '0',
-              overflow: 'hidden',
-              minHeight: '480px',
-            }}
-          >
-            <div className="stars-bg" style={{ position: 'absolute', inset: 0, minHeight: '480px', zIndex: 0 }} />
-            <Reveal>
-              <div
-                style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  padding: '80px 0 40px',
-                  textAlign: 'center',
-                }}
-              >
-                <div className="before-after-title">
-                  <span>SELECTED</span>
-                  <span>// WORK©</span>
-                </div>
-              </div>
-            </Reveal>
-          </div>
+          {/* Interactive Project Console */}
+          <div className="project-cards-area" style={{ padding: '0 60px 80px' }}>
+            <div className="project-console-grid">
 
-          <div className="project-cards-area">
-            <motion.div
-              className="project-cards-grid"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-5%' }}
-              variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-            >
-              {projects.map((p) => (
-                <motion.div
-                  key={p.num}
-                  className="project-card"
-                  variants={fadeUp}
-                  whileHover={{
-                    y: -8,
-                    borderColor: 'rgba(255,255,255,0.18)',
-                    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] },
-                  }}
-                >
-                  <div className="project-card-number">{p.num}</div>
-                  <h3 className="project-card-title">{p.title}</h3>
-                  <p className="project-card-desc">{p.detail}</p>
-                  <div className="project-card-tags">
-                    {p.tags.map((t) => (
-                      <span key={t} className="project-tag">{t}</span>
-                    ))}
+              {/* Left Column: Project Selector Cards */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {projectData.length === 0 ? (
+                  <div className="hud-frame" style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--mono)', fontSize: '12px' }}>
+                    CONNECTING PORTFOLIO DATABASE ENGINE...
                   </div>
-                  <motion.a
-                    href={p.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="project-card-link"
-                    aria-label={`View ${p.title} on GitHub`}
-                    whileHover={{ rotate: 15, scale: 1.15 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    ↗
-                  </motion.a>
-                </motion.div>
-              ))}
-            </motion.div>
+                ) : (
+                  projectData.map((p, idx) => {
+                    const isActive = activeProjectIndex === idx;
+                    // Deterministic glow theme color class based on title
+                    let activeClass = 'active-orange';
+                    if (p.title === 'ChiefOS') activeClass = 'active-orange';
+                    else if (p.title === 'UrbanNet') activeClass = 'active-green';
+                    else if (p.title === 'Vital Archive') activeClass = 'active-purple';
+                    else if (p.title === 'Zenvvy') activeClass = 'active-cyan';
+
+                    return (
+                      <div
+                        key={p.title}
+                        className={`console-cabinet-card ${isActive ? activeClass : ''}`}
+                        onClick={() => setActiveProjectIndex(idx)}
+                      >
+                        <div className="specular-glare" />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)' }}>
+                            {p.num || `[0${idx + 1}]`}
+                          </span>
+                          {isActive && (
+                            <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', background: 'rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '4px', color: 'var(--white)' }}>
+                              RUNNING_SESSION
+                            </span>
+                          )}
+                        </div>
+                        <h3 style={{ fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                          {p.title}
+                        </h3>
+                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '16px' }}>
+                          {p.detail}
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                          {p.tags.map((t: string) => (
+                            <span key={t} className="project-tag" style={{ fontSize: '9px', padding: '3px 8px' }}>{t}</span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Right Column: Dynamic Terminal System Details */}
+              {projectData.length > 0 && (
+                <div className="hud-frame" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '520px' }}>
+                  {/* Console Header */}
+                  <div className="hud-header">
+                    <div className="hud-dot-group">
+                      <span className="hud-dot red" />
+                      <span className="hud-dot yellow" />
+                      <span className="hud-dot green" />
+                    </div>
+                    <span>TERMINAL // {projectData[activeProjectIndex]?.title.toUpperCase()}_SYS</span>
+                    <span style={{ color: '#50c878' }}>● ONLINE</span>
+                  </div>
+
+                  {/* Terminal Log Console */}
+                  <div className="terminal-scroll-panel" style={{ flex: '1', background: '#050505', padding: '24px', overflowY: 'auto' }}>
+                    <div className="terminal-prompt" style={{ marginBottom: '8px' }}>load_tech_profile --target={projectData[activeProjectIndex]?.title.toLowerCase()}</div>
+                    <div style={{ margin: '8px 0 16px' }}>
+                      {(projectTechOverlays[projectData[activeProjectIndex]?.title] || { logs: [] }).logs.map((logLine, idx) => (
+                        <div key={idx} className="terminal-output" style={{ fontSize: '11px', opacity: 0.9, fontFamily: 'var(--mono)', marginBottom: '3px' }}>
+                          &gt; {logLine}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="rules-divider" style={{ margin: '16px 0' }} />
+
+                    {/* Architecture Details */}
+                    <div style={{ marginBottom: '18px' }}>
+                      <span style={{ color: '#e8c84a', fontWeight: 'bold', fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase' }}>[SYSTEM ARCHITECTURE]</span>
+                      <p style={{ marginTop: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
+                        {(projectTechOverlays[projectData[activeProjectIndex]?.title] || { architecture: '' }).architecture}
+                      </p>
+                    </div>
+
+                    {/* Key Contributions */}
+                    <div style={{ marginBottom: '18px' }}>
+                      <span style={{ color: '#5a8fc8', fontWeight: 'bold', fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase' }}>[KEY CONTRIBUTIONS]</span>
+                      <ul style={{ marginTop: '8px', paddingLeft: '16px', listStyleType: 'square', fontSize: '13px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.6' }}>
+                        {(projectTechOverlays[projectData[activeProjectIndex]?.title] || { contributions: [] }).contributions.map((cLine, idx) => (
+                          <li key={idx} style={{ marginBottom: '6px' }}>{cLine}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Engineering Challenge */}
+                    <div style={{ marginBottom: '18px' }}>
+                      <span style={{ color: '#e05a4e', fontWeight: 'bold', fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase' }}>[ENGINEERING CHALLENGE]</span>
+                      <p style={{ marginTop: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.6' }}>
+                        {(projectTechOverlays[projectData[activeProjectIndex]?.title] || { challenges: '' }).challenges}
+                      </p>
+                    </div>
+
+                    {/* Action buttons inside terminal */}
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '28px' }}>
+                      <a
+                        href={projectData[activeProjectIndex]?.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="glass-capsule capsule-glow-orange"
+                        style={{ padding: '8px 18px', fontSize: '11px', textTransform: 'uppercase', border: '1px solid rgba(255,255,255,0.08)' }}
+                      >
+                        Source Code ↗
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
@@ -959,24 +1204,205 @@ export default function Home() {
         </section>
 
         {/* ── CONTACT / FAQ ── */}
-        <section className="contact-section">
+        <section className="contact-section" id="contact">
           <div className="contact-inner">
             <Reveal>
               <div className="section-header" style={{ padding: '0', marginBottom: '48px' }}>
                 <span className="section-counter">[ CONTACT ]</span>
-                <span className="section-label">FAQ</span>
+                <span className="section-label">FAQ &amp; CONNECT</span>
               </div>
             </Reveal>
 
-            <SplitText
-              text="Feeling ambitious? Let's build something."
-              className="contact-headline"
-              staggerDelay={0.04}
-            />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '60px', maxWidth: '1200px', margin: '0 auto' }} className="inquiry-dual-layout">
 
-            <br />
-            <FaqSection />
+              {/* Left Column: FAQ Accordion */}
+              <div>
+                <div style={{ marginBottom: '32px' }}>
+                  <SplitText
+                    text="Let's connect and share ideas."
+                    className="contact-headline"
+                    staggerDelay={0.04}
+                  />
+                </div>
+                <FaqSection />
+              </div>
+
+              {/* Right Column: Premium Liquid Glass Connect Console */}
+              <div className="hud-frame liquid-glass-panel" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="specular-glare" />
+
+                {/* HUD form header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '16px', marginBottom: '8px' }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.05em' }}>
+                    SECURE_CONNECT_DB_ENTRY_NODE
+                  </span>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: '#50c878' }}>
+                    DB_SYNC: ACTIVE
+                  </span>
+                </div>
+
+                {inquiryStatus ? (
+                  /* Form Success State: Scrolling Terminal Outputs */
+                  <div style={{ background: '#050505', borderRadius: '12px', padding: '20px', fontFamily: 'var(--mono)', minHeight: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <span style={{ color: '#e8c84a' }}>sarthak@mehta-os:~$ submit_connection --payload=json</span>
+                      <span className="terminal-output">&gt; Resolving sqlite transaction client... OK</span>
+                      <span className="terminal-output">&gt; Parsing Zod validation parameters... OK</span>
+                      <span className="terminal-output">&gt; Executing DB insertion to table 'Inquiry'... OK</span>
+                      <span className="terminal-output">&gt; Connection logged successfully!</span>
+                      <div style={{ background: 'rgba(80, 200, 120, 0.08)', border: '1px dashed rgba(80, 200, 120, 0.3)', padding: '10px', margin: '8px 0', borderRadius: '6px', fontSize: '11px' }}>
+                        <div style={{ color: '#50c878', fontWeight: 'bold' }}>TRANSACTION SUCCESSFUL</div>
+                        <div style={{ color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>Connection ID: {inquiryStatus.inquiryId}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.6)' }}>Timestamp: {new Date().toISOString()}</div>
+                      </div>
+                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>&gt; Thank you, {inquiryData.name}. I will review your connection parameters (Reason: {inquiryData.budget}, Affiliation: {inquiryData.timeline}) and respond to you at {inquiryData.email} within 24 hours.</span>
+                    </div>
+                    <button
+                      className="glass-capsule capsule-glow-orange"
+                      onClick={() => {
+                        setInquiryStatus(null);
+                        setInquiryData({
+                          name: '',
+                          email: '',
+                          company: '',
+                          budget: 'Just saying hello 👋',
+                          timeline: 'Developer / Engineer',
+                          message: '',
+                        });
+                      }}
+                      style={{ alignSelf: 'flex-start', padding: '8px 20px', fontSize: '11px', marginTop: '16px' }}
+                    >
+                      Submit Another Message
+                    </button>
+                  </div>
+                ) : (
+                  /* Main Form State */
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!inquiryData.name || !inquiryData.email || !inquiryData.message) {
+                      alert('Please complete all required fields (Name, Email, and Message).');
+                      return;
+                    }
+                    setSubmittingInquiry(true);
+                    try {
+                      const res = await submitInquiry(inquiryData);
+                      if (res.success) {
+                        setInquiryStatus({
+                          success: true,
+                          inquiryId: res.inquiryId,
+                        });
+                      } else {
+                        alert(res.error || 'Failed to submit connection.');
+                      }
+                    } catch (err: any) {
+                      alert('An error occurred during submission.');
+                    } finally {
+                      setSubmittingInquiry(false);
+                    }
+                  }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div className="inquiry-grid-form">
+                      <div className="glass-input-container">
+                        <label className="glass-input-label">Your Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={inquiryData.name}
+                          onChange={(e) => setInquiryData({ ...inquiryData, name: e.target.value })}
+                          className="glass-input-field"
+                          placeholder="e.g. John Doe"
+                        />
+                      </div>
+                      <div className="glass-input-container">
+                        <label className="glass-input-label">Email Address *</label>
+                        <input
+                          type="email"
+                          required
+                          value={inquiryData.email}
+                          onChange={(e) => setInquiryData({ ...inquiryData, email: e.target.value })}
+                          className="glass-input-field"
+                          placeholder="e.g. john@email.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="glass-input-container">
+                      <label className="glass-input-label">Affiliated Organization / School (Optional)</label>
+                      <input
+                        type="text"
+                        value={inquiryData.company}
+                        onChange={(e) => setInquiryData({ ...inquiryData, company: e.target.value })}
+                        className="glass-input-field"
+                        placeholder="e.g. NIT Jalandhar"
+                      />
+                    </div>
+
+                    <div className="inquiry-grid-form">
+                      <div className="glass-input-container">
+                        <label className="glass-input-label">Reason for Connection</label>
+                        <div className="glass-select-wrapper">
+                          <select
+                            value={inquiryData.budget}
+                            onChange={(e) => setInquiryData({ ...inquiryData, budget: e.target.value })}
+                            className="glass-select-field"
+                          >
+                            <option value="Just saying hello 👋">Just saying hello 👋</option>
+                            <option value="Technical collaboration 🤝">Technical collaboration 🤝</option>
+                            <option value="NIT Jalandhar discussion 🎓">NIT Jalandhar discussion 🎓</option>
+                            <option value="General Q&A or chat 💻">General Q&A or chat 💻</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="glass-input-container">
+                        <label className="glass-input-label">Your Affiliation / Role</label>
+                        <div className="glass-select-wrapper">
+                          <select
+                            value={inquiryData.timeline}
+                            onChange={(e) => setInquiryData({ ...inquiryData, timeline: e.target.value })}
+                            className="glass-select-field"
+                          >
+                            <option value="Developer / Engineer">Developer / Engineer</option>
+                            <option value="Researcher / Student">Researcher / Student</option>
+                            <option value="Recruiter / Tech Manager">Recruiter / Tech Manager</option>
+                            <option value="Tech Enthusiast">Tech Enthusiast</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="glass-input-container">
+                      <label className="glass-input-label">Message Content *</label>
+                      <textarea
+                        required
+                        rows={4}
+                        value={inquiryData.message}
+                        onChange={(e) => setInquiryData({ ...inquiryData, message: e.target.value })}
+                        className="glass-input-field"
+                        style={{ resize: 'vertical' }}
+                        placeholder="What would you like to discuss? Project ideas, collaborations, or tech topics..."
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={submittingInquiry}
+                      className="glass-capsule capsule-glow-orange"
+                      style={{ marginTop: '8px', width: '100%' }}
+                    >
+                      {submittingInquiry ? 'SENDING CONNECTION RECORD...' : 'EXECUTE DB WRITE TRANSACTION ↗'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
           </div>
+
+          <style jsx global>{`
+            @media (max-width: 900px) {
+              .inquiry-dual-layout {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          `}</style>
         </section>
 
         {/* ── FOOTER ── */}
@@ -999,7 +1425,7 @@ export default function Home() {
           {/* Giant "honey" wordmark */}
           <Reveal delay={0.05}>
             <div className="footer-wordmark-wrap">
-              <div className="footer-wordmark">honey</div>
+              <div className="footer-wordmark">Sarthak Mehta</div>
             </div>
           </Reveal>
 

@@ -32,3 +32,41 @@ export async function submitInquiry(data: {
     return { success: false, error: error.message || 'An error occurred while saving your inquiry.' };
   }
 }
+
+export async function getInquiries() {
+  try {
+    const inquiries = await prisma.inquiry.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return { success: true, inquiries };
+  } catch (error: any) {
+    console.error('Error fetching inquiries:', error);
+    return { success: false, error: error.message || 'Failed to fetch inquiries.' };
+  }
+}
+
+export async function deleteInquiry(id: string) {
+  try {
+    await prisma.inquiry.delete({
+      where: { id },
+    });
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error deleting inquiry:', error);
+    return { success: false, error: error.message || 'Failed to delete inquiry.' };
+  }
+}
+
+export async function updateInquiryStatus(id: string, status: string) {
+  try {
+    const inquiry = await prisma.inquiry.update({
+      where: { id },
+      data: { status },
+    });
+    return { success: true, inquiry };
+  } catch (error: any) {
+    console.error('Error updating inquiry status:', error);
+    return { success: false, error: error.message || 'Failed to update status.' };
+  }
+}
+
