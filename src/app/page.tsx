@@ -4,7 +4,6 @@ import {
   useEffect,
   useRef,
   useState,
-  useCallback,
   ReactNode,
 } from 'react';
 import {
@@ -15,354 +14,223 @@ import {
   useMotionValue,
   useInView,
   AnimatePresence,
-  stagger,
-  animate,
 } from 'framer-motion';
-import Image from 'next/image';
 import Link from 'next/link';
 
-// Import Database Server Actions
 import { getProjects } from '../actions/project';
 import { submitInquiry } from '../actions/inquiry';
 
-/* ─────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════
    DATA
-───────────────────────────────────────────── */
+═══════════════════════════════════════════════════════════ */
 
 const skills = [
-  'Next.js', 'React', 'TypeScript', 'Python',
-  'FastAPI', 'PyTorch', 'TensorFlow', 'Prisma',
-  'Google Earth Engine', 'SQLite', 'C++', 'Electron',
+  'Next.js', 'React', 'TypeScript', 'Python', 'FastAPI',
+  'PyTorch', 'TensorFlow', 'Prisma', 'Google Earth Engine',
+  'SQLite', 'C++', 'Electron', 'Hugging Face', 'QGIS',
 ];
 
-const projects = [
+const staticProjects = [
   {
-    num: '[01]',
+    id: 'chiefos',
+    num: '01',
     title: 'ChiefOS',
-    detail:
-      'Built a premium AI Operating System with a multi-engine intelligence architecture (Intent, Scheduling, Risk, Memory Engines). Powered by Gemini 2.5 Flash for executive-level daily briefings.',
-    tags: ['Next.js', 'Gemini AI', 'Prisma', 'SQLite', 'TypeScript'],
+    desc: 'A premium AI Operating System acting as an executive Chief of Staff. Multi-engine intelligence architecture powered by Groq Llama 3.3 and Gemini 2.5 Flash.',
+    tags: ['Next.js', 'TypeScript', 'Gemini AI', 'Prisma', 'SQLite'],
     url: 'https://github.com/sarthaxmehta/ChiefOS',
+    architecture: 'Next.js 16 (App Router) + SQLite via Prisma ORM + Groq Llama 3.3 70B + Gemini 2.5 Flash / Gemma 4 26B',
+    contributions: [
+      'Designed multi-engine AI orchestrator — Intent, Scheduling, Risk, and Memory Engines working in concert',
+      'Built deterministic timezone offset algorithm resolving LLM UTC outputs to local user time without hallucination',
+      'Created high-capacity model fallback pipeline switching workloads seamlessly under rate limits',
+      'Implemented "Daily Briefing" using Gemini 2.5 generating proactive, executive-level strategy recommendations',
+    ],
+    challenge: 'Bridging unpredictable LLM completions with strict database transactions — solved by building Zod-based parser engines that validate all AI inputs synchronously before any execution occurs.',
   },
   {
-    num: '[02]',
+    id: 'urbannet',
+    num: '02',
     title: 'UrbanNet',
-    detail:
-      'End-to-end geospatial AI pipeline extracting building footprints from Sentinel-2 imagery. Random Forest at 93.7% accuracy + custom U-Net for pixel-level delineation.',
+    desc: 'End-to-end geospatial AI pipeline for automated building footprint extraction from Sentinel-2 satellite imagery. Random Forest at 93.7% accuracy + custom U-Net for pixel-level delineation.',
     tags: ['PyTorch', 'U-Net', 'Google Earth Engine', 'QGIS', 'NumPy'],
     url: 'https://github.com/sarthaxmehta/UrbanNet',
+    architecture: 'PyTorch (Custom U-Net ConvNet) + Google Earth Engine JavaScript API + QGIS + NumPy + Rasterio',
+    contributions: [
+      'Engineered cloud-based multispectral feature workflows computing NDVI, NDWI, NDBI, and GLCM texture',
+      'Trained Random Forest classifier achieving 93.7% overall accuracy with Kappa coefficient 0.91+',
+      'Built PyTorch U-Net segmentation pipeline for high-precision pixel-level boundary delineation',
+      'Integrated GIS spatial analysis converting AI raster predictions into usable vector shapefiles via QGIS',
+    ],
+    challenge: 'Transitioning massive geospatial raster data from cloud GEE to local PyTorch tensor arrays without geospatial metadata loss — solved via custom raster block mapping with Rasterio.',
   },
   {
-    num: '[03]',
+    id: 'vitalarchive',
+    num: '03',
     title: 'Vital Archive',
-    detail:
-      'Automated ingestion pipeline extracting structured data from lab PDFs via Gemini 2.5. Semantic normalizer for biomarker names + analytics dashboard with longitudinal trend analysis.',
+    desc: 'Medical informatics platform that extracts structured data from complex lab PDFs via Gemini 2.5, normalizes biomarker names semantically, and visualizes longitudinal health trends.',
     tags: ['FastAPI', 'Next.js', 'Gemini AI', 'Sentence Transformers', 'Recharts'],
     url: 'https://github.com/sarthaxmehta/Vital-Archive',
+    architecture: 'Python FastAPI + Next.js + SQLite via SQLAlchemy + Sentence Transformers (PyTorch) + Gemini 2.5 Flash Lite',
+    contributions: [
+      'Created automated PDF ingestion pipeline extracting text matrices via pdfplumber and structuring via Gemini 2.5',
+      'Developed semantic normalization pipeline using local Sentence Transformer vector embeddings',
+      'Built interactive React dashboard with organ system metrics and longitudinal biomarker trend charts',
+      'Integrated AI-generated plain-language summaries and context-aware chat for medical history queries',
+    ],
+    challenge: 'Resolving highly variable biomarker naming across different clinics ("Hgb", "H.G.B.", "Hemoglobin, Total") — solved by computing cosine similarities against a canonical medical dictionary using high-dimensional vector embeddings.',
   },
   {
-    num: '[04]',
+    id: 'zenvvy',
+    num: '04',
     title: 'Zenvvy',
-    detail:
-      'Full-stack POS, KDS, table management and inventory system packaged as a native desktop app via Electron. Runs 100% offline with local SQLite. Built for NIT Jalandhar.',
-    tags: ['Next.js', 'Electron', 'Prisma', 'SQLite', 'React'],
+    desc: 'Full-stack restaurant management system — POS, KDS, table management and inventory — packaged as a native desktop app via Electron. Runs 100% offline with local SQLite.',
+    tags: ['Next.js', 'Electron', 'Prisma', 'SQLite', 'React 19'],
     url: 'https://github.com/sarthaxmehta/Zenvvy',
+    architecture: 'Next.js App Router + React 19 + Electron Builder + Prisma ORM + SQLite (fully local)',
+    contributions: [
+      'Built POS system, kitchen display (KDS), and inventory tracker operating 100% offline',
+      'Integrated simulated passwordless authentication using React Context session persistence',
+      'Created complex build configurations packaging Next.js and Prisma inside macOS & Windows installers',
+      'Implemented real-time table management with visual occupancy and direct kitchen-to-floor order routing',
+    ],
+    challenge: 'Ensuring Next.js Server Actions and Prisma SQLite client paths resolve correctly in a packaged offline desktop container on both macOS and Windows — resolved via custom native module bundling and relative path overrides.',
   },
 ];
 
-const howWork = [
+const timelineItems = [
   {
-    num: '01',
-    title: 'One Problem',
-    desc: "I DON'T SOLVE PROBLEMS. I OVERWHELM THEM. I FOCUS ON THE BIGGEST WOLF PLAGUING YOUR PROJECT AND THROW ALL OF MY RESOURCES, EXPERTISE AND CREATIVE POWERS AT TAKING IT DOWN.",
+    date: '2024 — Present',
+    title: 'NIT Jalandhar',
+    subtitle: 'B.Tech Computer Science · GPA 8.65 / 10',
+    body: 'Studying at Dr. B.R. Ambedkar National Institute of Technology Jalandhar. Core Member of E-Cell and Q\'Mania Quantum Club. Relevant coursework: DSA, OOP, DBMS, Computer Networks, DAA, COA, Digital Circuits.',
   },
   {
-    num: '02',
-    title: 'Two Weeks',
-    desc: "LIKE DEV TEAMS, I WORK IN FOCUSED TWO-WEEK SPRINTS. ONCE I'VE HONED IN ON A PROBLEM, I SPEND TWO WEEKS SOLVING IT. THEN, I MOVE ON TO THE NEXT.",
-  },
-  {
-    num: '03',
-    title: 'Three People',
-    desc: 'EVERY PROJECT INVOLVES THREE KEY STAKEHOLDERS: YOU, THE PROBLEM, AND ME. I STAY EMBEDDED IN YOUR VISION, ACT AS A TECHNICAL PARTNER, AND MOVE AT STARTUP SPEED.',
+    date: 'Jan 2026 — Feb 2026',
+    title: 'India Space Academy',
+    subtitle: 'Remote Sensing & GIS Intern',
+    body: 'Built an end-to-end geospatial AI pipeline for automated building footprint extraction from Sentinel-2 satellite imagery in the Delhi NCR region using a custom PyTorch U-Net and Google Earth Engine Random Forest classifier.',
   },
 ];
 
-const sprintPhases = [
-  {
-    label: 'Phase 01: The Discovery',
-    number: '01. The Discovery',
-    desc: 'WE DIG DEEP INTO THE PROBLEM SPACE. I UNDERSTAND YOUR TECH STACK, YOUR USERS, AND YOUR VISION. NO CODE WRITTEN UNTIL THE PROBLEM IS FULLY UNDERSTOOD.',
-    color: '#c8a850',
-  },
-  {
-    label: 'Phase 02: The Silence',
-    number: '02. The Silence',
-    desc: 'HEADS DOWN. NOSE TO THE GRINDSTONE. THE ARCHITECTURE IS DESIGNED, THE CODE IS WRITTEN, AND THE SYSTEM TAKES SHAPE. RAPID ITERATION, ZERO NOISE.',
-    color: '#e8c84a',
-  },
-  {
-    label: 'Phase 03: The Exhibition',
-    number: '03. The Exhibition',
-    desc: 'I PRESENT THE WORK. YOU LIVE WITH IT. TEST IT. BREAK IT. EVERY GREAT SYSTEM WORTH ITS WEIGHT MAKES PIVOTS — AND I ALWAYS ANSWER THE DOOR.',
-    color: '#50c878',
-  },
-  {
-    label: 'Phase 04: The Alterations',
-    number: '04. The Alterations',
-    desc: 'BASED ON YOUR FEEDBACK, WE REFINE AND POLISH. THE FINAL PRODUCT IS SHIPPED WITH CONFIDENCE — DOCUMENTED, OPTIMIZED, AND READY FOR SCALE.',
-    color: '#5a8fc8',
-  },
-];
-
-const rules = [
-  { num: '001.', text: 'Ship things that matter.' },
-  { num: '002.', text: 'Have a point of view.' },
-  { num: '003.', text: 'Take no shortcuts.' },
-  { num: '004.', text: 'Be original.' },
-  { num: '005.', text: "If you can't be original, be better than original." },
-  { num: '006.', text: "Don't ship junk." },
-  { num: '007.', text: "Move at startup speed even if you aren't one." },
-  { num: '008.', text: 'Every pixel is a decision. Make it count.' },
-  { num: '009.', text: 'The best documentation is working code.' },
-  { num: '010.', text: 'Solve the hardest problem first.' },
+const principles = [
+  { num: '001', text: 'Ship things that matter.' },
+  { num: '002', text: 'Have a point of view.' },
+  { num: '003', text: 'Take no shortcuts.' },
+  { num: '004', text: 'Be original.' },
+  { num: '005', text: "If you can't be original, be better than original." },
+  { num: '006', text: "Don't ship junk." },
+  { num: '007', text: "Move at startup speed even if you aren't one." },
+  { num: '008', text: 'Every pixel is a decision. Make it count.' },
+  { num: '009', text: 'The best documentation is working code.' },
+  { num: '010', text: 'Solve the hardest problem first.' },
 ];
 
 const faqs = [
   {
-    q: 'What kind of projects do you take on?',
-    a: 'Full-stack web applications, AI/ML pipelines, geospatial intelligence systems, desktop apps, and anything that involves solving a genuinely hard engineering problem with a clean, premium product.',
+    q: 'What kind of projects do you build?',
+    a: 'Full-stack web applications, AI/ML pipelines, geospatial intelligence systems, and native desktop apps. I gravitate toward projects that involve genuinely hard engineering problems and result in a clean, high-quality product.',
   },
   {
     q: 'What technologies do you specialize in?',
     a: "Next.js, React, TypeScript, Python, FastAPI, PyTorch, Prisma, and the Google AI ecosystem. I'm also deeply experienced in geospatial tooling — Google Earth Engine, QGIS, and satellite imagery processing.",
   },
   {
-    q: 'Are you available for internships or full-time roles?',
-    a: "Yes. I'm currently a 2nd-year student at NIT Jalandhar (B.Tech, 2024–2028) and actively seeking internships in software engineering, AI/ML, and product development.",
+    q: 'Are you open to internships?',
+    a: "Yes. I'm a 2nd-year student at NIT Jalandhar (B.Tech CS, 2024–2028) and actively exploring internship opportunities in software engineering and AI/ML.",
   },
   {
     q: "What's the fastest way to reach you?",
-    a: "Drop me a message at sarthakm.cs.24@nitj.ac.in — I respond fast. You can also connect on LinkedIn or check out my GitHub to see the work first.",
-  },
-  {
-    q: 'Do you work on AI/ML projects specifically?',
-    a: "Absolutely. AI is at the core of most of my recent work — from LLM-powered OS systems to deep learning segmentation models and semantic NLP pipelines. If there's an AI angle, I'm interested.",
+    a: "Email at sarthakm.cs.24@nitj.ac.in — I respond fast. You can also connect on LinkedIn or explore my GitHub to see what I'm building.",
   },
 ];
 
-/* ─────────────────────────────────────────────
-   PROJECT DETAILED SCHEMAS & SIMULATOR LOGS
-───────────────────────────────────────────── */
-
-const projectTechOverlays: Record<string, {
-  architecture: string;
-  contributions: string[];
-  challenges: string;
-  logs: string[];
-}> = {
-  'ChiefOS': {
-    architecture: 'Next.js 16 (App Router) + SQLite + Prisma ORM + Groq Llama 3.3 + Gemini 2.5 Flash / Gemma 4.',
-    contributions: [
-      'Designed multi-engine AI scheduler orchestrator (Intent, Scheduling, Risk, Memory Engines).',
-      'Built deterministic timezone offsets algorithm resolving LLM UTC outputs to local user time.',
-      'Created high-capacity fallback pipeline switching query workloads seamlessly under rate limits.'
-    ],
-    challenges: 'Bridging the gap between unpredictable model completions and strict database transactions. Resolved by building Zod-based parser engines that validate LLM inputs synchronously before execution.',
-    logs: [
-      'INITIALIZING CHIEF_OS ORCHESTRATION LAYER...',
-      'CONNECTING SQLite LOCAL STORAGE: dev.db... OK',
-      'INTENT_ENGINE: LOADING SCHEMA RULES... OK',
-      'SCHEDULER: MAPPING FOCUS BUFFERS... OK',
-      'SYSTEM STATUS: ONLINE // CHIEF_ENGINE ENGAGED'
-    ]
-  },
-  'UrbanNet': {
-    architecture: 'PyTorch (Custom U-Net ConvNet) + Google Earth Engine API + QGIS + NumPy + Rasterio.',
-    contributions: [
-      'Engineered cloud-based multispectral composite feature engineering workflows (NDVI, NDWI, NDBI, GLCM).',
-      'Trained Random Forest ensemble baseline achieving 93.7% accuracy (Kappa 0.91+).',
-      'Built PyTorch semantic segmentation pipeline delineating high-resolution structural boundaries.'
-    ],
-    challenges: 'Data pipe transition from cloud GEE raster blocks down to local PyTorch tensor arrays without geo-spatial metadata loss. Solved by custom raster block mapping using python Rasterio.',
-    logs: [
-      'COPERNICUS/S2_SR COMPOSITING Delhi_NCR... OK',
-      'COMPUTING GLCM SPATIAL TEXTURES... DONE',
-      'RUNNING RANDOM FOREST ENSEMBLE... ACCURACY: 93.7%',
-      'PYTORCH_UNET: PROCESSING 897 IMAGERY PATCHES...',
-      'VECTORIZING IN QGIS: SHAPEFILE GENERATED.'
-    ]
-  },
-  'Vital Archive': {
-    architecture: 'Python (FastAPI) + Next.js + SQLite + SQLAlchemy + Sentence Transformers + Gemini AI.',
-    contributions: [
-      'Created automated medical lab PDF parser extracting matrices via pdfplumber and Gemini extraction.',
-      'Developed semantic normalization pipeline running local Sentence Transformers vector embeddings.',
-      'Built interactive React charts tracing historical biomarker trends over time.'
-    ],
-    challenges: 'Resolving variation in biomarker naming (e.g. "Hgb", "Hemoglobin", "HGB total") across different clinics. Solved by mapping test names into high-dimensional vector spaces and computing cosine similarities against canonical lists.',
-    logs: [
-      'STARTING FASTAPI REST SERVER... PORT 8000 OK',
-      'PDFPLUMBER: PARSING UPLOADED DOCUMENT MATRIX...',
-      'EXTRACTING STRUCTURED SCHEMAS VIA GEMINI LITE... DONE',
-      'SEMANTIC SEARCH: normalizer models loaded... OK',
-      'NORMALIZING DISPARATE TEST NAMES against canonical dict...'
-    ]
-  },
-  'Zenvvy': {
-    architecture: 'Next.js App Router + React 19 + Electron Container + Prisma ORM + SQLite.',
-    contributions: [
-      'Built POS, kitchen display system (KDS), and inventory tracker running 100% offline.',
-      'Integrated simulated, passwordless authentication using React session persistence.',
-      'Created bundle configurations for packaging database runtimes inside macOS & Windows installers.'
-    ],
-    challenges: 'Ensuring Next.js Server Actions and Prisma SQLite client paths resolve correctly in a packaged offline desktop container on both macOS and Windows. Resolved via custom native node module bundling and relative path overrides.',
-    logs: [
-      'BOOTING ELECTRON SHELL... WINDOW CREATED',
-      'SPAWNING OFFLINE NEXTJS CORE PROTOCOL...',
-      'RESOLVING LOCAL SQLite PATH IN PRODUCTION... OK',
-      'SIMULATION_CONTEXT: LOADING STUDENT SESSION... SUCCESS',
-      'KITCHEN DISPLAY ACTIVE // TABLE CHANNELS VERIFIED'
-    ]
-  },
-  'AgriMarket Profit Optimizer': {
-    architecture: 'Python + FastAPI + Next.js + Geopy API + Pandas.',
-    contributions: [
-      'Created logic engine processing 325 agricultural commodities with distance mapping.',
-      'Integrated Geopy to dynamically compute transport costs and determine net profit margins.'
-    ],
-    challenges: 'Real-time computation of geographical distance and logistics deductions across large agricultural datasets. Optimized using caching layers.',
-    logs: [
-      'PARSING COMMODITY DATASET... 325 ITEMS LOGGED',
-      'GEOPY: CONNECTING NOMINATIM GEOLOCATOR...',
-      'CALCULATING TRANSPORTATION LOGISTICS COSTS...',
-      'MAP REDUCE NET PROFIT OPTIMIZATION... COMPLETE'
-    ]
-  }
-};
-
-/* ─────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════
    ANIMATION VARIANTS
-───────────────────────────────────────────── */
+═══════════════════════════════════════════════════════════ */
 
-const fadeUp: any = {
-  hidden: { opacity: 0, y: 48 },
+const fadeUp = {
+  hidden: { opacity: 0, y: 32 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] },
   },
 };
 
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.7, ease: 'easeOut' } },
-};
-
 const staggerChildren = {
-  visible: { transition: { staggerChildren: 0.12 } },
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
 };
 
-const staggerChildrenFast = {
-  visible: { transition: { staggerChildren: 0.06 } },
-};
+/* ═══════════════════════════════════════════════════════════
+   UTILITY COMPONENTS
+═══════════════════════════════════════════════════════════ */
 
-/* ─────────────────────────────────────────────
-   CUSTOM CURSOR
-───────────────────────────────────────────── */
+// ── Scroll Progress Bar ────────────────────────────────────
+function ScrollProgressBar() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 400, damping: 35 });
+  return <motion.div className="scroll-progress" style={{ scaleX }} />;
+}
 
+// ── Custom Cursor ──────────────────────────────────────────
 function CustomCursor() {
-  const cursorX = useMotionValue(-100);
-  const cursorY = useMotionValue(-100);
+  const cursorX = useMotionValue(-200);
+  const cursorY = useMotionValue(-200);
 
-  const springX = useSpring(cursorX, { stiffness: 350, damping: 25 });
-  const springY = useSpring(cursorY, { stiffness: 350, damping: 25 });
+  const ringX = useSpring(cursorX, { stiffness: 420, damping: 26 });
+  const ringY = useSpring(cursorY, { stiffness: 420, damping: 26 });
+  const dotX  = useSpring(cursorX, { stiffness: 900, damping: 32 });
+  const dotY  = useSpring(cursorY, { stiffness: 900, damping: 32 });
 
-  const dotX = useSpring(cursorX, { stiffness: 900, damping: 30 });
-  const dotY = useSpring(cursorY, { stiffness: 900, damping: 30 });
-
-  const [isPointer, setIsPointer] = useState(false);
+  const [hover, setHover] = useState(false);
 
   useEffect(() => {
-    const move = (e: MouseEvent) => {
+    const onMove = (e: MouseEvent) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      setHover(!!el?.closest('a, button, [data-hover], input, textarea, select'));
     };
-    const checkPointer = () => {
-      const el = document.elementFromPoint(cursorX.get(), cursorY.get());
-      setIsPointer(
-        !!el && (
-          getComputedStyle(el).cursor === 'pointer' ||
-          el.closest('a, button, [data-cursor-pointer], .console-cabinet-card, select, input, textarea') !== null
-        )
-      );
-    };
-    window.addEventListener('mousemove', move);
-    window.addEventListener('mousemove', checkPointer);
-    return () => {
-      window.removeEventListener('mousemove', move);
-      window.removeEventListener('mousemove', checkPointer);
-    };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
   }, [cursorX, cursorY]);
 
   return (
     <>
-      {/* outer glowing target ring */}
       <motion.div
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          x: springX,
-          y: springY,
-          translateX: '-50%',
-          translateY: '-50%',
-          width: isPointer ? 44 : 28,
-          height: isPointer ? 44 : 28,
+          position: 'fixed', top: 0, left: 0,
+          x: ringX, y: ringY,
+          translateX: '-50%', translateY: '-50%',
           borderRadius: '50%',
           border: '1.5px solid rgba(255, 76, 36, 0.65)',
-          pointerEvents: 'none',
-          zIndex: 9999,
-          boxShadow: isPointer ? '0 0 15px rgba(255, 76, 36, 0.4)' : 'none',
+          pointerEvents: 'none', zIndex: 9999,
         }}
         animate={{
-          scale: isPointer ? 1.25 : 1,
-          borderColor: isPointer ? 'rgba(36, 219, 255, 0.8)' : 'rgba(255, 76, 36, 0.65)',
-          boxShadow: isPointer ? '0 0 15px rgba(36, 219, 255, 0.4)' : 'none',
+          width:  hover ? 46 : 22,
+          height: hover ? 46 : 22,
+          borderColor: hover
+            ? 'rgba(255, 76, 36, 0.85)'
+            : 'rgba(255, 76, 36, 0.55)',
         }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       />
-      {/* inner glow dot */}
       <motion.div
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          x: dotX,
-          y: dotY,
-          translateX: '-50%',
-          translateY: '-50%',
-          width: 5,
-          height: 5,
-          borderRadius: '50%',
-          backgroundColor: '#ff4c24',
-          pointerEvents: 'none',
-          zIndex: 9999,
-          boxShadow: '0 0 8px #ff4c24',
-        }}
-        animate={{
-          backgroundColor: isPointer ? '#24dbff' : '#ff4c24',
-          boxShadow: isPointer ? '0 0 8px #24dbff' : '0 0 8px #ff4c24',
+          position: 'fixed', top: 0, left: 0,
+          x: dotX, y: dotY,
+          translateX: '-50%', translateY: '-50%',
+          width: 4, height: 4, borderRadius: '50%',
+          background: '#FF4C24',
+          pointerEvents: 'none', zIndex: 9999,
         }}
       />
     </>
   );
 }
 
-/* ─────────────────────────────────────────────
-   SCROLL REVEAL WRAPPER
-───────────────────────────────────────────── */
-
+// ── Scroll Reveal ──────────────────────────────────────────
 function Reveal({
   children,
   delay = 0,
@@ -373,7 +241,7 @@ function Reveal({
   className?: string;
 }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-10% 0px' });
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
 
   return (
     <motion.div
@@ -382,11 +250,10 @@ function Reveal({
       initial="hidden"
       animate={inView ? 'visible' : 'hidden'}
       variants={{
-        hidden: { opacity: 0, y: 40 },
+        hidden: { opacity: 0, y: 36 },
         visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1], delay },
+          opacity: 1, y: 0,
+          transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1], delay },
         },
       }}
     >
@@ -395,61 +262,29 @@ function Reveal({
   );
 }
 
-/* ─────────────────────────────────────────────
-   WORD-BY-WORD TEXT REVEAL
-───────────────────────────────────────────── */
-
-function SplitText({
+// ── Hero Name Line (clip-reveal) ───────────────────────────
+function HeroNameLine({
   text,
-  className,
-  wordClassName,
-  delay = 0,
-  staggerDelay = 0.035,
+  delay,
 }: {
   text: string;
-  className?: string;
-  wordClassName?: string;
-  delay?: number;
-  staggerDelay?: number;
+  delay: number;
 }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
-  const words = text.split(' ');
-
   return (
-    <span ref={ref} className={className} style={{ display: 'block' }}>
-      {words.map((word, i) => (
-        <motion.span
-          key={i}
-          style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'bottom' }}
-        >
-          <motion.span
-            style={{ display: 'inline-block' }}
-            initial={{ y: '105%', opacity: 0 }}
-            animate={
-              inView
-                ? { y: 0, opacity: 1 }
-                : { y: '105%', opacity: 0 }
-            }
-            transition={{
-              duration: 0.75,
-              ease: [0.16, 1, 0.3, 1],
-              delay: delay + i * staggerDelay,
-            }}
-          >
-            {word}
-            {i < words.length - 1 ? '\u00a0' : ''}
-          </motion.span>
-        </motion.span>
-      ))}
+    <span className="hero-name-line">
+      <motion.span
+        className="hero-name-inner"
+        initial={{ y: '105%' }}
+        animate={{ y: 0 }}
+        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay }}
+      >
+        {text}
+      </motion.span>
     </span>
   );
 }
 
-/* ─────────────────────────────────────────────
-   MARQUEE
-───────────────────────────────────────────── */
-
+// ── Infinite Marquee ───────────────────────────────────────
 function Marquee({
   children,
   speed = 40,
@@ -472,11 +307,7 @@ function Marquee({
         ref={ref}
         style={{ display: 'inline-flex' }}
         animate={{ x: reverse ? [0, width] : [0, -width] }}
-        transition={{
-          repeat: Infinity,
-          ease: 'linear',
-          duration: width / speed,
-        }}
+        transition={{ repeat: Infinity, ease: 'linear', duration: width / speed }}
       >
         {children}
         {children}
@@ -485,163 +316,201 @@ function Marquee({
   );
 }
 
-/* ─────────────────────────────────────────────
-   SPRINT SECTION
-───────────────────────────────────────────── */
+// ── Animated Stat Counter ──────────────────────────────────
+function StatCounter({
+  target,
+  decimals = 0,
+  suffix = '',
+  prefix = '',
+}: {
+  target: number;
+  decimals?: number;
+  suffix?: string;
+  prefix?: string;
+}) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-10%' });
 
-function SprintSection() {
-  const [active, setActive] = useState(0);
-  const phase = sprintPhases[active];
+  useEffect(() => {
+    if (!inView) return;
+    let startTime: number;
+    const duration = 1800;
+
+    const step = (ts: number) => {
+      if (!startTime) startTime = ts;
+      const progress = Math.min((ts - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 4);
+      setCount(parseFloat((eased * target).toFixed(decimals)));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [inView, target, decimals]);
 
   return (
-    <section style={{ paddingBottom: '100px' }}>
-      <Reveal>
-        <div
-          className="section-header"
-          style={{ padding: '20px 60px 0', marginBottom: '0' }}
-        >
-          <span className="section-counter">[ 06 / 07 ]</span>
-          <span className="section-label">HOW I SPRINT</span>
-        </div>
-      </Reveal>
-      <div className="sprint-inner">
-        <div className="sprint-left">
-          {sprintPhases.map((p, i) => (
-            <motion.div
-              key={i}
-              className={`sprint-phase-item${active === i ? ' active' : ''}`}
-              onClick={() => setActive(i)}
-              whileHover={{ x: 4 }}
-              transition={{ duration: 0.2 }}
-            >
-              <motion.div
-                className="sprint-phase-dot"
-                animate={{ background: active === i ? p.color : '#2a2a2a' }}
-                transition={{ duration: 0.4 }}
-              />
-              <span className="sprint-phase-label">{p.label}</span>
-            </motion.div>
-          ))}
-        </div>
-        <div className="sprint-right">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={active}
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div className="sprint-phase-number">{phase.number}</div>
-              <div className="sprint-phase-desc-box">
-                <p className="sprint-phase-desc">{phase.desc}</p>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-    </section>
+    <span ref={ref}>
+      {prefix}{count.toFixed(decimals)}{suffix}
+    </span>
   );
 }
 
-/* ─────────────────────────────────────────────
-   FAQ
-───────────────────────────────────────────── */
+// ── Project Modal ──────────────────────────────────────────
+function ProjectModal({
+  project,
+  onClose,
+}: {
+  project: typeof staticProjects[0] | null;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    if (project) {
+      window.addEventListener('keydown', onKey);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [project, onClose]);
 
+  return (
+    <AnimatePresence>
+      {project && (
+        <motion.div
+          className="modal-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.28 }}
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        >
+          <motion.div
+            className="modal-panel"
+            initial={{ opacity: 0, y: 48, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.97 }}
+            transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {/* Header */}
+            <div className="modal-header">
+              <div>
+                <div className="modal-num">Project {project.num}</div>
+                <div className="modal-title">{project.title}</div>
+              </div>
+              <button className="modal-close" onClick={onClose} data-hover="true">
+                ×
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="modal-body">
+              {/* Architecture */}
+              <div>
+                <div className="modal-section-label">Stack & Architecture</div>
+                <p className="modal-text">{project.architecture}</p>
+              </div>
+
+              {/* Key Contributions */}
+              <div>
+                <div className="modal-section-label">What I Built</div>
+                <ul className="modal-list">
+                  {project.contributions.map((c, i) => (
+                    <li key={i}>{c}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Challenge */}
+              <div>
+                <div className="modal-section-label">Biggest Engineering Challenge</div>
+                <p className="modal-text">{project.challenge}</p>
+              </div>
+
+              {/* Tags */}
+              <div>
+                <div className="modal-section-label">Technologies</div>
+                <div className="modal-tags-wrap">
+                  {project.tags.map((t) => (
+                    <span key={t} className="modal-tag">{t}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer actions */}
+              <div className="modal-footer">
+                <a
+                  href={project.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary"
+                  style={{ fontSize: '13px', padding: '11px 26px' }}
+                  data-hover="true"
+                >
+                  View on GitHub ↗
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ── FAQ Accordion ──────────────────────────────────────────
 function FaqSection() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
     <div className="faq-list">
       {faqs.map((item, i) => (
-        <Reveal key={i} delay={i * 0.05}>
-          <div className={`faq-item${open === i ? ' open' : ''}`}>
-            <div
-              className="faq-question"
-              onClick={() => setOpen(open === i ? null : i)}
+        <div key={i} className={`faq-item${open === i ? ' open' : ''}`}>
+          <div
+            className="faq-question"
+            onClick={() => setOpen(open === i ? null : i)}
+            data-hover="true"
+            style={{ cursor: 'default' }}
+          >
+            <span>{item.q}</span>
+            <motion.span
+              className="faq-toggle"
+              animate={{ rotate: open === i ? 45 : 0 }}
+              transition={{ duration: 0.28 }}
             >
-              <span>{item.q}</span>
-              <motion.span
-                className="faq-toggle"
-                animate={{ rotate: open === i ? 45 : 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                +
-              </motion.span>
-            </div>
-            <AnimatePresence>
-              {open === i && (
-                <motion.div
-                  className="faq-answer"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ overflow: 'hidden' }}
-                >
-                  <div style={{ paddingTop: '16px' }}>{item.a}</div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+              +
+            </motion.span>
           </div>
-        </Reveal>
+          <AnimatePresence>
+            {open === i && (
+              <motion.div
+                className="faq-answer"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+                style={{ overflow: 'hidden' }}
+              >
+                {item.a}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       ))}
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   HERO PARALLAX HOOK
-───────────────────────────────────────────── */
-
-function HeroImage() {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start start', 'end start'],
-  });
-  const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
-  return (
-    <motion.div
-      ref={ref}
-      className="hero-image-container"
-      style={{ y, opacity }}
-    >
-      <div className="hero-image-backdrop" />
-      <motion.div
-        initial={{ scale: 0.85, opacity: 0, y: 40 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-        style={{ width: '100%', height: '100%', position: 'relative' }}
-      >
-        <Image
-          src="/hero-visual.png"
-          alt="3D honeycomb sculpture"
-          width={500}
-          height={500}
-          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'bottom' }}
-          priority
-        />
-      </motion.div>
-    </motion.div>
-  );
-}
-
-/* ─────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════
    MAIN PAGE
-───────────────────────────────────────────── */
+═══════════════════════════════════════════════════════════ */
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
-  const [projectData, setProjectData] = useState<any[]>([]);
-  const [activeProjectIndex, setActiveProjectIndex] = useState(0);
-  const [timeStr, setTimeStr] = useState('19:40:30');
-  const [mousePos, setMousePos] = useState({ x: -200, y: -200 });
-  
-  // Inquiry form states
-  const [inquiryData, setInquiryData] = useState({
+  const [projectData, setProjectData] = useState(staticProjects);
+  const [activeProject, setActiveProject] = useState<typeof staticProjects[0] | null>(null);
+
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     company: '',
@@ -649,813 +518,667 @@ export default function Home() {
     timeline: 'Developer / Engineer',
     message: '',
   });
-  const [submittingInquiry, setSubmittingInquiry] = useState(false);
-  const [inquiryStatus, setInquiryStatus] = useState<{
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<{
     success?: boolean;
-    inquiryId?: string;
+    id?: string;
   } | null>(null);
-
-  // System status animations for terminal HUD
-  const [hudMessage, setHudMessage] = useState('INTENT_AGENT: STANDBY');
 
   useEffect(() => {
     setMounted(true);
-    // Hide default cursor
     document.body.style.cursor = 'none';
 
-    // Fetch dynamic project list
-    const fetchProj = async () => {
+    // Fetch dynamic projects
+    const fetchProjects = async () => {
       try {
         const res = await getProjects();
-        if (res.success && res.projects) {
+        if (res.success && res.projects && res.projects.length > 0) {
           const mapped = res.projects.map((p: any, i: number) => ({
-            num: `[0${i + 1}]`,
+            id: p.id || p.title.toLowerCase().replace(/\s/g, '-'),
+            num: String(i + 1).padStart(2, '0'),
             title: p.title,
-            detail: p.description,
-            tags: p.tags.split(','),
+            desc: p.description,
+            tags: typeof p.tags === 'string' ? p.tags.split(',').map((t: string) => t.trim()) : p.tags,
             url: p.githubUrl || p.projectUrl || 'https://github.com/sarthaxmehta',
+            architecture: '',
+            contributions: [],
+            challenge: '',
           }));
-          setProjectData(mapped);
-        } else {
-          setProjectData(projects);
+          // Merge with detailed static data
+          const merged = mapped.map((mp: any) => {
+            const staticMatch = staticProjects.find(
+              sp => sp.title.toLowerCase() === mp.title.toLowerCase()
+            );
+            return staticMatch ? { ...mp, ...staticMatch } : mp;
+          });
+          setProjectData(merged);
         }
-      } catch (e) {
-        setProjectData(projects);
+      } catch {
+        // Silently use static data
       }
     };
-    fetchProj();
+    fetchProjects();
 
-    // System clock timer
-    const timer = setInterval(() => {
-      const now = new Date();
-      setTimeStr(now.toLocaleTimeString('en-US', { hour12: false }));
-    }, 1000);
-
-    // Mouse movement tracker
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-
-    // Dynamic HUD terminal logger messages
-    const hudMessages = [
-      'SYS_AGENTS: POLLING CHIEF_OS PROCESSES... [OK]',
-      'GEOSPATIAL: COMPUTING SENTINEL-2 NDVI CHANNELS... [OK]',
-      'VITAL_ARCHIVE: RUNNING VECTOR SEMANTIC MAPPER... [OK]',
-      'INTENT_AGENT: READY FOR USER INQUIRY...',
-      'SYSTEM STATUS: ONLINE // MEHTA_OS ACTIVE'
-    ];
-    let msgIdx = 0;
-    const hudInterval = setInterval(() => {
-      setHudMessage(hudMessages[msgIdx]);
-      msgIdx = (msgIdx + 1) % hudMessages.length;
-    }, 4500);
-
-    return () => {
-      document.body.style.cursor = '';
-      clearInterval(timer);
-      clearInterval(hudInterval);
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
+    return () => { document.body.style.cursor = ''; };
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.message) {
+      alert('Please complete all required fields.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const res = await submitInquiry(formData);
+      if (res.success) {
+        setSubmitStatus({ success: true, id: res.inquiryId });
+      } else {
+        alert(res.error || 'Something went wrong. Try again.');
+      }
+    } catch {
+      alert('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <>
-      {/* BACKGROUND GRAPHIC HUD CONSOLE */}
-      <div className="console-grid-bg" />
-      <div className="ambient-glow-orb" style={{ top: '10%', left: '5%', background: 'var(--glow-orange)' }} />
-      <div className="ambient-glow-orb" style={{ top: '50%', right: '5%', background: 'var(--glow-purple)' }} />
-
-      {/* INTERACTIVE MOUSE SPOTLIGHT OVERLAY */}
-      {mounted && (
-        <div 
-          className="mouse-spotlight" 
-          style={{ 
-            left: mousePos.x, 
-            top: mousePos.y 
-          }} 
-        />
-      )}
-
-      {/* CUSTOM CURSOR */}
+      {/* ── GLOBAL OVERLAYS ── */}
+      <ScrollProgressBar />
       {mounted && <CustomCursor />}
 
-      {/* FLOATING CAPSULE NAVIGATION (DYNAMIC ISLAND) */}
+      {/* ── NAVIGATION ── */}
       <motion.nav
-        className="nav-capsule"
-        initial={{ opacity: 0, y: -20, x: '-50%' }}
-        animate={{ opacity: 1, y: 0, x: '-50%' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
+        className="nav"
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
       >
-        <Link href="/" className="nav-capsule-brand">
-          <span>sarthak</span>
-          <span className="nav-capsule-dot" />
-          <span className="nav-capsule-year">2026</span>
-        </Link>
-        <div className="nav-capsule-links">
-          <a href="#about" className="nav-capsule-link">About</a>
-          <a href="#work" className="nav-capsule-link">Work</a>
-          <a href="#contact" className="nav-capsule-link">Connect</a>
-          <Link href="/manager" className="nav-capsule-link admin">Console</Link>
+        <Link href="/" className="nav-brand">sarthak mehta</Link>
+        <div className="nav-links">
+          <a href="#about"    className="nav-link">About</a>
+          <a href="#work"     className="nav-link">Work</a>
+          <a href="#timeline" className="nav-link">Experience</a>
+          <a href="#contact"  className="nav-link">Connect</a>
         </div>
-        <a href="#contact" className="nav-capsule-cta">
-          CONNECT
-        </a>
+        <a href="#contact" className="nav-cta" data-hover="true">Say hello ↗</a>
       </motion.nav>
 
-      {/* ── HERO ── */}
-      <section className="hero" style={{ height: '100vh', minHeight: '750px', display: 'flex', alignItems: 'center', position: 'relative' }}>
-        <HeroImage />
-        
-        {/* HUD Frame Corner Sight Crosshairs */}
-        <div className="hud-corner-crosshair top-left" />
-        <div className="hud-corner-crosshair top-right" />
-        <div className="hud-corner-crosshair bottom-left" />
-        <div className="hud-corner-crosshair bottom-right" />
+      {/* ═══════════════════════════════════════════════════
+          HERO
+      ═════════════════════════════════════════════════════ */}
+      <section className="hero">
+        {/* Atmospheric background */}
+        <div className="hero-atmosphere" />
+        <div className="hero-grain" />
 
-        {/* Floating OS Console HUD Frame in Hero */}
-        <div style={{ position: 'absolute', top: '100px', left: '50px', right: '50px', zIndex: 1, pointerEvents: 'none' }} className="inquiry-grid-form">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            {/* Top Left: System info */}
-            <div className="hud-frame" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '10px', fontFamily: 'var(--mono)', color: 'rgba(255,255,255,0.4)', background: 'rgba(5, 5, 5, 0.45)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#50c878', display: 'inline-block', boxShadow: '0 0 8px #50c878' }}></span>
-              <span>SYS_KERNEL // ONLINE</span>
-              <span style={{ opacity: 0.3 }}>|</span>
-              <span>DB_SYNC: SQLite_LOCAL</span>
-            </div>
-
-            {/* Top Right: System Clock */}
-            <div className="hud-frame" style={{ padding: '8px 16px', fontSize: '10px', fontFamily: 'var(--mono)', color: 'rgba(255, 255, 255, 0.8)', background: 'rgba(5, 5, 5, 0.45)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span>TIME // {timeStr}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="hero-text" style={{ paddingBottom: '6vh', zIndex: 2 }}>
-          <motion.h1
-            className="hero-headline"
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.7 }}
+        <div className="hero-content">
+          {/* Eyebrow */}
+          <motion.div
+            className="hero-eyebrow"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
           >
-            Build things that <span className="text-gradient-neon" style={{ fontWeight: 800 }}>matter</span>.<br />
-            Ship them <span className="text-gradient-neon-cyan" style={{ fontWeight: 800 }}>fast</span>.
-          </motion.h1>
+            <span className="hero-eyebrow-dot" />
+            NIT Jalandhar · B.Tech CS · 2024–2028
+          </motion.div>
 
-          {/* Simulated HUD Typewriter prompt */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '28px' }}>
-            <div className="hud-frame" style={{ padding: '10px 24px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'rgba(255,255,255,0.7)', maxWidth: '600px', display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(5, 5, 5, 0.45)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ color: 'var(--accent)' }}>&gt;</span>
-              <span>{hudMessage}</span>
-              <span className="terminal-cursor"></span>
-            </div>
-          </div>
+          {/* Name — two-line clip reveal */}
+          <h1 className="hero-name">
+            <HeroNameLine text="Sarthak" delay={0.5} />
+            <HeroNameLine text="Mehta"   delay={0.65} />
+          </h1>
+
+          {/* Separator */}
+          <motion.div
+            className="hero-separator"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.9 }}
+            style={{ transformOrigin: 'left' }}
+          />
+
+          {/* Role */}
+          <motion.p
+            className="hero-role"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.0 }}
+          >
+            Full-Stack Engineer & AI/ML Enthusiast
+          </motion.p>
+
+          {/* CTA buttons */}
+          <motion.div
+            className="hero-actions"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.15 }}
+          >
+            <a href="#work" className="btn-primary" data-hover="true">
+              View my work ↓
+            </a>
+            <a
+              href="https://github.com/sarthaxmehta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary"
+              data-hover="true"
+            >
+              GitHub ↗
+            </a>
+          </motion.div>
         </div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          className="scroll-indicator"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 1.5 }}
+        >
+          <span>scroll</span>
+          <div className="scroll-line" />
+        </motion.div>
       </section>
 
-      {/* ── SKILLS MARQUEE ── */}
+      {/* ═══════════════════════════════════════════════════
+          SKILLS MARQUEE
+      ═════════════════════════════════════════════════════ */}
       <motion.div
-        className="partners"
+        className="marquee-section"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 1.1 }}
+        transition={{ duration: 0.8, delay: 0.6 }}
       >
-        <p className="partners-label">TECHNOLOGIES &amp; TOOLS</p>
-        <div className="partners-logos" style={{ overflow: 'hidden', position: 'relative' }}>
-          <Marquee speed={55}>
+        <Marquee speed={50}>
+          {skills.map((s) => (
+            <span key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 0 }}>
+              <span className="marquee-item">{s}</span>
+              <span className="marquee-sep">◆</span>
+            </span>
+          ))}
+        </Marquee>
+      </motion.div>
+
+      {/* ═══════════════════════════════════════════════════
+          MAIN CONTENT WRAPPER
+      ═════════════════════════════════════════════════════ */}
+      <div className="main-wrap">
+
+        {/* ════════════════════════════════════════════════
+            ABOUT
+        ════════════════════════════════════════════════ */}
+        <section className="section" id="about">
+          <Reveal>
+            <div className="section-label">About me</div>
+          </Reveal>
+
+          <div className="about-grid">
+            {/* Left: text */}
+            <Reveal delay={0.05}>
+              <h2 className="section-title" style={{ marginBottom: '28px' }}>
+                Building systems that<br />actually work.
+              </h2>
+              <p className="about-text">
+                I'm a <strong>second-year Computer Science student</strong> at NIT Jalandhar,
+                building things at the intersection of full-stack engineering and artificial
+                intelligence. I've shipped AI-powered operating systems, geospatial deep learning
+                pipelines, medical informatics platforms, and native desktop apps — each one
+                solving a real, hard problem.
+              </p>
+              <p className="about-text">
+                I move fast, care deeply about code quality, and believe great software is
+                as much about the craft as it is about the outcome.
+              </p>
+              <div className="about-cta-row">
+                <a
+                  href="https://github.com/sarthaxmehta"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary"
+                  data-hover="true"
+                >
+                  GitHub ↗
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/sarthak-mehta-698457310/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                  data-hover="true"
+                >
+                  LinkedIn ↗
+                </a>
+              </div>
+            </Reveal>
+
+            {/* Right: stats */}
+            <Reveal delay={0.15}>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-number">
+                    <StatCounter target={8.65} decimals={2} />
+                    <span className="stat-accent" style={{ fontSize: '0.45em' }}>/10</span>
+                  </div>
+                  <div className="stat-label">GPA at<br />NIT Jalandhar</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">
+                    <StatCounter target={4} /><span className="stat-accent">+</span>
+                  </div>
+                  <div className="stat-label">Projects<br />shipped</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">
+                    <StatCounter target={1} />
+                  </div>
+                  <div className="stat-label">Internship<br />completed</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">
+                    <StatCounter target={2} />
+                  </div>
+                  <div className="stat-label">AI models<br />trained &amp; deployed</div>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        <div className="section-divider-line" />
+
+        {/* ════════════════════════════════════════════════
+            SKILLS
+        ════════════════════════════════════════════════ */}
+        <div className="skills-wrap">
+          <Reveal>
+            <div className="section-label">Tech stack</div>
+          </Reveal>
+          <motion.div
+            className="skills-chips"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-5%' }}
+            variants={staggerChildren}
+          >
             {skills.map((s) => (
               <motion.span
                 key={s}
-                className="partner-logo"
-                style={{ paddingRight: '48px' }}
-                whileHover={{ opacity: 0.85 }}
+                className="skill-chip"
+                variants={fadeUp}
               >
                 {s}
               </motion.span>
             ))}
-          </Marquee>
+          </motion.div>
         </div>
-      </motion.div>
 
-      {/* ── DARK ROUNDED CONTAINER ── */}
-      <div className="dark-container">
+        <div className="section-divider-line" />
 
-        {/* ── BENTO GRID CONSOLE (ABOUT / SERVICES / PROCESS) ── */}
-        <section style={{ padding: '80px 60px 40px' }} id="about">
+        {/* ════════════════════════════════════════════════
+            PROJECTS
+        ════════════════════════════════════════════════ */}
+        <section className="section" id="work">
           <Reveal>
-            <div className="section-header" style={{ padding: '0', marginBottom: '40px' }}>
-              <span className="section-counter">[ 02 / 07 ]</span>
-              <span className="section-label">OPERATOR // ARCHITECTURE</span>
-            </div>
+            <div className="section-label">Selected work</div>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <h2 className="section-title" style={{ marginBottom: '52px' }}>
+              Things I've built.
+            </h2>
           </Reveal>
 
-          <div className="bento-grid">
-            {/* Card 1: First Person Introduction (span 2) */}
-            <div className="bento-card bento-span-2 liquid-glass-panel" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '20px' }}>
-              <div className="specular-glare" />
-              <div>
-                <span className="about-tag" style={{ background: 'rgba(255, 76, 36, 0.12)', border: '1px solid rgba(255, 76, 36, 0.25)', color: '#ff4c24', marginBottom: '16px' }}>
-                  OPERATOR PROFILE // ACTIVE
-                </span>
-                <h2 style={{ fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em', marginTop: '12px', lineHeight: '1.2' }}>
-                  I'm Sarthak Mehta.
-                </h2>
-                <h3 style={{ fontSize: '18px', fontWeight: 400, color: 'rgba(255,255,255,0.6)', marginTop: '8px', fontFamily: 'var(--mono)' }}>
-                  Full-Stack Engineer &amp; AI Builder
-                </h3>
-                <p style={{ marginTop: '20px', fontSize: '15px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.7' }}>
-                  I build end-to-end geospatial intelligence pipelines, premium AI-powered operating systems, and local-first desktop apps. I'm currently studying Computer Science at **Dr. B.R. Ambedkar National Institute of Technology Jalandhar (NITJ)**.
-                </p>
-                <p style={{ marginTop: '12px', fontSize: '15px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.7' }}>
-                  I operate at startup speed, tackling the hardest technical problems first, and packing complex features into high-fidelity user interfaces.
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: '16px', marginTop: 'auto' }}>
-                <a href="https://github.com/sarthaxmehta" target="_blank" rel="noopener noreferrer" className="glass-capsule capsule-glow-orange" style={{ padding: '10px 20px', fontSize: '12px', textDecoration: 'none' }}>
-                  View Github ↗
-                </a>
-                <a href="#contact" className="glass-capsule capsule-glow-cyan" style={{ padding: '10px 20px', fontSize: '12px', textDecoration: 'none' }}>
-                  Get In Touch ↗
-                </a>
-              </div>
-            </div>
-
-            {/* Card 2: Interactive Tech Stack Matrix (span 1) */}
-            <div className="bento-card liquid-glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="specular-glare" />
-              <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em' }}>
-                TECH_STACK // LOADED
-              </span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
-                {skills.map((s) => {
-                  // Determine glow colors for tags
-                  let colorClass = 'capsule-glow-orange';
-                  if (['PyTorch', 'TensorFlow', 'Google Earth Engine'].includes(s)) colorClass = 'capsule-glow-green';
-                  else if (['FastAPI', 'TypeScript', 'Electron'].includes(s)) colorClass = 'capsule-glow-cyan';
-                  else if (['React', 'Next.js'].includes(s)) colorClass = 'capsule-glow-orange';
-                  else colorClass = 'capsule-glow-purple';
-
-                  return (
-                    <span
-                      key={s}
-                      className={`glass-capsule ${colorClass}`}
-                      style={{ padding: '6px 14px', fontSize: '11px', display: 'inline-flex', cursor: 'default' }}
-                    >
-                      {s}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Card 3: What I Build (span 1) */}
-            <div className="bento-card liquid-glass-panel" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div className="specular-glare" />
-              <div>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em' }}>
-                  SERVICES // SYSTEM_SCOPES
-                </span>
-                <h3 style={{ fontSize: '20px', fontWeight: 600, marginTop: '16px', letterSpacing: '-0.01em' }}>
-                  Dynamic Development
-                </h3>
-                <p style={{ marginTop: '12px', fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
-                  I write clean code and build responsive, accessible layouts, robust FastAPI backends, semantic indexing engines, local-first Electron wrappers, and geospatial calculations.
-                </p>
-              </div>
-            </div>
-
-            {/* Card 4: Operating Sprint Loop (span 2) */}
-            <div className="bento-card bento-span-2 liquid-glass-panel" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '20px' }}>
-              <div className="specular-glare" />
-              <div>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em' }}>
-                  WORK_PROCESS // TWO_WEEK_SPRINT_CYCLE
-                </span>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginTop: '20px' }} className="inquiry-grid-form">
-                  <div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--accent)', fontWeight: 'bold' }}>01 / DISCOVERY</div>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '6px', lineHeight: '1.5' }}>
-                      Deep dive into technical parameters, databases, user needs, and architectural boundaries.
-                    </p>
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: '#e8c84a', fontWeight: 'bold' }}>02 / BUILD</div>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '6px', lineHeight: '1.5' }}>
-                      Heads-down rapid iteration. Coding deterministic algorithms, structuring DB tables, designing high-fidelity glass UI elements.
-                    </p>
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: '#50c878', fontWeight: 'bold' }}>03 / SHIP</div>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '6px', lineHeight: '1.5' }}>
-                      Publishing optimized builds to production. Verification audits, code handoffs, and operational refinement.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── SELECTED WORK ── */}
-        <section className="projects-section" id="work">
-          <Reveal>
-            <div className="section-header" style={{ padding: '0 60px', marginBottom: '40px' }}>
-              <span className="section-counter">[ 04 / 07 ]</span>
-              <span className="section-label">SELECTED WORK</span>
-            </div>
-          </Reveal>
-
-          {/* Interactive Project Console */}
-          <div className="project-cards-area" style={{ padding: '0 60px 80px' }}>
-            <div className="project-console-grid">
-
-              {/* Left Column: Project Selector Cards */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {projectData.length === 0 ? (
-                  <div className="hud-frame" style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--mono)', fontSize: '12px' }}>
-                    CONNECTING PORTFOLIO DATABASE ENGINE...
-                  </div>
-                ) : (
-                  projectData.map((p, idx) => {
-                    const isActive = activeProjectIndex === idx;
-                    // Deterministic glow theme color class based on title
-                    let activeClass = 'active-orange';
-                    if (p.title === 'ChiefOS') activeClass = 'active-orange';
-                    else if (p.title === 'UrbanNet') activeClass = 'active-green';
-                    else if (p.title === 'Vital Archive') activeClass = 'active-purple';
-                    else if (p.title === 'Zenvvy') activeClass = 'active-cyan';
-
-                    return (
-                      <div
-                        key={p.title}
-                        className={`console-cabinet-card ${isActive ? activeClass : ''}`}
-                        onClick={() => setActiveProjectIndex(idx)}
-                      >
-                        <div className="specular-glare" />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                          <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)' }}>
-                            {p.num || `[0${idx + 1}]`}
-                          </span>
-                          {isActive && (
-                            <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', background: 'rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '4px', color: 'var(--white)' }}>
-                              RUNNING_SESSION
-                            </span>
-                          )}
-                        </div>
-                        <h3 style={{ fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em', textTransform: 'uppercase', marginBottom: '8px' }}>
-                          {p.title}
-                        </h3>
-                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5', marginBottom: '16px' }}>
-                          {p.detail}
-                        </p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                          {p.tags.map((t: string) => (
-                            <span key={t} className="project-tag" style={{ fontSize: '9px', padding: '3px 8px' }}>{t}</span>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              {/* Right Column: Dynamic Terminal System Details */}
-              {projectData.length > 0 && (
-                <div className="hud-frame" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '520px' }}>
-                  {/* Console Header */}
-                  <div className="hud-header">
-                    <div className="hud-dot-group">
-                      <span className="hud-dot red" />
-                      <span className="hud-dot yellow" />
-                      <span className="hud-dot green" />
-                    </div>
-                    <span>TERMINAL // {projectData[activeProjectIndex]?.title.toUpperCase()}_SYS</span>
-                    <span style={{ color: '#50c878' }}>● ONLINE</span>
-                  </div>
-
-                  {/* Terminal Log Console */}
-                  <div className="terminal-scroll-panel" style={{ flex: '1', background: '#050505', padding: '24px', overflowY: 'auto' }}>
-                    <div className="terminal-prompt" style={{ marginBottom: '8px' }}>load_tech_profile --target={projectData[activeProjectIndex]?.title.toLowerCase()}</div>
-                    <div style={{ margin: '8px 0 16px' }}>
-                      {(projectTechOverlays[projectData[activeProjectIndex]?.title] || { logs: [] }).logs.map((logLine, idx) => (
-                        <div key={idx} className="terminal-output" style={{ fontSize: '11px', opacity: 0.9, fontFamily: 'var(--mono)', marginBottom: '3px' }}>
-                          &gt; {logLine}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="rules-divider" style={{ margin: '16px 0' }} />
-
-                    {/* Architecture Details */}
-                    <div style={{ marginBottom: '18px' }}>
-                      <span style={{ color: '#e8c84a', fontWeight: 'bold', fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase' }}>[SYSTEM ARCHITECTURE]</span>
-                      <p style={{ marginTop: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.5' }}>
-                        {(projectTechOverlays[projectData[activeProjectIndex]?.title] || { architecture: '' }).architecture}
-                      </p>
-                    </div>
-
-                    {/* Key Contributions */}
-                    <div style={{ marginBottom: '18px' }}>
-                      <span style={{ color: '#5a8fc8', fontWeight: 'bold', fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase' }}>[KEY CONTRIBUTIONS]</span>
-                      <ul style={{ marginTop: '8px', paddingLeft: '16px', listStyleType: 'square', fontSize: '13px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.6' }}>
-                        {(projectTechOverlays[projectData[activeProjectIndex]?.title] || { contributions: [] }).contributions.map((cLine, idx) => (
-                          <li key={idx} style={{ marginBottom: '6px' }}>{cLine}</li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Engineering Challenge */}
-                    <div style={{ marginBottom: '18px' }}>
-                      <span style={{ color: '#e05a4e', fontWeight: 'bold', fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase' }}>[ENGINEERING CHALLENGE]</span>
-                      <p style={{ marginTop: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.6' }}>
-                        {(projectTechOverlays[projectData[activeProjectIndex]?.title] || { challenges: '' }).challenges}
-                      </p>
-                    </div>
-
-                    {/* Action buttons inside terminal */}
-                    <div style={{ display: 'flex', gap: '12px', marginTop: '28px' }}>
-                      <a
-                        href={projectData[activeProjectIndex]?.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="glass-capsule capsule-glow-orange"
-                        style={{ padding: '8px 18px', fontSize: '11px', textTransform: 'uppercase', border: '1px solid rgba(255,255,255,0.08)' }}
-                      >
-                        Source Code ↗
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* ── EDUCATION ── */}
-        <section className="edu-section">
-          <Reveal>
-            <div className="section-header" style={{ padding: '0', marginBottom: '48px' }}>
-              <span className="section-counter">[ 05 / 07 ]</span>
-              <span className="section-label">EDUCATION &amp; CERTS</span>
-            </div>
-          </Reveal>
           <motion.div
-            className="edu-grid"
+            className="projects-grid"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-5%' }}
-            variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+            variants={staggerChildren}
           >
-            {[
-              {
-                label: 'B.Tech Computer Science',
-                title: 'NIT Jalandhar',
-                sub: 'Dr. B.R. Ambedkar NIT · 2024–2028\nGPA: 8.63 / 10\nCore Member, E-Cell · Core Member, Q\'Mania Quantum Club',
-              },
-              {
-                label: 'Experience',
-                title: 'Remote Sensing & GIS Intern',
-                sub: 'India Space Academy · Jan–Feb 2026\nBuilt a geospatial AI pipeline for building footprint extraction from Sentinel-2 imagery using PyTorch U-Net + GEE Random Forest.',
-              },
-              {
-                label: 'Certification',
-                title: 'Machine Learning Specialization',
-                sub: 'Stanford Online & DeepLearning.AI\nAndrew Ng · Coursera',
-              },
-              {
-                label: 'Certification',
-                title: 'Meta Front-End Developer',
-                sub: 'Professional Certificate\nMeta · Coursera',
-              },
-            ].map((card, i) => (
+            {projectData.map((p) => (
               <motion.div
-                key={i}
-                className="edu-card"
+                key={p.id}
+                className="project-card"
                 variants={fadeUp}
-                whileHover={{
-                  borderColor: 'rgba(255,255,255,0.18)',
-                  y: -4,
-                  transition: { duration: 0.25 },
-                }}
+                onClick={() => setActiveProject(p)}
+                data-hover="true"
               >
-                <div className="edu-card-label">{card.label}</div>
-                <div className="edu-card-title">{card.title}</div>
-                <div className="edu-card-sub" style={{ whiteSpace: 'pre-line' }}>{card.sub}</div>
+                <div className="project-card-top">
+                  <span className="project-num">{p.num}</span>
+                  <span className="project-arrow">↗</span>
+                </div>
+                <h3 className="project-title">{p.title}</h3>
+                <p className="project-desc">{p.desc}</p>
+                <div className="project-tags">
+                  {p.tags.slice(0, 4).map((t) => (
+                    <span key={t} className="project-tag">{t}</span>
+                  ))}
+                </div>
               </motion.div>
             ))}
           </motion.div>
         </section>
 
-        {/* ── SPRINT ── */}
-        <SprintSection />
+        <div className="section-divider-line" />
 
-        {/* ── PRINCIPLES ── */}
-        <section className="rules-section">
+        {/* ════════════════════════════════════════════════
+            TIMELINE — EDUCATION & EXPERIENCE
+        ════════════════════════════════════════════════ */}
+        <section className="section" id="timeline">
           <Reveal>
-            <div className="section-header" style={{ padding: '20px 60px 0', marginBottom: '0' }}>
-              <span className="section-counter">[ 07 / 07 ]</span>
-              <span className="section-label">PRINCIPLES</span>
-            </div>
+            <div className="section-label">Education &amp; experience</div>
           </Reveal>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '80px', alignItems: 'start' }}>
+            <Reveal delay={0.05}>
+              <h2 className="section-title">
+                Where I've<br />been.
+              </h2>
+            </Reveal>
+            <Reveal delay={0.12}>
+              <div className="timeline-wrap">
+                <div className="timeline-spine" />
+                {timelineItems.map((item, i) => (
+                  <motion.div
+                    key={i}
+                    className="timeline-item"
+                    initial={{ opacity: 0, x: -16 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: '-5%' }}
+                    transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: i * 0.12 }}
+                  >
+                    <div className="timeline-dot" />
+                    <div className="timeline-date">{item.date}</div>
+                    <div className="timeline-title">{item.title}</div>
+                    <div className="timeline-subtitle">{item.subtitle}</div>
+                    <div className="timeline-body">{item.body}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        </section>
 
-          <div className="rules-ticker" style={{ padding: '14px 0', overflow: 'hidden' }}>
-            <Marquee speed={80}>
-              <span className="rules-ticker-text">PRINCIPLES</span>
-              <span className="rules-ticker-dot" style={{ padding: '0 32px', fontSize: 'clamp(52px,7vw,90px)', fontWeight: 900, color: '#e05a4e' }}>✦</span>
-              <span className="rules-ticker-text">HOW I OPERATE</span>
-              <span className="rules-ticker-dot" style={{ padding: '0 32px', fontSize: 'clamp(52px,7vw,90px)', fontWeight: 900, color: '#e05a4e' }}>✦</span>
-              <span className="rules-ticker-text">PRINCIPLES</span>
-              <span className="rules-ticker-dot" style={{ padding: '0 32px', fontSize: 'clamp(52px,7vw,90px)', fontWeight: 900, color: '#e05a4e' }}>✦</span>
-              <span className="rules-ticker-text">HOW I OPERATE</span>
-              <span className="rules-ticker-dot" style={{ padding: '0 32px', fontSize: 'clamp(52px,7vw,90px)', fontWeight: 900, color: '#e05a4e' }}>✦</span>
+        <div className="section-divider-line" />
+
+        {/* ════════════════════════════════════════════════
+            PRINCIPLES
+        ════════════════════════════════════════════════ */}
+        <section style={{ paddingBottom: '0' }}>
+          {/* Giant ticker */}
+          <div className="principles-marquee-wrap">
+            <Marquee speed={90}>
+              <span className="principles-ticker-text">PRINCIPLES</span>
+              <span className="principles-ticker-sep">✦</span>
+              <span className="principles-ticker-text">HOW I OPERATE</span>
+              <span className="principles-ticker-sep">✦</span>
+              <span className="principles-ticker-text">PRINCIPLES</span>
+              <span className="principles-ticker-sep">✦</span>
+              <span className="principles-ticker-text">HOW I OPERATE</span>
+              <span className="principles-ticker-sep">✦</span>
             </Marquee>
           </div>
 
-          <div className="rules-body">
+          <div className="section" style={{ paddingTop: '80px' }}>
             <Reveal>
-              <p className="rules-intro">
-                At every great project, there&rsquo;s a set of operating principles that keep things from
-                getting too out of hand. These are mine — forged from shipping real products, writing
-                real code, and learning from engineers I deeply respect.
-              </p>
+              <div className="section-label">How I work</div>
             </Reveal>
-            <div className="rules-divider" />
             <motion.ul
-              className="rules-list"
+              className="principles-list"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: '-5%' }}
-              variants={{ visible: { transition: { staggerChildren: 0.07 } } }}
+              variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
             >
-              {rules.map((r, i) => (
+              {principles.map((p) => (
                 <motion.li
-                  key={r.num}
-                  className="rules-list-item"
+                  key={p.num}
+                  className="principle-item"
                   variants={fadeUp}
-                  whileHover={{ color: 'rgba(255,255,255,0.9)', x: 8 }}
-                  transition={{ duration: 0.2 }}
                 >
-                  <span className="rules-list-num">{r.num}</span>
-                  {r.text}
+                  <span className="principle-num">{p.num}</span>
+                  <span className="principle-text">{p.text}</span>
                 </motion.li>
               ))}
             </motion.ul>
           </div>
         </section>
 
-        {/* ── CONTACT / FAQ ── */}
-        <section className="contact-section" id="contact">
-          <div className="contact-inner">
-            <Reveal>
-              <div className="section-header" style={{ padding: '0', marginBottom: '48px' }}>
-                <span className="section-counter">[ CONTACT ]</span>
-                <span className="section-label">FAQ &amp; CONNECT</span>
-              </div>
-            </Reveal>
+        <div className="section-divider-line" />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '60px', maxWidth: '1200px', margin: '0 auto' }} className="inquiry-dual-layout">
+        {/* ════════════════════════════════════════════════
+            CONTACT
+        ════════════════════════════════════════════════ */}
+        <section className="section" id="contact">
+          <Reveal>
+            <div className="section-label">Get in touch</div>
+          </Reveal>
 
-              {/* Left Column: FAQ Accordion */}
-              <div>
-                <div style={{ marginBottom: '32px' }}>
-                  <SplitText
-                    text="Let's connect and share ideas."
-                    className="contact-headline"
-                    staggerDelay={0.04}
-                  />
+          <div className="contact-grid">
+            {/* Left side */}
+            <div>
+              <Reveal delay={0.05}>
+                <h2 className="contact-headline">
+                  Let's<br />connect.
+                </h2>
+                <p className="contact-sub">
+                  Whether you want to collaborate on a project, talk about AI, or just say hi
+                  — I'd love to hear from you.
+                </p>
+              </Reveal>
+
+              <Reveal delay={0.1}>
+                <div className="social-links">
+                  {[
+                    {
+                      label: 'GitHub',
+                      href: 'https://github.com/sarthaxmehta',
+                      icon: 'GH',
+                    },
+                    {
+                      label: 'LinkedIn',
+                      href: 'https://www.linkedin.com/in/sarthak-mehta-698457310/',
+                      icon: 'in',
+                    },
+                    {
+                      label: 'sarthakm.cs.24@nitj.ac.in',
+                      href: 'mailto:sarthakm.cs.24@nitj.ac.in',
+                      icon: '@',
+                    },
+                  ].map((s) => (
+                    <a
+                      key={s.label}
+                      href={s.href}
+                      target={s.href.startsWith('mailto') ? undefined : '_blank'}
+                      rel={s.href.startsWith('mailto') ? undefined : 'noopener noreferrer'}
+                      className="social-link"
+                      data-hover="true"
+                    >
+                      <span className="social-icon"
+                        style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
+                        {s.icon}
+                      </span>
+                      {s.label}
+                    </a>
+                  ))}
                 </div>
-                <FaqSection />
-              </div>
 
-              {/* Right Column: Premium Liquid Glass Connect Console */}
-              <div className="hud-frame liquid-glass-panel" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div className="specular-glare" />
-
-                {/* HUD form header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '16px', marginBottom: '8px' }}>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.05em' }}>
-                    SECURE_CONNECT_DB_ENTRY_NODE
-                  </span>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: '#50c878' }}>
-                    DB_SYNC: ACTIVE
-                  </span>
+                {/* FAQ below social links */}
+                <div style={{ marginTop: '48px' }}>
+                  <div className="section-label" style={{ marginBottom: '24px' }}>FAQ</div>
+                  <FaqSection />
                 </div>
+              </Reveal>
+            </div>
 
-                {inquiryStatus ? (
-                  /* Form Success State: Scrolling Terminal Outputs */
-                  <div style={{ background: '#050505', borderRadius: '12px', padding: '20px', fontFamily: 'var(--mono)', minHeight: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <span style={{ color: '#e8c84a' }}>sarthak@mehta-os:~$ submit_connection --payload=json</span>
-                      <span className="terminal-output">&gt; Resolving sqlite transaction client... OK</span>
-                      <span className="terminal-output">&gt; Parsing Zod validation parameters... OK</span>
-                      <span className="terminal-output">&gt; Executing DB insertion to table 'Inquiry'... OK</span>
-                      <span className="terminal-output">&gt; Connection logged successfully!</span>
-                      <div style={{ background: 'rgba(80, 200, 120, 0.08)', border: '1px dashed rgba(80, 200, 120, 0.3)', padding: '10px', margin: '8px 0', borderRadius: '6px', fontSize: '11px' }}>
-                        <div style={{ color: '#50c878', fontWeight: 'bold' }}>TRANSACTION SUCCESSFUL</div>
-                        <div style={{ color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>Connection ID: {inquiryStatus.inquiryId}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.6)' }}>Timestamp: {new Date().toISOString()}</div>
-                      </div>
-                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>&gt; Thank you, {inquiryData.name}. I will review your connection parameters (Reason: {inquiryData.budget}, Affiliation: {inquiryData.timeline}) and respond to you at {inquiryData.email} within 24 hours.</span>
-                    </div>
+            {/* Right side: form */}
+            <Reveal delay={0.1}>
+              <div className="contact-form">
+                {submitStatus ? (
+                  /* Success state */
+                  <div className="success-state">
+                    <div className="success-icon">✓</div>
+                    <div className="success-title">Message received.</div>
+                    <p className="success-body">
+                      Thanks, {formData.name}. I'll get back to you at{' '}
+                      <strong style={{ color: 'var(--text-1)' }}>{formData.email}</strong>{' '}
+                      as soon as I can.
+                    </p>
                     <button
-                      className="glass-capsule capsule-glow-orange"
+                      className="btn-secondary"
+                      style={{ marginTop: '8px' }}
+                      data-hover="true"
                       onClick={() => {
-                        setInquiryStatus(null);
-                        setInquiryData({
-                          name: '',
-                          email: '',
-                          company: '',
+                        setSubmitStatus(null);
+                        setFormData({
+                          name: '', email: '', company: '',
                           budget: 'Just saying hello 👋',
                           timeline: 'Developer / Engineer',
                           message: '',
                         });
                       }}
-                      style={{ alignSelf: 'flex-start', padding: '8px 20px', fontSize: '11px', marginTop: '16px' }}
                     >
-                      Submit Another Message
+                      Send another
                     </button>
                   </div>
                 ) : (
-                  /* Main Form State */
-                  <form onSubmit={async (e) => {
-                    e.preventDefault();
-                    if (!inquiryData.name || !inquiryData.email || !inquiryData.message) {
-                      alert('Please complete all required fields (Name, Email, and Message).');
-                      return;
-                    }
-                    setSubmittingInquiry(true);
-                    try {
-                      const res = await submitInquiry(inquiryData);
-                      if (res.success) {
-                        setInquiryStatus({
-                          success: true,
-                          inquiryId: res.inquiryId,
-                        });
-                      } else {
-                        alert(res.error || 'Failed to submit connection.');
-                      }
-                    } catch (err: any) {
-                      alert('An error occurred during submission.');
-                    } finally {
-                      setSubmittingInquiry(false);
-                    }
-                  }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div className="inquiry-grid-form">
-                      <div className="glass-input-container">
-                        <label className="glass-input-label">Your Name *</label>
+                  <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">Name *</label>
                         <input
                           type="text"
                           required
-                          value={inquiryData.name}
-                          onChange={(e) => setInquiryData({ ...inquiryData, name: e.target.value })}
-                          className="glass-input-field"
-                          placeholder="e.g. John Doe"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="form-input"
+                          placeholder="Your name"
                         />
                       </div>
-                      <div className="glass-input-container">
-                        <label className="glass-input-label">Email Address *</label>
+                      <div className="form-group">
+                        <label className="form-label">Email *</label>
                         <input
                           type="email"
                           required
-                          value={inquiryData.email}
-                          onChange={(e) => setInquiryData({ ...inquiryData, email: e.target.value })}
-                          className="glass-input-field"
-                          placeholder="e.g. john@email.com"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="form-input"
+                          placeholder="your@email.com"
                         />
                       </div>
                     </div>
 
-                    <div className="glass-input-container">
-                      <label className="glass-input-label">Affiliated Organization / School (Optional)</label>
+                    <div className="form-group">
+                      <label className="form-label">Organization / School</label>
                       <input
                         type="text"
-                        value={inquiryData.company}
-                        onChange={(e) => setInquiryData({ ...inquiryData, company: e.target.value })}
-                        className="glass-input-field"
-                        placeholder="e.g. NIT Jalandhar"
+                        value={formData.company}
+                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                        className="form-input"
+                        placeholder="Where are you from? (optional)"
                       />
                     </div>
 
-                    <div className="inquiry-grid-form">
-                      <div className="glass-input-container">
-                        <label className="glass-input-label">Reason for Connection</label>
-                        <div className="glass-select-wrapper">
-                          <select
-                            value={inquiryData.budget}
-                            onChange={(e) => setInquiryData({ ...inquiryData, budget: e.target.value })}
-                            className="glass-select-field"
-                          >
-                            <option value="Just saying hello 👋">Just saying hello 👋</option>
-                            <option value="Technical collaboration 🤝">Technical collaboration 🤝</option>
-                            <option value="NIT Jalandhar discussion 🎓">NIT Jalandhar discussion 🎓</option>
-                            <option value="General Q&A or chat 💻">General Q&A or chat 💻</option>
-                          </select>
-                        </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">Reason for reaching out</label>
+                        <select
+                          value={formData.budget}
+                          onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                          className="form-select"
+                        >
+                          <option value="Just saying hello 👋">Just saying hello 👋</option>
+                          <option value="Technical collaboration 🤝">Technical collaboration 🤝</option>
+                          <option value="NIT Jalandhar discussion 🎓">NIT Jalandhar discussion 🎓</option>
+                          <option value="General Q&A or chat 💻">General Q&amp;A or chat 💻</option>
+                        </select>
                       </div>
-                      <div className="glass-input-container">
-                        <label className="glass-input-label">Your Affiliation / Role</label>
-                        <div className="glass-select-wrapper">
-                          <select
-                            value={inquiryData.timeline}
-                            onChange={(e) => setInquiryData({ ...inquiryData, timeline: e.target.value })}
-                            className="glass-select-field"
-                          >
-                            <option value="Developer / Engineer">Developer / Engineer</option>
-                            <option value="Researcher / Student">Researcher / Student</option>
-                            <option value="Recruiter / Tech Manager">Recruiter / Tech Manager</option>
-                            <option value="Tech Enthusiast">Tech Enthusiast</option>
-                          </select>
-                        </div>
+                      <div className="form-group">
+                        <label className="form-label">Your affiliation</label>
+                        <select
+                          value={formData.timeline}
+                          onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
+                          className="form-select"
+                        >
+                          <option value="Developer / Engineer">Developer / Engineer</option>
+                          <option value="Researcher / Student">Researcher / Student</option>
+                          <option value="Recruiter / Tech Manager">Recruiter / Tech Manager</option>
+                          <option value="Tech Enthusiast">Tech Enthusiast</option>
+                        </select>
                       </div>
                     </div>
 
-                    <div className="glass-input-container">
-                      <label className="glass-input-label">Message Content *</label>
+                    <div className="form-group">
+                      <label className="form-label">Message *</label>
                       <textarea
                         required
-                        rows={4}
-                        value={inquiryData.message}
-                        onChange={(e) => setInquiryData({ ...inquiryData, message: e.target.value })}
-                        className="glass-input-field"
-                        style={{ resize: 'vertical' }}
-                        placeholder="What would you like to discuss? Project ideas, collaborations, or tech topics..."
+                        rows={5}
+                        value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        className="form-textarea"
+                        placeholder="What's on your mind?"
                       />
                     </div>
 
                     <button
                       type="submit"
-                      disabled={submittingInquiry}
-                      className="glass-capsule capsule-glow-orange"
-                      style={{ marginTop: '8px', width: '100%' }}
+                      disabled={isSubmitting}
+                      className="form-submit"
+                      data-hover="true"
                     >
-                      {submittingInquiry ? 'SENDING CONNECTION RECORD...' : 'EXECUTE DB WRITE TRANSACTION ↗'}
+                      {isSubmitting ? 'Sending…' : 'Send message →'}
                     </button>
                   </form>
                 )}
               </div>
-            </div>
+            </Reveal>
           </div>
-
-          <style jsx global>{`
-            @media (max-width: 900px) {
-              .inquiry-dual-layout {
-                grid-template-columns: 1fr !important;
-              }
-            }
-          `}</style>
         </section>
 
-        {/* ── FOOTER ── */}
+        {/* ════════════════════════════════════════════════
+            FOOTER
+        ════════════════════════════════════════════════ */}
         <footer className="footer">
-          {/* Top bar — WHERE DO I CONNECT? + HERE button */}
           <Reveal>
-            <div className="footer-connect-bar">
-              <div className="footer-connect-label">WHERE DO I CONNECT?</div>
-              <motion.a
-                href="/connect"
-                className="footer-here-btn"
-                whileHover={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
-                transition={{ duration: 0.2 }}
-              >
-                HERE ↗↗↗
-              </motion.a>
-            </div>
+            <div className="footer-wordmark">Sarthak Mehta</div>
           </Reveal>
 
-          {/* Giant "honey" wordmark */}
           <Reveal delay={0.05}>
-            <div className="footer-wordmark-wrap">
-              <div className="footer-wordmark">Sarthak Mehta</div>
-            </div>
-          </Reveal>
-
-          {/* Bottom strip */}
-          <Reveal delay={0.1}>
             <div className="footer-bottom">
-              <span className="footer-copy">© 2025 Sarthak Mehta. All rights reserved.</span>
-              <div className="footer-links">
+              <span className="footer-copy">© 2026 Sarthak Mehta. All rights reserved.</span>
+              <div className="footer-link-group">
                 {[
-                  { label: 'GitHub', href: 'https://github.com/sarthaxmehta' },
+                  { label: 'GitHub',   href: 'https://github.com/sarthaxmehta' },
                   { label: 'LinkedIn', href: 'https://www.linkedin.com/in/sarthak-mehta-698457310/' },
-                  { label: 'Email', href: 'mailto:sarthakm.cs.24@nitj.ac.in' },
+                  { label: 'Email',    href: 'mailto:sarthakm.cs.24@nitj.ac.in' },
+                  { label: 'Admin',    href: '/manager' },
                 ].map((l) => (
-                  <motion.a
+                  <a
                     key={l.label}
                     href={l.href}
-                    target={l.href.startsWith('mailto') ? undefined : '_blank'}
-                    rel={l.href.startsWith('mailto') ? undefined : 'noopener noreferrer'}
+                    target={l.href.startsWith('http') ? '_blank' : undefined}
+                    rel={l.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                     className="footer-link"
-                    whileHover={{ color: 'rgba(255,255,255,0.9)' }}
-                    transition={{ duration: 0.2 }}
+                    data-hover="true"
                   >
                     {l.label}
-                  </motion.a>
+                  </a>
                 ))}
               </div>
             </div>
           </Reveal>
         </footer>
-      </div>
+
+      </div>{/* /.main-wrap */}
+
+      {/* ── PROJECT MODAL ── */}
+      <ProjectModal
+        project={activeProject}
+        onClose={() => setActiveProject(null)}
+      />
     </>
   );
 }
