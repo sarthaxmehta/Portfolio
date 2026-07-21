@@ -17,6 +17,7 @@ import {
   AnimatePresence,
 } from 'framer-motion';
 import Link from 'next/link';
+import * as THREE from 'three';
 
 import { getProjects } from '../actions/project';
 import { submitInquiry } from '../actions/inquiry';
@@ -213,7 +214,7 @@ const fadeUp = {
   hidden: { opacity: 0, y: 32 },
   visible: {
     opacity: 1, y: 0,
-    transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] as const },
   },
 };
 
@@ -673,6 +674,9 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [projectData, setProjectData] = useState(staticProjects);
   const [activeProject, setActiveProject] = useState<typeof staticProjects[0] | null>(null);
+  
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [vantaEffect, setVantaEffect] = useState<any>(null);
 
   // Parallax
   const { scrollY } = useScroll();
@@ -693,7 +697,7 @@ export default function Home() {
     const fetchProjects = async () => {
       try {
         const res = await getProjects();
-        if (res.success && res.projects?.length > 0) {
+        if (res.success && res.projects && res.projects.length > 0) {
           const mapped = res.projects.map((p: any, i: number) => ({
             id: p.id || p.title.toLowerCase().replace(/\s/g, '-'),
             num: String(i + 1).padStart(2, '0'),
@@ -711,7 +715,40 @@ export default function Home() {
       } catch { /* silently use static */ }
     };
     fetchProjects();
-    return () => { document.body.style.cursor = ''; };
+
+    // Vanta.js net effect initialization
+    let effect: any = null;
+    if (typeof window !== 'undefined' && heroRef.current) {
+      (window as any).THREE = THREE;
+      import('vanta/dist/vanta.net.min').then((NET) => {
+        if (heroRef.current && !effect) {
+          effect = NET.default({
+            el: heroRef.current,
+            THREE: THREE,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0xff4c24, // --accent
+            backgroundColor: 0x040404, // matches --bg
+            points: 10.00,
+            maxDistance: 22.00,
+            spacing: 16.00
+          });
+          setVantaEffect(effect);
+        }
+      });
+    }
+
+    return () => {
+      document.body.style.cursor = '';
+      if (effect) {
+        effect.destroy();
+      }
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -749,7 +786,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════
           HERO
       ═════════════════════════════════════════════════════ */}
-      <section className="hero">
+      <section className="hero" ref={heroRef}>
         <motion.div className="hero-atmosphere" style={{ y: glowY }} />
         <div className="hero-grain" />
 
