@@ -17,19 +17,19 @@
 :root {
   /* Backgrounds */
   --bg: #040404;
-  --surface: #0B0B0B;
-  --card: #111111;
-  --card-2: #151515;
+  --surface: #0E0E0E;
+  --card: #161616;
+  --card-2: #222222;
 
   /* Borders */
-  --border: rgba(255, 255, 255, 0.06);
-  --border-hover: rgba(255, 255, 255, 0.13);
-  --border-accent: rgba(255, 76, 36, 0.25);
+  --border: rgba(255, 255, 255, 0.11);
+  --border-hover: rgba(255, 255, 255, 0.22);
+  --border-accent: rgba(255, 76, 36, 0.35);
 
   /* Text */
   --text-1: #F2F2F0;
-  --text-2: rgba(242, 242, 240, 0.5);
-  --text-3: rgba(242, 242, 240, 0.24);
+  --text-2: rgba(242, 242, 240, 0.72);
+  --text-3: rgba(242, 242, 240, 0.44);
 
   /* Accent */
   --accent: #FF4C24;
@@ -1482,7 +1482,7 @@ ol {
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.36);
   min-width: 48px;
   flex-shrink: 0;
   transition: color 0.15s;
@@ -1495,7 +1495,7 @@ ol {
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.44);
   transition: color 0.15s;
   line-height: 1.3;
 }
