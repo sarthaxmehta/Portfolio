@@ -676,7 +676,9 @@ export default function Home() {
   const [activeProject, setActiveProject] = useState<typeof staticProjects[0] | null>(null);
   
   const heroRef = useRef<HTMLDivElement>(null);
+  const contactRef = useRef<HTMLDivElement>(null);
   const [vantaEffect, setVantaEffect] = useState<any>(null);
+  const [vantaContactEffect, setVantaContactEffect] = useState<any>(null);
 
   // Parallax
   const { scrollY } = useScroll();
@@ -718,35 +720,64 @@ export default function Home() {
 
     // Vanta.js net effect initialization
     let effect: any = null;
-    if (typeof window !== 'undefined' && heroRef.current) {
+    let contactEffect: any = null;
+    if (typeof window !== 'undefined') {
       (window as any).THREE = THREE;
-      import('vanta/dist/vanta.net.min').then((NET) => {
-        if (heroRef.current && !effect) {
-          effect = NET.default({
-            el: heroRef.current,
-            THREE: THREE,
-            mouseControls: true,
-            touchControls: true,
-            gyroControls: false,
-            minHeight: 200.00,
-            minWidth: 200.00,
-            scale: 1.00,
-            scaleMobile: 1.00,
-            color: 0xff4c24, // --accent
-            backgroundColor: 0x040404, // matches --bg
-            points: 10.00,
-            maxDistance: 22.00,
-            spacing: 16.00
-          });
-          setVantaEffect(effect);
-        }
-      });
+      if (heroRef.current) {
+        import('vanta/dist/vanta.net.min').then((NET) => {
+          if (heroRef.current && !effect) {
+            effect = NET.default({
+              el: heroRef.current,
+              THREE: THREE,
+              mouseControls: true,
+              touchControls: true,
+              gyroControls: false,
+              minHeight: 200.00,
+              minWidth: 200.00,
+              scale: 1.00,
+              scaleMobile: 1.00,
+              color: 0xff4c24, // --accent
+              backgroundColor: 0x040404, // matches --bg
+              points: 10.00,
+              maxDistance: 22.00,
+              spacing: 16.00
+            });
+            setVantaEffect(effect);
+          }
+        });
+      }
+      if (contactRef.current) {
+        import('vanta/dist/vanta.waves.min').then((WAVES) => {
+          if (contactRef.current && !contactEffect) {
+            contactEffect = WAVES.default({
+              el: contactRef.current,
+              THREE: THREE,
+              mouseControls: true,
+              touchControls: true,
+              gyroControls: false,
+              minHeight: 200.00,
+              minWidth: 200.00,
+              scale: 1.00,
+              scaleMobile: 1.00,
+              color: 0x070707, // very dark subtle grey wave
+              shininess: 35.00,
+              waveHeight: 12.00,
+              waveSpeed: 0.60,
+              zoom: 0.90
+            });
+            setVantaContactEffect(contactEffect);
+          }
+        });
+      }
     }
 
     return () => {
       document.body.style.cursor = '';
       if (effect) {
         effect.destroy();
+      }
+      if (contactEffect) {
+        contactEffect.destroy();
       }
     };
   }, []);
@@ -977,9 +1008,11 @@ export default function Home() {
 
         <div className="section-divider-line" />
 
-        {/* ── CONTACT ── */}
-        <section className="section" id="contact">
-          <Reveal><div className="section-label">Get in touch</div></Reveal>
+        <section className="section" id="contact" ref={contactRef}>
+          <div className="contact-top-blend" />
+          <div className="contact-bottom-blend" />
+          <div className="contact-container-interactive">
+            <Reveal><div className="section-label">Get in touch</div></Reveal>
 
           <div className="contact-grid">
             <div>
@@ -1097,7 +1130,8 @@ export default function Home() {
               </div>
             </Reveal>
           </div>
-        </section>
+        </div>
+      </section>
 
         {/* ── FOOTER ── */}
         <footer className="footer">

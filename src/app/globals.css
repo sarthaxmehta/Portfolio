@@ -1659,3 +1659,36 @@ ol {
     display: none;
   }
 }
+
+/* ── CONTACT DYNAMIC BACKGROUND ────────────────────────────── */
+#contact {
+  position: relative;
+  overflow: hidden;
+}
+
+.contact-top-blend {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 140px;
+  background: linear-gradient(to bottom, var(--bg), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.contact-bottom-blend {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 140px;
+  background: linear-gradient(to top, var(--bg), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.contact-container-interactive {
+  position: relative;
+  z-index: 2;
+}
