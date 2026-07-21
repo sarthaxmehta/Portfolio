@@ -237,6 +237,22 @@ ol {
   background-size: 200px 200px;
 }
 
+/* Soft transition bottom blur blend */
+.hero-bottom-blend {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 220px;
+  background: linear-gradient(to bottom, transparent, var(--bg) 92%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  mask-image: linear-gradient(to bottom, transparent, black 50%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .hero-content {
   position: relative;
   z-index: 2;
@@ -252,10 +268,17 @@ ol {
   gap: 10px;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--text-3);
+  color: var(--text-1);
+  background: rgba(4, 4, 4, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 8px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--r-full);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-bottom: 36px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .hero-eyebrow-dot {
@@ -407,20 +430,24 @@ ol {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--text-2);
+  color: var(--text-1);
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 500;
   padding: 12px 28px;
   border-radius: var(--r-full);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(4, 4, 4, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   text-decoration: none;
-  transition: color 0.2s, border-color 0.2s, transform 0.25s var(--ease);
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s, transform 0.25s var(--ease);
 }
 
 .btn-secondary:hover {
-  color: var(--text-1);
-  border-color: var(--border-hover);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+  background-color: rgba(255, 255, 255, 0.08);
   transform: translateY(-2px);
 }
 

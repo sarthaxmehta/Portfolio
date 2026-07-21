@@ -837,6 +837,7 @@ export default function Home() {
           <span>scroll</span>
           <div className="scroll-line" />
         </motion.div>
+        <div className="hero-bottom-blend" />
       </section>
 
       {/* ══════════════════════════════════════════════════════
