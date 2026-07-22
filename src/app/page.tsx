@@ -723,8 +723,10 @@ export default function Home() {
     let contactEffect: any = null;
     if (typeof window !== 'undefined') {
       (window as any).THREE = THREE;
+      console.log('DEBUG: heroRef.current =', heroRef.current, 'contactRef.current =', contactRef.current);
       if (heroRef.current) {
         import('vanta/dist/vanta.net.min').then((NET) => {
+          console.log('DEBUG: NET loaded successfully');
           if (heroRef.current && !effect) {
             effect = NET.default({
               el: heroRef.current,
@@ -744,10 +746,11 @@ export default function Home() {
             });
             setVantaEffect(effect);
           }
-        });
+        }).catch(err => console.error('DEBUG: NET failed to load:', err));
       }
       if (contactRef.current) {
         import('vanta/dist/vanta.waves.min').then((WAVES) => {
+          console.log('DEBUG: WAVES loaded successfully');
           if (contactRef.current && !contactEffect) {
             contactEffect = WAVES.default({
               el: contactRef.current,
@@ -759,15 +762,15 @@ export default function Home() {
               minWidth: 200.00,
               scale: 1.00,
               scaleMobile: 1.00,
-              color: 0x070707, // very dark subtle grey wave
+              color: 0x22120b, // subtle dark copper wave
               shininess: 35.00,
-              waveHeight: 12.00,
-              waveSpeed: 0.60,
+              waveHeight: 14.00,
+              waveSpeed: 0.55,
               zoom: 0.90
             });
             setVantaContactEffect(contactEffect);
           }
-        });
+        }).catch(err => console.error('DEBUG: WAVES failed to load:', err));
       }
     }
 
