@@ -831,6 +831,10 @@ export default function Home() {
           >
             <span className="hero-eyebrow-dot" />
             NIT Jalandhar · B.Tech CS · 2024–2028
+            <span className="hero-available">
+              <span className="hero-available-dot" />
+              Available
+            </span>
           </motion.div>
 
           <h1 className="hero-name">
@@ -1052,7 +1056,7 @@ export default function Home() {
             </div>
 
             <Reveal delay={0.1}>
-              <div className="contact-form">
+              <div className="contact-form form-card">
                 {submitStatus ? (
                   <div className="success-state">
                     <div className="success-icon">✓</div>
