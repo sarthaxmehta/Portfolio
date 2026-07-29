@@ -17,8 +17,7 @@ import {
   AnimatePresence,
 } from 'framer-motion';
 import Link from 'next/link';
-import { Particles, ParticlesProvider, useParticlesProvider } from '@tsparticles/react';
-import { loadSlim } from '@tsparticles/slim';
+import * as THREE from 'three';
 
 import { getProjects } from '../actions/project';
 import { getExperiences } from '../actions/experience';
@@ -108,98 +107,106 @@ const timelineItems = [
     title: 'NIT Jalandhar',
     subtitle: 'B.Tech Computer Science · GPA 8.65 / 10',
     body: "Studying at Dr. B.R. Ambedkar National Institute of Technology Jalandhar. Core Member of E-Cell and Q'Mania Quantum Club. Relevant coursework: DSA, OOP, DBMS, Computer Networks, DAA, COA, Digital Circuits.",
-    type: 'Education',
   },
   {
     date: 'Jan 2026 — Feb 2026',
     title: 'India Space Academy',
     subtitle: 'Remote Sensing & GIS Intern',
     body: 'Built an end-to-end geospatial AI pipeline for automated building footprint extraction from Sentinel-2 satellite imagery in the Delhi NCR region using a custom PyTorch U-Net and Google Earth Engine Random Forest classifier.',
-    type: 'Internship',
   },
 ];
 
 const principles = [
-  { num: '001', text: 'SHIP THINGS THAT MATTER.', person: 'Steve Jobs', role: '// Apple · NeXT', img: '/portraits/visionary.png' },
-  { num: '002', text: 'HAVE A POINT OF VIEW.', person: 'Steve Jobs', role: '// Apple · NeXT', img: '/portraits/visionary.png' },
-  { num: '003', text: 'TAKE NO SHORTCUTS.', person: 'Kobe Bryant', role: '// 1978 – 2020', img: '/portraits/athlete.png' },
-  { num: '004', text: 'BE ORIGINAL.', person: 'Pablo Picasso', role: '// 1881 – 1973', img: '/portraits/artist.png' },
-  { num: '005', text: "IF YOU CAN'T BE ORIGINAL, BE BETTER THAN ORIGINAL.", person: 'C.S. Lewis', role: '// 1898 – 1963', img: '/portraits/scholar.png' },
-  { num: '006', text: "DON'T SHIP JUNK.", person: 'Jeff Bezos', role: '// Amazon · Blue Origin', img: '/portraits/ceo.png' },
-  { num: '007', text: "MOVE AT STARTUP SPEED EVEN IF YOU AREN'T ONE.", person: 'Sam Altman', role: '// OpenAI · Y Combinator', img: '/portraits/ceo.png' },
-  { num: '008', text: 'EVERY PIXEL IS A DECISION. MAKE IT COUNT.', person: 'Jony Ive', role: '// Apple Design', img: '/portraits/visionary.png' },
-  { num: '009', text: 'THE BEST DOCUMENTATION IS WORKING CODE.', person: 'Richard Feynman', role: '// 1918 – 1988', img: '/portraits/physicist.png' },
-  { num: '010', text: 'SOLVE THE HARDEST PROBLEM FIRST.', person: 'Richard Feynman', role: '// 1918 – 1988', img: '/portraits/physicist.png' },
+  {
+    num: '001',
+    text: 'SHIP THINGS THAT MATTER.',
+    person: 'Steve Jobs',
+    role: '// Apple · NeXT',
+    img: '/portraits/visionary.png',
+  },
+  {
+    num: '002',
+    text: 'HAVE A POINT OF VIEW.',
+    person: 'Steve Jobs',
+    role: '// Apple · NeXT',
+    img: '/portraits/visionary.png',
+  },
+  {
+    num: '003',
+    text: 'TAKE NO SHORTCUTS.',
+    person: 'Kobe Bryant',
+    role: '// 1978 – 2020',
+    img: '/portraits/athlete.png',
+  },
+  {
+    num: '004',
+    text: 'BE ORIGINAL.',
+    person: 'Pablo Picasso',
+    role: '// 1881 – 1973',
+    img: '/portraits/artist.png',
+  },
+  {
+    num: '005',
+    text: "IF YOU CAN'T BE ORIGINAL, BE BETTER THAN ORIGINAL.",
+    person: 'C.S. Lewis',
+    role: '// 1898 – 1963',
+    img: '/portraits/scholar.png',
+  },
+  {
+    num: '006',
+    text: "DON'T SHIP JUNK.",
+    person: 'Jeff Bezos',
+    role: '// Amazon · Blue Origin',
+    img: '/portraits/ceo.png',
+  },
+  {
+    num: '007',
+    text: "MOVE AT STARTUP SPEED EVEN IF YOU AREN'T ONE.",
+    person: 'Sam Altman',
+    role: '// OpenAI · Y Combinator',
+    img: '/portraits/ceo.png',
+  },
+  {
+    num: '008',
+    text: 'EVERY PIXEL IS A DECISION. MAKE IT COUNT.',
+    person: 'Jony Ive',
+    role: '// Apple Design',
+    img: '/portraits/visionary.png',
+  },
+  {
+    num: '009',
+    text: 'THE BEST DOCUMENTATION IS WORKING CODE.',
+    person: 'Richard Feynman',
+    role: '// 1918 – 1988',
+    img: '/portraits/physicist.png',
+  },
+  {
+    num: '010',
+    text: 'SOLVE THE HARDEST PROBLEM FIRST.',
+    person: 'Richard Feynman',
+    role: '// 1918 – 1988',
+    img: '/portraits/physicist.png',
+  },
 ];
 
 const faqs = [
-  { q: 'What kind of projects do you build?', a: 'Full-stack web applications, AI/ML pipelines, geospatial intelligence systems, and native desktop apps. I gravitate toward projects that involve genuinely hard engineering problems and result in a clean, high-quality product.' },
-  { q: 'What technologies do you specialize in?', a: "Next.js, React, TypeScript, Python, FastAPI, PyTorch, Prisma, and the Google AI ecosystem. I'm also deeply experienced in geospatial tooling — Google Earth Engine, QGIS, and satellite imagery processing." },
-  { q: 'Are you open to internships?', a: "Yes. I'm a 2nd-year student at NIT Jalandhar (B.Tech CS, 2024–2028) and actively exploring internship opportunities in software engineering and AI/ML." },
-  { q: "What's the fastest way to reach you?", a: "Email at sarthakm.cs.24@nitj.ac.in — I respond fast. You can also connect on LinkedIn or explore my GitHub." },
+  {
+    q: 'What kind of projects do you build?',
+    a: 'Full-stack web applications, AI/ML pipelines, geospatial intelligence systems, and native desktop apps. I gravitate toward projects that involve genuinely hard engineering problems and result in a clean, high-quality product.',
+  },
+  {
+    q: 'What technologies do you specialize in?',
+    a: "Next.js, React, TypeScript, Python, FastAPI, PyTorch, Prisma, and the Google AI ecosystem. I'm also deeply experienced in geospatial tooling — Google Earth Engine, QGIS, and satellite imagery processing.",
+  },
+  {
+    q: 'Are you open to internships?',
+    a: "Yes. I'm a 2nd-year student at NIT Jalandhar (B.Tech CS, 2024–2028) and actively exploring internship opportunities in software engineering and AI/ML.",
+  },
+  {
+    q: "What's the fastest way to reach you?",
+    a: "Email at sarthakm.cs.24@nitj.ac.in — I respond fast. You can also connect on LinkedIn or explore my GitHub.",
+  },
 ];
-
-/* ═══════════════════════════════════════════════════════════
-   tsParticles configs
-═══════════════════════════════════════════════════════════ */
-
-const HERO_PARTICLES: any = {
-  background: { color: { value: 'transparent' } },
-  fpsLimit: 60,
-  particles: {
-    number: { value: 55, density: { enable: true, area: 1000 } },
-    color: { value: ['#FF4C24', '#FF6B47', 'rgba(255,76,36,0.4)'] },
-    links: {
-      enable: true,
-      distance: 160,
-      color: '#FF4C24',
-      opacity: 0.1,
-      width: 1,
-    },
-    move: {
-      enable: true,
-      speed: 0.35,
-      outModes: { default: 'bounce' },
-    },
-    opacity: { value: { min: 0.15, max: 0.45 } },
-    size: { value: { min: 1, max: 2.8 } },
-    shape: { type: 'circle' },
-  },
-  interactivity: {
-    events: {
-      onHover: { enable: true, mode: 'grab' },
-    },
-    modes: {
-      grab: { distance: 140, links: { opacity: 0.35 } },
-    },
-  },
-  detectRetina: true,
-};
-
-const CONTACT_PARTICLES: any = {
-  background: { color: { value: 'transparent' } },
-  fpsLimit: 60,
-  particles: {
-    number: { value: 35, density: { enable: true, area: 800 } },
-    color: { value: ['#FF4C24', '#7B61FF', '#00D8FF'] },
-    links: {
-      enable: true,
-      distance: 120,
-      color: '#FF4C24',
-      opacity: 0.08,
-      width: 1,
-    },
-    move: {
-      enable: true,
-      speed: 0.3,
-      outModes: { default: 'bounce' },
-    },
-    opacity: { value: { min: 0.1, max: 0.35 } },
-    size: { value: { min: 1, max: 2 } },
-    shape: { type: 'circle' },
-  },
-  detectRetina: true,
-};
 
 /* ═══════════════════════════════════════════════════════════
    ANIMATION VARIANTS
@@ -229,7 +236,6 @@ function ScrollProgressBar() {
   return <motion.div className="scroll-progress" style={{ scaleX }} />;
 }
 
-// ── Custom Cursor ──────────────────────────────────────────
 function CustomCursor() {
   const cx = useMotionValue(-200);
   const cy = useMotionValue(-200);
@@ -243,8 +249,8 @@ function CustomCursor() {
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(
-        window.matchMedia('(max-width: 768px)').matches ||
-        ('ontouchstart' in window) ||
+        window.matchMedia('(max-width: 768px)').matches || 
+        ('ontouchstart' in window) || 
         navigator.maxTouchPoints > 0
       );
     };
@@ -509,7 +515,7 @@ function ProjectModal({
   );
 }
 
-// ── Principles Section ────────────────────────────────────
+// ── Principles Section (withhoney style) ──────────────────
 function PrinciplesSection() {
   const [hovIdx, setHovIdx] = useState<number | null>(null);
   const px = useMotionValue(-400);
@@ -524,6 +530,7 @@ function PrinciplesSection() {
 
   return (
     <section className="principles-dark" onMouseMove={onSectionMove}>
+      {/* Section heading */}
       <div className="section" style={{ paddingBottom: '48px' }}>
         <Reveal>
           <div className="section-label">How I work</div>
@@ -533,6 +540,7 @@ function PrinciplesSection() {
         </Reveal>
       </div>
 
+      {/* The list */}
       <div className="principles-full-list">
         {principles.map((p, i) => (
           <div
@@ -547,6 +555,7 @@ function PrinciplesSection() {
         ))}
       </div>
 
+      {/* Floating portrait tooltip */}
       <AnimatePresence>
         {hovIdx !== null && (
           <motion.div
@@ -608,8 +617,8 @@ function FaqSection() {
   );
 }
 
-// ── Enhanced Timeline with color type badges ───────────────
-function TimelineSection({ items }: { items?: { date: string; title: string; subtitle: string; body: string; type?: string }[] }) {
+// ── Timeline with draw animation ──────────────────────────
+function TimelineSection({ items }: { items?: { date: string; title: string; subtitle: string; body: string }[] }) {
   const displayItems = items && items.length > 0 ? items : timelineItems;
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end center'] });
@@ -617,13 +626,6 @@ function TimelineSection({ items }: { items?: { date: string; title: string; sub
     useTransform(scrollYProgress, [0, 1], [0, 1]),
     { stiffness: 60, damping: 20 }
   );
-
-  const typeColors: Record<string, string> = {
-    'Education': '#7B61FF',
-    'Internship': '#FF4C24',
-    'Work': '#00D8FF',
-    'Leadership': '#4ADE80',
-  };
 
   return (
     <section className="section" id="experience" ref={sectionRef}>
@@ -636,10 +638,15 @@ function TimelineSection({ items }: { items?: { date: string; title: string; sub
         </Reveal>
         <Reveal delay={0.12}>
           <div className="timeline-wrap" style={{ position: 'relative' }}>
+            {/* Background ghost spine */}
             <div className="timeline-spine" />
+            {/* Animated spine overlay */}
             <motion.div
               className="timeline-spine-animated"
-              style={{ height: `calc(100% - 24px)`, scaleY: lineScaleY }}
+              style={{
+                height: `calc(100% - 24px)`,
+                scaleY: lineScaleY,
+              }}
             />
             {displayItems.map((item, i) => (
               <motion.div key={i} className="timeline-item"
@@ -649,21 +656,7 @@ function TimelineSection({ items }: { items?: { date: string; title: string; sub
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: i * 0.14 }}
               >
                 <div className="timeline-dot" />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <div className="timeline-date">{item.date}</div>
-                  {item.type && (
-                    <span style={{
-                      background: `${typeColors[item.type] || '#FF4C24'}18`,
-                      color: typeColors[item.type] || '#FF4C24',
-                      border: `1px solid ${typeColors[item.type] || '#FF4C24'}40`,
-                      borderRadius: 20, padding: '2px 9px',
-                      fontSize: 9, fontFamily: 'var(--font-mono)',
-                      textTransform: 'uppercase', letterSpacing: '1px',
-                    }}>
-                      {item.type}
-                    </span>
-                  )}
-                </div>
+                <div className="timeline-date">{item.date}</div>
                 <div className="timeline-title">{item.title}</div>
                 <div className="timeline-subtitle">{item.subtitle}</div>
                 <div className="timeline-body">{item.body}</div>
@@ -676,317 +669,21 @@ function TimelineSection({ items }: { items?: { date: string; title: string; sub
   );
 }
 
-// ── Floating glowing orb ─────────────────────────────────
-function FloatingOrb({ x, y, size, color, blur, delay }: {
-  x: string; y: string; size: number; color: string; blur: number; delay: number;
-}) {
-  return (
-    <motion.div
-      style={{
-        position: 'absolute', left: x, top: y, width: size, height: size,
-        borderRadius: '50%',
-        background: color,
-        filter: `blur(${blur}px)`,
-        pointerEvents: 'none',
-      }}
-      animate={{ y: [0, -30, 0], opacity: [0.4, 0.7, 0.4] }}
-      transition={{ duration: 6 + delay, repeat: Infinity, ease: 'easeInOut', delay }}
-    />
-  );
-}
-
 /* ═══════════════════════════════════════════════════════════
-   HERO SECTION (particles-powered)
+   MAIN PAGE
 ═══════════════════════════════════════════════════════════ */
 
-function HeroSection({ glowY }: { glowY: any }) {
-  const { loaded } = useParticlesProvider();
-  return (
-    <section className="hero" style={{ position: 'relative', overflow: 'hidden' }}>
-      {/* tsParticles network */}
-      {loaded && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <Particles id="hero-particles" options={HERO_PARTICLES} style={{ width: '100%', height: '100%' }} />
-        </div>
-      )}
-
-      {/* Floating ambient orbs */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden' }}>
-        <FloatingOrb x="8%" y="20%" size={320} color="radial-gradient(circle, rgba(255,76,36,0.12) 0%, transparent 70%)" blur={0} delay={0} />
-        <FloatingOrb x="72%" y="10%" size={260} color="radial-gradient(circle, rgba(123,97,255,0.08) 0%, transparent 70%)" blur={0} delay={1.5} />
-        <FloatingOrb x="55%" y="60%" size={200} color="radial-gradient(circle, rgba(0,216,255,0.06) 0%, transparent 70%)" blur={0} delay={3} />
-      </div>
-
-      <motion.div className="hero-atmosphere" style={{ y: glowY, zIndex: 1 }} />
-      <div className="hero-grain" style={{ zIndex: 1 }} />
-
-      <div className="hero-content" style={{ position: 'relative', zIndex: 2 }}>
-        <motion.div className="hero-eyebrow"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-        >
-          <span className="hero-eyebrow-dot" />
-          NIT Jalandhar · B.Tech CS · 2024–2028
-          <span className="hero-available">
-            <span className="hero-available-dot" />
-            Available
-          </span>
-        </motion.div>
-
-        <h1 className="hero-name">
-          <HeroNameLine text="Sarthak" delay={0.5} />
-          <HeroNameLine text="Mehta"   delay={0.65} />
-        </h1>
-
-        <motion.div className="hero-separator"
-          initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.9 }}
-          style={{ transformOrigin: 'left' }}
-        />
-
-        <motion.p className="hero-role"
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.0 }}
-        >
-          Full-Stack Engineer & AI/ML Enthusiast
-        </motion.p>
-
-        {/* Animated tech pills */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.08 }}
-          style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}
-        >
-          {['Next.js', 'PyTorch', 'GEE', 'Gemini AI'].map((tech, i) => (
-            <motion.span
-              key={tech}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.1 + i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                background: 'rgba(255,76,36,0.08)',
-                border: '1px solid rgba(255,76,36,0.2)',
-                borderRadius: 20, padding: '5px 14px',
-                fontSize: 11, fontFamily: 'var(--font-mono)',
-                color: 'rgba(242,242,240,0.65)', letterSpacing: '0.5px',
-              }}
-            >
-              {tech}
-            </motion.span>
-          ))}
-        </motion.div>
-
-        <motion.div className="hero-actions"
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.25 }}
-        >
-          <MagneticBtn href="#work" className="btn-primary">
-            View my work ↓
-          </MagneticBtn>
-          <MagneticBtn href="https://github.com/sarthaxmehta" target="_blank" rel="noopener noreferrer" className="btn-secondary">
-            GitHub ↗
-          </MagneticBtn>
-        </motion.div>
-      </div>
-
-      <motion.div className="scroll-indicator"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 1.6 }}
-        style={{ zIndex: 2 }}
-      >
-        <span>scroll</span>
-        <div className="scroll-line" />
-      </motion.div>
-      <div className="hero-bottom-blend" style={{ zIndex: 3 }} />
-    </section>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════
-   CONTACT SECTION (particles-powered)
-═══════════════════════════════════════════════════════════ */
-
-function ContactSection({
-  formData, setFormData, isSubmitting, submitStatus, handleSubmit, setSubmitStatus,
-}: any) {
-  const { loaded } = useParticlesProvider();
-  return (
-    <section className="section" id="contact" style={{ position: 'relative', overflow: 'hidden' }}>
-      {/* tsParticles for contact */}
-      {loaded && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-          <Particles id="contact-particles" options={CONTACT_PARTICLES} style={{ width: '100%', height: '100%' }} />
-        </div>
-      )}
-
-      <div className="contact-top-blend" style={{ zIndex: 1, position: 'relative' }} />
-      <div className="contact-bottom-blend" style={{ zIndex: 1, position: 'relative' }} />
-      <div className="contact-container-interactive" style={{ position: 'relative', zIndex: 2 }}>
-        <Reveal><div className="section-label">Get in touch</div></Reveal>
-
-        <div className="contact-grid">
-          <div>
-            <Reveal delay={0.05}>
-              <h2 className="contact-headline">Let's<br />connect.</h2>
-              <p className="contact-sub">
-                Whether you want to collaborate on a project, talk about AI, or just say
-                hi — I'd love to hear from you.
-              </p>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <div className="social-links">
-                {[
-                  { label: 'GitHub', href: 'https://github.com/sarthaxmehta', icon: 'GH' },
-                  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/sarthak-mehta-698457310/', icon: 'in' },
-                  { label: 'sarthakm.cs.24@nitj.ac.in', href: 'mailto:sarthakm.cs.24@nitj.ac.in', icon: '@' },
-                ].map((s) => (
-                  <a key={s.label} href={s.href}
-                    target={s.href.startsWith('mailto') ? undefined : '_blank'}
-                    rel={s.href.startsWith('mailto') ? undefined : 'noopener noreferrer'}
-                    className="social-link" data-hover="true"
-                  >
-                    <span className="social-icon" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>{s.icon}</span>
-                    {s.label}
-                  </a>
-                ))}
-              </div>
-
-              <div style={{ marginTop: '48px' }}>
-                <div className="section-label" style={{ marginBottom: '24px' }}>FAQ</div>
-                <FaqSection />
-              </div>
-            </Reveal>
-          </div>
-
-          <Reveal delay={0.1}>
-            <div className="contact-form form-card">
-              {submitStatus ? (
-                <div className="success-state">
-                  <div className="success-icon">✓</div>
-                  <div className="success-title">Message received.</div>
-                  <p className="success-body">
-                    Thanks, {formData.name}. I'll get back to you at{' '}
-                    <strong style={{ color: 'var(--text-1)' }}>{formData.email}</strong> soon.
-                  </p>
-                  <button className="btn-secondary" style={{ marginTop: '8px' }} data-hover="true"
-                    onClick={() => { setSubmitStatus(null); setFormData({ name: '', email: '', company: '', budget: 'Just saying hello 👋', timeline: 'Developer / Engineer', message: '' }); }}
-                  >
-                    Send another
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">Name *</label>
-                      <input type="text" required value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="form-input" placeholder="Your name" />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Email *</label>
-                      <input type="email" required value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="form-input" placeholder="your@email.com" />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Organization / School</label>
-                    <input type="text" value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="form-input" placeholder="Where are you from? (optional)" />
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">Reason for reaching out</label>
-                      <select value={formData.budget}
-                        onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                        className="form-select"
-                      >
-                        <option>Just saying hello 👋</option>
-                        <option>Technical collaboration 🤝</option>
-                        <option>NIT Jalandhar discussion 🎓</option>
-                        <option>General Q&A or chat 💻</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Your affiliation</label>
-                      <select value={formData.timeline}
-                        onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
-                        className="form-select"
-                      >
-                        <option>Developer / Engineer</option>
-                        <option>Researcher / Student</option>
-                        <option>Recruiter / Tech Manager</option>
-                        <option>Tech Enthusiast</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Message *</label>
-                    <textarea required rows={5} value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      className="form-textarea" placeholder="What's on your mind?" />
-                  </div>
-
-                  <button type="submit" disabled={isSubmitting} className="form-submit" data-hover="true">
-                    {isSubmitting ? 'Sending…' : 'Send message →'}
-                  </button>
-                </form>
-              )}
-            </div>
-          </Reveal>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════
-   SKILLS with category color chips
-═══════════════════════════════════════════════════════════ */
-
-const skillCategories: Record<string, string> = {
-  'Next.js': '#FF4C24', 'React': '#FF4C24', 'TypeScript': '#FF4C24',
-  'Python': '#7B61FF', 'FastAPI': '#7B61FF', 'C++': '#7B61FF',
-  'PyTorch': '#00D8FF', 'TensorFlow': '#00D8FF', 'Hugging Face': '#00D8FF',
-  'Prisma': '#4ADE80', 'SQLite': '#4ADE80',
-  'Google Earth Engine': '#FBBF24', 'QGIS': '#FBBF24', 'Electron': '#FBBF24',
-};
-
-function SkillChip({ name }: { name: string }) {
-  const color = skillCategories[name] || '#FF4C24';
-  const [hovered, setHovered] = useState(false);
-  return (
-    <motion.span
-      variants={fadeUp}
-      className="skill-chip"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        borderColor: hovered ? `${color}60` : undefined,
-        background: hovered ? `${color}10` : undefined,
-        color: hovered ? color : undefined,
-        boxShadow: hovered ? `0 4px 20px ${color}20` : undefined,
-      }}
-    >
-      {name}
-    </motion.span>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════
-   MAIN PAGE INNER (uses useParticlesProvider)
-═══════════════════════════════════════════════════════════ */
-
-function HomeInner() {
+export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [projectData, setProjectData] = useState(staticProjects);
   const [activeProject, setActiveProject] = useState<typeof staticProjects[0] | null>(null);
+  
+  const heroRef = useRef<HTMLDivElement>(null);
+  const contactRef = useRef<HTMLDivElement>(null);
+  const [vantaEffect, setVantaEffect] = useState<any>(null);
+  const [vantaContactEffect, setVantaContactEffect] = useState<any>(null);
 
+  // Parallax
   const { scrollY } = useScroll();
   const glowY = useTransform(scrollY, [0, 600], [0, -90]);
 
@@ -999,7 +696,7 @@ function HomeInner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{ success?: boolean; id?: string } | null>(null);
 
-  const [dynamicTimelineItems, setDynamicTimelineItems] = useState<{ date: string; title: string; subtitle: string; body: string; type?: string }[]>([]);
+  const [dynamicTimelineItems, setDynamicTimelineItems] = useState<{ date: string; title: string; subtitle: string; body: string }[]>([]);
   const [dynamicSkills, setDynamicSkills] = useState<string[]>([]);
 
   useEffect(() => {
@@ -1016,7 +713,7 @@ function HomeInner() {
 
         if (projRes.success && projRes.projects && projRes.projects.length > 0) {
           const mapped = projRes.projects.map((p: any, i: number) => {
-            let contribs: string[] = [];
+            let contribs = [];
             try {
               if (p.contributions) contribs = typeof p.contributions === 'string' ? JSON.parse(p.contributions) : p.contributions;
             } catch {}
@@ -1037,14 +734,13 @@ function HomeInner() {
 
         if (expRes.success && expRes.experiences && expRes.experiences.length > 0) {
           const mappedExp = expRes.experiences.map((exp: any) => {
-            let bullets: string[] = [];
+            let bullets = [];
             try { if (exp.bulletPoints) bullets = JSON.parse(exp.bulletPoints); } catch {}
             return {
               date: `${exp.startDate} — ${exp.current ? 'Present' : exp.endDate || ''}`,
               title: exp.title,
               subtitle: `${exp.organization}${exp.location ? ` · ${exp.location}` : ''}`,
               body: exp.description || (bullets.length ? bullets.join(' ') : ''),
-              type: exp.type,
             };
           });
           setDynamicTimelineItems(mappedExp);
@@ -1059,8 +755,70 @@ function HomeInner() {
     };
     fetchAllDynamicContent();
 
+    // Vanta.js net effect initialization
+    let effect: any = null;
+    let contactEffect: any = null;
+    if (typeof window !== 'undefined') {
+      (window as any).THREE = THREE;
+      console.log('DEBUG: heroRef.current =', heroRef.current, 'contactRef.current =', contactRef.current);
+      if (heroRef.current) {
+        import('vanta/dist/vanta.net.min').then((NET) => {
+          console.log('DEBUG: NET loaded successfully');
+          if (heroRef.current && !effect) {
+            effect = NET.default({
+              el: heroRef.current,
+              THREE: THREE,
+              mouseControls: true,
+              touchControls: true,
+              gyroControls: false,
+              minHeight: 200.00,
+              minWidth: 200.00,
+              scale: 1.00,
+              scaleMobile: 1.00,
+              color: 0xff4c24, // --accent
+              backgroundColor: 0x040404, // matches --bg
+              points: 10.00,
+              maxDistance: 22.00,
+              spacing: 16.00
+            });
+            setVantaEffect(effect);
+          }
+        }).catch(err => console.error('DEBUG: NET failed to load:', err));
+      }
+      if (contactRef.current) {
+        import('vanta/dist/vanta.waves.min').then((WAVES) => {
+          console.log('DEBUG: WAVES loaded successfully');
+          if (contactRef.current && !contactEffect) {
+            contactEffect = WAVES.default({
+              el: contactRef.current,
+              THREE: THREE,
+              mouseControls: true,
+              touchControls: true,
+              gyroControls: false,
+              minHeight: 200.00,
+              minWidth: 200.00,
+              scale: 1.00,
+              scaleMobile: 1.00,
+              color: 0x22120b, // subtle dark copper wave
+              shininess: 35.00,
+              waveHeight: 14.00,
+              waveSpeed: 0.55,
+              zoom: 0.90
+            });
+            setVantaContactEffect(contactEffect);
+          }
+        }).catch(err => console.error('DEBUG: WAVES failed to load:', err));
+      }
+    }
+
     return () => {
       document.body.style.cursor = '';
+      if (effect) {
+        effect.destroy();
+      }
+      if (contactEffect) {
+        contactEffect.destroy();
+      }
     };
   }, []);
 
@@ -1096,10 +854,70 @@ function HomeInner() {
         <a href="#contact" className="nav-cta" data-hover="true">Say hello ↗</a>
       </motion.nav>
 
-      {/* ── HERO (with particles) ── */}
-      <HeroSection glowY={glowY} />
+      {/* ══════════════════════════════════════════════════════
+          HERO
+      ═════════════════════════════════════════════════════ */}
+      <section className="hero" ref={heroRef}>
+        <motion.div className="hero-atmosphere" style={{ y: glowY }} />
+        <div className="hero-grain" />
 
-      {/* ── SKILLS MARQUEE ── */}
+        <div className="hero-content">
+          <motion.div className="hero-eyebrow"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            <span className="hero-eyebrow-dot" />
+            NIT Jalandhar · B.Tech CS · 2024–2028
+            <span className="hero-available">
+              <span className="hero-available-dot" />
+              Available
+            </span>
+          </motion.div>
+
+          <h1 className="hero-name">
+            <HeroNameLine text="Sarthak" delay={0.5} />
+            <HeroNameLine text="Mehta"   delay={0.65} />
+          </h1>
+
+          <motion.div className="hero-separator"
+            initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.9 }}
+            style={{ transformOrigin: 'left' }}
+          />
+
+          <motion.p className="hero-role"
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.0 }}
+          >
+            Full-Stack Engineer & AI/ML Enthusiast
+          </motion.p>
+
+          <motion.div className="hero-actions"
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.15 }}
+          >
+            <MagneticBtn href="#work" className="btn-primary">
+              View my work ↓
+            </MagneticBtn>
+            <MagneticBtn href="https://github.com/sarthaxmehta" target="_blank" rel="noopener noreferrer" className="btn-secondary">
+              GitHub ↗
+            </MagneticBtn>
+          </motion.div>
+        </div>
+
+        <motion.div className="scroll-indicator"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 1.5 }}
+        >
+          <span>scroll</span>
+          <div className="scroll-line" />
+        </motion.div>
+        <div className="hero-bottom-blend" />
+      </section>
+
+      {/* ══════════════════════════════════════════════════════
+          SKILLS MARQUEE
+      ═════════════════════════════════════════════════════ */}
       <motion.div className="marquee-section"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.6 }}
@@ -1114,7 +932,9 @@ function HomeInner() {
         </Marquee>
       </motion.div>
 
-      {/* ── MAIN CONTENT ── */}
+      {/* ══════════════════════════════════════════════════════
+          MAIN CONTENT
+      ═════════════════════════════════════════════════════ */}
       <div className="main-wrap">
 
         {/* ── ABOUT ── */}
@@ -1171,7 +991,7 @@ function HomeInner() {
 
         <div className="section-divider-line" />
 
-        {/* ── SKILLS with color chips ── */}
+        {/* ── SKILLS ── */}
         <div className="skills-wrap">
           <Reveal><div className="section-label">Tech stack</div></Reveal>
           <motion.div className="skills-chips"
@@ -1180,7 +1000,7 @@ function HomeInner() {
             variants={staggerChildren}
           >
             {(dynamicSkills.length ? dynamicSkills : skills).map((s) => (
-              <SkillChip key={s} name={s} />
+              <motion.span key={s} className="skill-chip" variants={fadeUp}>{s}</motion.span>
             ))}
           </motion.div>
         </div>
@@ -1227,20 +1047,135 @@ function HomeInner() {
 
         <div className="section-divider-line" />
 
-        {/* ── PRINCIPLES ── */}
+        {/* ── PRINCIPLES (withhoney style) ── */}
         <PrinciplesSection />
 
         <div className="section-divider-line" />
 
-        {/* ── CONTACT (with particles) ── */}
-        <ContactSection
-          formData={formData}
-          setFormData={setFormData}
-          isSubmitting={isSubmitting}
-          submitStatus={submitStatus}
-          handleSubmit={handleSubmit}
-          setSubmitStatus={setSubmitStatus}
-        />
+        <section className="section" id="contact" ref={contactRef}>
+          <div className="contact-top-blend" />
+          <div className="contact-bottom-blend" />
+          <div className="contact-container-interactive">
+            <Reveal><div className="section-label">Get in touch</div></Reveal>
+
+          <div className="contact-grid">
+            <div>
+              <Reveal delay={0.05}>
+                <h2 className="contact-headline">Let's<br />connect.</h2>
+                <p className="contact-sub">
+                  Whether you want to collaborate on a project, talk about AI, or just say
+                  hi — I'd love to hear from you.
+                </p>
+              </Reveal>
+              <Reveal delay={0.1}>
+                <div className="social-links">
+                  {[
+                    { label: 'GitHub', href: 'https://github.com/sarthaxmehta', icon: 'GH' },
+                    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/sarthak-mehta-698457310/', icon: 'in' },
+                    { label: 'sarthakm.cs.24@nitj.ac.in', href: 'mailto:sarthakm.cs.24@nitj.ac.in', icon: '@' },
+                  ].map((s) => (
+                    <a key={s.label} href={s.href}
+                      target={s.href.startsWith('mailto') ? undefined : '_blank'}
+                      rel={s.href.startsWith('mailto') ? undefined : 'noopener noreferrer'}
+                      className="social-link" data-hover="true"
+                    >
+                      <span className="social-icon" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>{s.icon}</span>
+                      {s.label}
+                    </a>
+                  ))}
+                </div>
+
+                <div style={{ marginTop: '48px' }}>
+                  <div className="section-label" style={{ marginBottom: '24px' }}>FAQ</div>
+                  <FaqSection />
+                </div>
+              </Reveal>
+            </div>
+
+            <Reveal delay={0.1}>
+              <div className="contact-form form-card">
+                {submitStatus ? (
+                  <div className="success-state">
+                    <div className="success-icon">✓</div>
+                    <div className="success-title">Message received.</div>
+                    <p className="success-body">
+                      Thanks, {formData.name}. I'll get back to you at{' '}
+                      <strong style={{ color: 'var(--text-1)' }}>{formData.email}</strong> soon.
+                    </p>
+                    <button className="btn-secondary" style={{ marginTop: '8px' }} data-hover="true"
+                      onClick={() => { setSubmitStatus(null); setFormData({ name: '', email: '', company: '', budget: 'Just saying hello 👋', timeline: 'Developer / Engineer', message: '' }); }}
+                    >
+                      Send another
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">Name *</label>
+                        <input type="text" required value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="form-input" placeholder="Your name" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Email *</label>
+                        <input type="email" required value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="form-input" placeholder="your@email.com" />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Organization / School</label>
+                      <input type="text" value={formData.company}
+                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                        className="form-input" placeholder="Where are you from? (optional)" />
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">Reason for reaching out</label>
+                        <select value={formData.budget}
+                          onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                          className="form-select"
+                        >
+                          <option>Just saying hello 👋</option>
+                          <option>Technical collaboration 🤝</option>
+                          <option>NIT Jalandhar discussion 🎓</option>
+                          <option>General Q&A or chat 💻</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Your affiliation</label>
+                        <select value={formData.timeline}
+                          onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
+                          className="form-select"
+                        >
+                          <option>Developer / Engineer</option>
+                          <option>Researcher / Student</option>
+                          <option>Recruiter / Tech Manager</option>
+                          <option>Tech Enthusiast</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Message *</label>
+                      <textarea required rows={5} value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        className="form-textarea" placeholder="What's on your mind?" />
+                    </div>
+
+                    <button type="submit" disabled={isSubmitting} className="form-submit" data-hover="true">
+                      {isSubmitting ? 'Sending…' : 'Send message →'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
 
         {/* ── FOOTER ── */}
         <footer className="footer">
@@ -1275,21 +1210,5 @@ function HomeInner() {
       {/* ── PROJECT MODAL ── */}
       <ProjectModal project={activeProject} onClose={() => setActiveProject(null)} />
     </>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════
-   PARTICLES INIT + ROOT EXPORT
-═══════════════════════════════════════════════════════════ */
-
-async function particlesInit(engine: any) {
-  await loadSlim(engine);
-}
-
-export default function Home() {
-  return (
-    <ParticlesProvider init={particlesInit}>
-      <HomeInner />
-    </ParticlesProvider>
   );
 }
