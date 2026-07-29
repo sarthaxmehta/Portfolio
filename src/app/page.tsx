@@ -661,13 +661,21 @@ function PrinciplesSection() {
 
   return (
     <section className="principles-section" onMouseMove={onSectionMove} id="principles">
-      {/* Giant Marquee Header */}
+      {/* Top Bar */}
       <Reveal>
+        <div className="principles-top-bar">
+          <span>[ 07 / 09 ]</span>
+          <span>ENGINEERING CODE</span>
+        </div>
+      </Reveal>
+
+      {/* Giant Marquee Header */}
+      <Reveal delay={0.03}>
         <div className="principles-marquee-wrap">
           <Marquee speed={45}>
             <div className="principles-marquee-row">
               {['CORE PRINCIPLES', 'CORE PRINCIPLES', 'CORE PRINCIPLES', 'CORE PRINCIPLES'].map((text, i) => (
-                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '28px', paddingRight: '28px' }}>
+                <span key={i} style={{ display: 'inline-flex', alignItems: 'center' }}>
                   <span className="principles-marquee-text">{text}</span>
                   <span className="principles-marquee-dot" />
                 </span>
@@ -678,9 +686,9 @@ function PrinciplesSection() {
       </Reveal>
 
       {/* Subtitle Description */}
-      <Reveal delay={0.05}>
+      <Reveal delay={0.06}>
         <p className="principles-subtitle">
-          Rules exist to keep standards high and engineering sharp. Here is my personal code — inspired by visionaries, scientists, and relentless builders.
+          At every great engineering team, you find a code of conduct. No shortcuts. No sloppy code. No junk. These principles exist to keep standards high and craftsmanship sharp — inspired by visionaries, scientists, and relentless builders.
         </p>
       </Reveal>
 
@@ -696,10 +704,12 @@ function PrinciplesSection() {
                 onMouseLeave={() => setHovIdx(null)}
                 data-hover="true"
               >
-                <span className="principle-card-num">{p.num}.</span>
+                <span className="principle-card-num">
+                  {p.num}<span className="num-dot">.</span>
+                </span>
                 <span className="principle-card-text">
                   {p.text}
-                  <span className="principle-dot">.</span>
+                  <span className="end-dot">.</span>
                 </span>
               </div>
             ))}
