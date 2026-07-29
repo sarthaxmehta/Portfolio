@@ -119,7 +119,7 @@ const timelineItems = [
 const principles = [
   {
     num: '001',
-    text: 'SHIP THINGS THAT MATTER.',
+    text: 'SHIP THINGS THAT MATTER',
     person: 'Steve Jobs',
     role: '// (1955 – 2011)',
     img: '/portraits/steve_jobs.jpg',
@@ -127,7 +127,7 @@ const principles = [
   },
   {
     num: '002',
-    text: 'HAVE A POINT OF VIEW.',
+    text: 'HAVE A POINT OF VIEW',
     person: 'Steve Jobs',
     role: '// (1955 – 2011)',
     img: '/portraits/steve_jobs.jpg',
@@ -135,7 +135,7 @@ const principles = [
   },
   {
     num: '003',
-    text: 'TAKE NO SHORTCUTS.',
+    text: 'TAKE NO SHORTCUTS',
     person: 'Kobe Bryant',
     role: '// (1978 – 2020)',
     img: '/portraits/kobe_bryant.jpg',
@@ -143,7 +143,7 @@ const principles = [
   },
   {
     num: '004',
-    text: 'BE ORIGINAL.',
+    text: 'BE ORIGINAL',
     person: 'Pablo Picasso',
     role: '// (1881 – 1973)',
     img: '/portraits/pablo_picasso.jpg',
@@ -151,7 +151,7 @@ const principles = [
   },
   {
     num: '005',
-    text: "IF YOU CAN'T BE ORIGINAL, BE BETTER THAN ORIGINAL.",
+    text: "IF YOU CAN'T BE ORIGINAL, BE BETTER THAN ORIGINAL",
     person: 'C.S. Lewis',
     role: '// (1898 – 1963)',
     img: '/portraits/cs_lewis.jpg',
@@ -159,7 +159,7 @@ const principles = [
   },
   {
     num: '006',
-    text: "DON'T TAKE NO SHIT.",
+    text: "DON'T TAKE NO SHIT",
     person: 'Jeff Bezos',
     role: '// (1964 – Present)',
     img: '/portraits/jeff_bezos.jpg',
@@ -167,7 +167,7 @@ const principles = [
   },
   {
     num: '007',
-    text: 'GREATNESS IS GOOD COMPOUNDED OVER TIME.',
+    text: 'GREATNESS IS GOOD COMPOUNDED OVER TIME',
     person: 'Warren Buffett',
     role: '// (1930 – Present)',
     img: '/portraits/warren_buffett.jpg',
@@ -175,7 +175,7 @@ const principles = [
   },
   {
     num: '008',
-    text: "IT'S NOT CREATIVE UNLESS YOU DO SOMETHING THAT SCARES YOU.",
+    text: "IT'S NOT CREATIVE UNLESS YOU DO SOMETHING THAT SCARES YOU",
     person: 'Alfred Hitchcock',
     role: '// (1899 – 1980)',
     img: '/portraits/alfred_hitchcock.jpg',
@@ -183,7 +183,7 @@ const principles = [
   },
   {
     num: '009',
-    text: "BE YOUR CLIENT'S MOST LOYAL CUSTOMER.",
+    text: "BE YOUR CLIENT'S MOST LOYAL CUSTOMER",
     person: 'Warren Buffett',
     role: '// (1930 – Present)',
     img: '/portraits/warren_buffett.jpg',
@@ -191,7 +191,7 @@ const principles = [
   },
   {
     num: '010',
-    text: "MOVE AT STARTUP SPEED EVEN IF YOU AREN'T ONE.",
+    text: "MOVE AT STARTUP SPEED EVEN IF YOU AREN'T ONE",
     person: 'Sam Altman',
     role: '// (1985 – Present)',
     img: '/portraits/sam_altman.jpg',
@@ -199,7 +199,7 @@ const principles = [
   },
   {
     num: '011',
-    text: 'SOLVE THE HARDEST PROBLEM FIRST.',
+    text: 'SOLVE THE HARDEST PROBLEM FIRST',
     person: 'Richard Feynman',
     role: '// (1918 – 1988)',
     img: '/portraits/richard_feynman.jpg',
@@ -207,7 +207,7 @@ const principles = [
   },
   {
     num: '012',
-    text: 'EVERY PIXEL IS A DECISION. MAKE IT COUNT.',
+    text: 'EVERY PIXEL IS A DECISION. MAKE IT COUNT',
     person: 'Jony Ive',
     role: '// (1967 – Present)',
     img: '/portraits/jony_ive.jpg',
@@ -215,7 +215,7 @@ const principles = [
   },
   {
     num: '013',
-    text: 'THE BEST DOCUMENTATION IS WORKING CODE.',
+    text: 'THE BEST DOCUMENTATION IS WORKING CODE',
     person: 'Linus Torvalds',
     role: '// (1969 – Present)',
     img: '/portraits/linus_torvalds.jpg',
@@ -223,7 +223,7 @@ const principles = [
   },
   {
     num: '014',
-    text: 'SIMPLICITY IS A PREREQUISITE FOR RELIABILITY.',
+    text: 'SIMPLICITY IS A PREREQUISITE FOR RELIABILITY',
     person: 'Edsger W. Dijkstra',
     role: '// (1930 – 2002)',
     img: '/portraits/dijkstra.jpg',
@@ -231,7 +231,7 @@ const principles = [
   },
   {
     num: '015',
-    text: 'TAKE YOUR WORK SERIOUSLY, YOURSELF LESS SO.',
+    text: 'TAKE YOUR WORK SERIOUSLY, YOURSELF LESS SO',
     person: 'Richard Feynman',
     role: '// (1918 – 1988)',
     img: '/portraits/richard_feynman.jpg',
@@ -771,25 +771,36 @@ function PrinciplesSection() {
       <AnimatePresence>
         {hovIdx !== null && (
           <motion.div
-            className="floating-portrait"
+            className="floating-portrait-hud"
             style={{ left: 0, top: 0, x: spx, y: spy }}
-            initial={{ opacity: 0, scale: 0.86 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, scale: 0.82, rotate: -6 }}
+            animate={{ opacity: 1, scale: 1, rotate: -3 }}
+            exit={{ opacity: 0, scale: 0.85, rotate: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={principles[hovIdx].img}
-              alt={principles[hovIdx].person}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                if (target.src !== principles[hovIdx].fallbackImg) {
-                  target.src = principles[hovIdx].fallbackImg;
-                }
-              }}
-            />
+            {/* Corner Brackets */}
+            <div className="hud-corner-tl" style={{ width: '6px', height: '6px', top: '4px', left: '4px' }} />
+            <div className="hud-corner-tr" style={{ width: '6px', height: '6px', top: '4px', right: '4px' }} />
+            <div className="hud-corner-bl" style={{ width: '6px', height: '6px', bottom: '4px', left: '4px' }} />
+            <div className="hud-corner-br" style={{ width: '6px', height: '6px', bottom: '4px', right: '4px' }} />
+
+            <div className="portrait-img-frame">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={principles[hovIdx].img}
+                alt={principles[hovIdx].person}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== principles[hovIdx].fallbackImg) {
+                    target.src = principles[hovIdx].fallbackImg;
+                  }
+                }}
+              />
+              <div className="portrait-img-scanline" />
+            </div>
+
             <div className="floating-portrait-info">
+              <div className="portrait-badge">● ARCHIVE PORTRAIT</div>
               <div className="floating-portrait-name">{principles[hovIdx].person}</div>
               <div className="floating-portrait-role">{principles[hovIdx].role}</div>
             </div>
