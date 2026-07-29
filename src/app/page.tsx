@@ -687,6 +687,11 @@ function PrinciplesSection() {
       {/* Main Principles Rounded Card Container */}
       <Reveal delay={0.1}>
         <div className="principles-card-container">
+          <div className="principles-card-header">
+            <span>Sarthak Mehta // Code of Conduct</span>
+            <span style={{ color: '#FF4C24' }}>● 10 Rule Manifesto</span>
+          </div>
+
           <div className="principles-list">
             {principles.map((p, i) => (
               <div
@@ -696,8 +701,11 @@ function PrinciplesSection() {
                 onMouseLeave={() => setHovIdx(null)}
                 data-hover="true"
               >
-                <span className="principle-card-num">{p.num}.</span>
-                <span className="principle-card-text">{p.text}</span>
+                <div className="principle-left">
+                  <span className="principle-card-num">{p.num}.</span>
+                  <span className="principle-card-text">{p.text}</span>
+                </div>
+                <span className="principle-card-author">// {p.person}</span>
               </div>
             ))}
           </div>

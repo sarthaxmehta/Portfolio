@@ -1557,9 +1557,9 @@ ol {
   }
 }
 
-/* ── PRINCIPLES SECTION (withhoney exact match) ───────────── */
+/* ── PRINCIPLES SECTION (ELEGANT PROPORTIONAL MATCH) ───────── */
 .principles-section {
-  padding: 120px 0 80px;
+  padding: 100px 0 80px;
   position: relative;
   overflow: hidden;
 }
@@ -1569,7 +1569,7 @@ ol {
   margin-left: calc(-50vw + 50%);
   margin-right: calc(-50vw + 50%);
   overflow: hidden;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   user-select: none;
 }
 
@@ -1581,28 +1581,28 @@ ol {
 
 .principles-marquee-text {
   font-family: var(--font-display);
-  font-size: clamp(64px, 10vw, 140px);
+  font-size: clamp(32px, 4.5vw, 56px);
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   color: #FFFFFF;
   text-transform: uppercase;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .principles-marquee-dot {
-  width: 16px;
-  height: 16px;
+  width: 8px;
+  height: 8px;
   background: #FF4C24;
   display: inline-block;
   flex-shrink: 0;
-  border-radius: 3px;
-  box-shadow: 0 0 12px rgba(255, 76, 36, 0.6);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(255, 76, 36, 0.7);
 }
 
 .principles-subtitle {
   text-align: center;
-  max-width: 620px;
-  margin: 0 auto 52px;
+  max-width: 640px;
+  margin: 0 auto 48px;
   font-family: var(--font-body);
   font-size: 14px;
   color: rgba(242, 242, 240, 0.6);
@@ -1610,67 +1610,106 @@ ol {
 }
 
 .principles-card-container {
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
-  background: #0E0E12;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  padding: 48px 56px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
+  background: rgba(14, 14, 18, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 40px 48px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 76, 36, 0.05);
+  backdrop-filter: blur(16px);
 }
 
 @media (max-width: 768px) {
   .principles-card-container {
-    padding: 28px 24px;
-    border-radius: 20px;
+    padding: 24px 20px;
+    border-radius: 18px;
   }
+}
+
+.principles-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(242, 242, 240, 0.4);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .principles-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .principle-card-row {
   display: flex;
-  align-items: baseline;
-  gap: 20px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: background 0.2s ease, transform 0.2s ease;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.25s ease;
   cursor: pointer;
 }
 
 .principle-card-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 76, 36, 0.06);
+  border-left-color: #FF4C24;
+}
+
+.principle-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
 }
 
 .principle-card-num {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 13px;
   color: rgba(242, 242, 240, 0.35);
   flex-shrink: 0;
   transition: color 0.2s ease;
+  min-width: 36px;
 }
 
 .principle-card-row:hover .principle-card-num {
   color: #FF4C24;
+  font-weight: 600;
 }
 
 .principle-card-text {
   font-family: var(--font-mono);
-  font-size: clamp(13px, 1.4vw, 17px);
+  font-size: clamp(12px, 1.25vw, 15px);
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: rgba(242, 242, 240, 0.55);
+  color: rgba(242, 242, 240, 0.6);
   transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .principle-card-row:hover .principle-card-text {
   color: #FFFFFF;
-  transform: translateX(6px);
+  transform: translateX(4px);
+}
+
+.principle-card-author {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(242, 242, 240, 0.35);
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.principle-card-row:hover .principle-card-author {
+  color: rgba(255, 76, 36, 0.85);
 }
 
 /* ── FLOATING PORTRAIT CARD ─────────────────────────────────── */
