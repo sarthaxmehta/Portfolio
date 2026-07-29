@@ -20,6 +20,8 @@ import Link from 'next/link';
 import * as THREE from 'three';
 
 import { getProjects } from '../actions/project';
+import { getExperiences } from '../actions/experience';
+import { getSkills } from '../actions/skill';
 import { submitInquiry } from '../actions/inquiry';
 
 /* ═══════════════════════════════════════════════════════════
@@ -616,7 +618,8 @@ function FaqSection() {
 }
 
 // ── Timeline with draw animation ──────────────────────────
-function TimelineSection() {
+function TimelineSection({ items }: { items?: { date: string; title: string; subtitle: string; body: string }[] }) {
+  const displayItems = items && items.length > 0 ? items : timelineItems;
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end center'] });
   const lineScaleY = useSpring(
@@ -625,7 +628,7 @@ function TimelineSection() {
   );
 
   return (
-    <section className="section" id="timeline" ref={sectionRef}>
+    <section className="section" id="experience" ref={sectionRef}>
       <Reveal>
         <div className="section-label">Education &amp; experience</div>
       </Reveal>
@@ -645,7 +648,7 @@ function TimelineSection() {
                 scaleY: lineScaleY,
               }}
             />
-            {timelineItems.map((item, i) => (
+            {displayItems.map((item, i) => (
               <motion.div key={i} className="timeline-item"
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -693,30 +696,64 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{ success?: boolean; id?: string } | null>(null);
 
+  const [dynamicTimelineItems, setDynamicTimelineItems] = useState<{ date: string; title: string; subtitle: string; body: string }[]>([]);
+  const [dynamicSkills, setDynamicSkills] = useState<string[]>([]);
+
   useEffect(() => {
     setMounted(true);
     document.body.style.cursor = 'none';
-    const fetchProjects = async () => {
+
+    const fetchAllDynamicContent = async () => {
       try {
-        const res = await getProjects();
-        if (res.success && res.projects && res.projects.length > 0) {
-          const mapped = res.projects.map((p: any, i: number) => ({
-            id: p.id || p.title.toLowerCase().replace(/\s/g, '-'),
-            num: String(i + 1).padStart(2, '0'),
-            title: p.title, desc: p.description,
-            tags: typeof p.tags === 'string' ? p.tags.split(',').map((t: string) => t.trim()) : p.tags,
-            url: p.githubUrl || p.projectUrl || 'https://github.com/sarthaxmehta',
-            architecture: '', contributions: [], challenge: '',
-          }));
-          const merged = mapped.map((mp: any) => {
-            const sm = staticProjects.find(sp => sp.title.toLowerCase() === mp.title.toLowerCase());
-            return sm ? { ...mp, ...sm } : mp;
+        const [projRes, expRes, skillRes] = await Promise.all([
+          getProjects(),
+          getExperiences(),
+          getSkills(),
+        ]);
+
+        if (projRes.success && projRes.projects && projRes.projects.length > 0) {
+          const mapped = projRes.projects.map((p: any, i: number) => {
+            let contribs = [];
+            try {
+              if (p.contributions) contribs = typeof p.contributions === 'string' ? JSON.parse(p.contributions) : p.contributions;
+            } catch {}
+            return {
+              id: p.id || p.title.toLowerCase().replace(/\s/g, '-'),
+              num: p.num || String(i + 1).padStart(2, '0'),
+              title: p.title,
+              desc: p.desc || p.description,
+              tags: typeof p.tags === 'string' ? p.tags.split(',').map((t: string) => t.trim()) : p.tags,
+              url: p.githubUrl || p.projectUrl || 'https://github.com/sarthaxmehta',
+              architecture: p.architecture || '',
+              contributions: contribs,
+              challenge: p.challenge || '',
+            };
           });
-          setProjectData(merged);
+          setProjectData(mapped);
         }
-      } catch { /* silently use static */ }
+
+        if (expRes.success && expRes.experiences && expRes.experiences.length > 0) {
+          const mappedExp = expRes.experiences.map((exp: any) => {
+            let bullets = [];
+            try { if (exp.bulletPoints) bullets = JSON.parse(exp.bulletPoints); } catch {}
+            return {
+              date: `${exp.startDate} — ${exp.current ? 'Present' : exp.endDate || ''}`,
+              title: exp.title,
+              subtitle: `${exp.organization}${exp.location ? ` · ${exp.location}` : ''}`,
+              body: exp.description || (bullets.length ? bullets.join(' ') : ''),
+            };
+          });
+          setDynamicTimelineItems(mappedExp);
+        }
+
+        if (skillRes.success && skillRes.skills && skillRes.skills.length > 0) {
+          setDynamicSkills(skillRes.skills.map((s: any) => s.name));
+        }
+      } catch (err) {
+        console.error('Error fetching dynamic content:', err);
+      }
     };
-    fetchProjects();
+    fetchAllDynamicContent();
 
     // Vanta.js net effect initialization
     let effect: any = null;
@@ -886,7 +923,7 @@ export default function Home() {
         transition={{ duration: 0.8, delay: 0.6 }}
       >
         <Marquee speed={50}>
-          {skills.map((s) => (
+          {(dynamicSkills.length ? dynamicSkills : skills).map((s) => (
             <span key={s} style={{ display: 'inline-flex', alignItems: 'center' }}>
               <span className="marquee-item">{s}</span>
               <span className="marquee-sep">◆</span>
@@ -962,7 +999,7 @@ export default function Home() {
             viewport={{ once: true, margin: '-5%' }}
             variants={staggerChildren}
           >
-            {skills.map((s) => (
+            {(dynamicSkills.length ? dynamicSkills : skills).map((s) => (
               <motion.span key={s} className="skill-chip" variants={fadeUp}>{s}</motion.span>
             ))}
           </motion.div>
@@ -1006,7 +1043,7 @@ export default function Home() {
         <div className="section-divider-line" />
 
         {/* ── TIMELINE ── */}
-        <TimelineSection />
+        <TimelineSection items={dynamicTimelineItems} />
 
         <div className="section-divider-line" />
 

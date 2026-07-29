@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '../lib/prisma';
+import { isAuthorizedAdmin } from '../lib/auth';
 
 export async function submitInquiry(data: {
   name: string;
@@ -11,7 +12,7 @@ export async function submitInquiry(data: {
   message: string;
 }) {
   try {
-    if (!data.name || !data.email || !data.budget || !data.timeline || !data.message) {
+    if (!data.name || !data.email || !data.message) {
       return { success: false, error: 'Please fill all required fields.' };
     }
 
@@ -20,8 +21,8 @@ export async function submitInquiry(data: {
         name: data.name,
         email: data.email,
         company: data.company || null,
-        budget: data.budget,
-        timeline: data.timeline,
+        budget: data.budget || 'General Inquiry',
+        timeline: data.timeline || 'Immediate',
         message: data.message,
       },
     });
@@ -34,6 +35,11 @@ export async function submitInquiry(data: {
 }
 
 export async function getInquiries() {
+  const isAuth = await isAuthorizedAdmin();
+  if (!isAuth) {
+    return { success: false, error: 'Unauthorized access.' };
+  }
+
   try {
     const inquiries = await prisma.inquiry.findMany({
       orderBy: { createdAt: 'desc' },
@@ -46,6 +52,11 @@ export async function getInquiries() {
 }
 
 export async function deleteInquiry(id: string) {
+  const isAuth = await isAuthorizedAdmin();
+  if (!isAuth) {
+    return { success: false, error: 'Unauthorized action.' };
+  }
+
   try {
     await prisma.inquiry.delete({
       where: { id },
@@ -58,6 +69,11 @@ export async function deleteInquiry(id: string) {
 }
 
 export async function updateInquiryStatus(id: string, status: string) {
+  const isAuth = await isAuthorizedAdmin();
+  if (!isAuth) {
+    return { success: false, error: 'Unauthorized action.' };
+  }
+
   try {
     const inquiry = await prisma.inquiry.update({
       where: { id },
@@ -70,3 +86,20 @@ export async function updateInquiryStatus(id: string, status: string) {
   }
 }
 
+export async function addInquiryNote(id: string, notes: string) {
+  const isAuth = await isAuthorizedAdmin();
+  if (!isAuth) {
+    return { success: false, error: 'Unauthorized action.' };
+  }
+
+  try {
+    const inquiry = await prisma.inquiry.update({
+      where: { id },
+      data: { notes },
+    });
+    return { success: true, inquiry };
+  } catch (error: any) {
+    console.error('Error updating inquiry notes:', error);
+    return { success: false, error: error.message || 'Failed to update notes.' };
+  }
+}

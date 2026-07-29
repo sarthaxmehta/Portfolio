@@ -8,14 +8,45 @@ datasource db {
 }
 
 model Project {
+  id            String   @id @default(uuid())
+  num           String?
+  title         String
+  desc          String
+  tags          String   // Comma-separated tags
+  imageUrl      String   @default("/projects/placeholder.png")
+  projectUrl    String?
+  githubUrl     String?
+  architecture  String?
+  contributions String?  // JSON array string of bullet points
+  challenge     String?
+  featured      Boolean  @default(false)
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+}
+
+model Experience {
+  id           String   @id @default(uuid())
+  title        String
+  organization String
+  location     String?
+  type         String   @default("Work") // Work, Internship, Education, Leadership
+  startDate    String
+  endDate      String?
+  current      Boolean  @default(false)
+  description  String?
+  bulletPoints String?  // JSON array string
+  technologies String?  // Comma-separated tags
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+model Skill {
   id          String   @id @default(uuid())
-  title       String
-  description String
-  tags        String   // Comma-separated tags
-  imageUrl    String
-  projectUrl  String?
-  githubUrl   String?
-  featured    Boolean  @default(false)
+  name        String
+  category    String   // Programming, Frameworks, AI/ML, Databases, Tools
+  proficiency Int      @default(85)
+  featured    Boolean  @default(true)
+  order       Int      @default(0)
   createdAt   DateTime @default(now())
 }
 
@@ -27,6 +58,14 @@ model Inquiry {
   budget    String
   timeline  String
   message   String
-  status    String   @default("pending")
+  status    String   @default("pending") // pending, contacted, archived, starred
+  notes     String?
   createdAt DateTime @default(now())
 }
+
+model AdminSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
