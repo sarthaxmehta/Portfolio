@@ -1693,35 +1693,36 @@ ol {
   color: #FF4C24;
 }
 
-/* ── SOPHISTICATED FLOATING PORTRAIT CARD (MINIMAL ELEGANT) ── */
+/* ── SOPHISTICATED FLOATING PORTRAIT CARD (SMOOTH & MINIMAL) ── */
 .floating-portrait-clean {
   position: fixed;
   pointer-events: none;
   z-index: 9999;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: #141417;
+  gap: 10px;
+  background: rgba(14, 14, 17, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 6px 14px 6px 6px;
-  border-radius: 8px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+  padding: 5px 12px 5px 5px;
+  border-radius: 6px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85);
   transform: rotate(-3deg);
+  will-change: transform;
 }
 
 .floating-portrait-clean img {
-  width: 44px;
-  height: 54px;
+  width: 40px;
+  height: 50px;
   object-fit: cover;
-  border-radius: 4px;
-  filter: grayscale(100%) contrast(110%);
+  border-radius: 3px;
+  filter: grayscale(100%) contrast(115%);
   display: block;
 }
 
 .floating-portrait-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .portrait-name {
@@ -1736,7 +1737,7 @@ ol {
 
 .portrait-meta {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9.5px;
   color: rgba(242, 242, 240, 0.45);
   letter-spacing: 0.04em;
 }

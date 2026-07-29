@@ -701,12 +701,12 @@ function PrinciplesSection() {
   const [hovIdx, setHovIdx] = useState<number | null>(null);
   const px = useMotionValue(-400);
   const py = useMotionValue(-400);
-  const spx = useSpring(px, { stiffness: 220, damping: 20 });
-  const spy = useSpring(py, { stiffness: 220, damping: 20 });
+  const spx = useSpring(px, { stiffness: 900, damping: 45 });
+  const spy = useSpring(py, { stiffness: 900, damping: 45 });
 
   const onSectionMove = useCallback((e: React.MouseEvent) => {
-    px.set(e.clientX + 16);
-    py.set(e.clientY - 36);
+    px.set(e.clientX + 20);
+    py.set(e.clientY - 28);
   }, [px, py]);
 
   return (
@@ -773,10 +773,10 @@ function PrinciplesSection() {
           <motion.div
             className="floating-portrait-clean"
             style={{ left: 0, top: 0, x: spx, y: spy }}
-            initial={{ opacity: 0, scale: 0.9, y: 4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 4 }}
-            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1, ease: 'easeOut' }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
