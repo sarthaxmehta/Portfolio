@@ -189,7 +189,43 @@ const principles = [
   },
 ];
 
+const workflowPhases = [
+  {
+    id: '01',
+    label: 'Phase 01: First Principles',
+    title: '01. First-Principles Architecture',
+    desc: 'DECONSTRUCTING COMPLEX PROBLEMS TO THEIR CORE ALGORITHMIC PRIMITIVES BEFORE WRITING CODE. DATA MODELS, SYSTEM BOUNDARIES, AND AI PIPELINE ORCHESTRATORS ARE RIGOROUSLY ARCHITECTED TO ELIMINATE TECHNICAL DEBT BEFORE IT BEGINS.',
+    dotColor: '#FF4C24',
+    img: '/portraits/visionary.png',
+  },
+  {
+    id: '02',
+    label: 'Phase 02: Deep Execution',
+    title: '02. High-Velocity Deep Work',
+    desc: 'NO DISTRACTIONS. HEADS DOWN, NOSE TO THE GRINDSTONE. BUILDING HIGH-PERFORMANCE BACKENDS, REACT 19 INTERFACES, AND NEURAL NETWORK SEGMENTATION PIPELINES WITH UNCOMPROMISING PRECISION AND SPEED.',
+    dotColor: '#EAB308',
+    img: '/portraits/scholar.png',
+  },
+  {
+    id: '03',
+    label: 'Phase 03: Benchmarking',
+    title: '03. Empirical Stress Testing',
+    desc: 'TESTING EVERY EDGE CASE TO DESTRUCTION. QUERY LATENCIES, CONCURRENCY MUTATIONS, AND MACHINE LEARNING KAPPA COEFFICIENTS ARE VERIFIED AGAINST RIGOROUS RUNTIME TELEMETRY LOGS.',
+    dotColor: '#84CC16',
+    img: '/portraits/physicist.png',
+  },
+  {
+    id: '04',
+    label: 'Phase 04: Production Shipping',
+    title: '04. Production Shipping & Polish',
+    desc: 'SHIPPING FIRST-CLASS PRODUCT TO PRODUCTION WITH REAL-TIME TELEMETRY, AUTOMATED DATABASE MIGRATIONS, AND EVERY PIXEL METICULOUSLY CRAFTED FOR MAXIMUM IMPACT.',
+    dotColor: '#06B6D4',
+    img: '/portraits/ceo.png',
+  },
+];
+
 const faqs = [
+
   {
     q: 'What kind of projects do you build?',
     a: 'Full-stack web applications, AI/ML pipelines, geospatial intelligence systems, and native desktop apps. I gravitate toward projects that involve genuinely hard engineering problems and result in a clean, high-quality product.',
@@ -512,6 +548,101 @@ function ProjectModal({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// ── Workflow Methodology Section (withhoney style) ────────
+function WorkflowSection() {
+  const [activePhase, setActivePhase] = useState(0);
+  const current = workflowPhases[activePhase];
+
+  return (
+    <section className="section workflow-section" id="process">
+      <Reveal>
+        <div className="workflow-header">
+          <div className="section-label" style={{ justifyContent: 'center', marginBottom: '16px' }}>
+            Engineering Process
+          </div>
+          <h2 className="workflow-title">How I Build.</h2>
+          <p className="workflow-subtitle">
+            From first-principles architecture to production deployment — moving with startup speed, precision engineering, and zero compromises.
+          </p>
+        </div>
+      </Reveal>
+
+      <Reveal delay={0.1}>
+        <div className="workflow-container">
+          {/* Left Sidebar */}
+          <div className="workflow-sidebar">
+            <div className="workflow-brand">
+              <span className="workflow-brand-title">Sarthak // Workflow</span>
+              <span className="workflow-brand-icon">❖</span>
+            </div>
+
+            <div className="workflow-list">
+              {workflowPhases.map((phase, idx) => (
+                <button
+                  key={phase.id}
+                  onClick={() => setActivePhase(idx)}
+                  className={`workflow-nav-item${activePhase === idx ? ' active' : ''}`}
+                  data-hover="true"
+                >
+                  <span
+                    className="workflow-dot"
+                    style={{ background: phase.dotColor }}
+                  />
+                  <span>{phase.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ marginTop: '32px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.35)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Protocol v2.6</span>
+              <span style={{ color: '#4ADE80' }}>● Optimized</span>
+            </div>
+          </div>
+
+          {/* Right Content Panel */}
+          <div className="workflow-stage-panel">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={current.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                style={{ display: 'flex', flexDirection: 'column', gap: '28px', height: '100%', justifyContent: 'space-between' }}
+              >
+                {/* HUD Framed Box with red corner brackets */}
+                <div className="workflow-hud-card">
+                  <div className="hud-corner hud-corner-tl" />
+                  <div className="hud-corner hud-corner-tr" />
+                  <div className="hud-corner hud-corner-bl" />
+                  <div className="hud-corner hud-corner-br" />
+
+                  <div className="workflow-phase-num">{current.title}</div>
+                  <div className="workflow-phase-desc">{current.desc}</div>
+                </div>
+
+                {/* Artwork Container */}
+                <div className="workflow-art-wrap">
+                  <div
+                    className="workflow-art-glow"
+                    style={{ background: `radial-gradient(circle at center, ${current.dotColor}35 0%, transparent 75%)` }}
+                  />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={current.img}
+                    alt={current.title}
+                    className="workflow-art-img"
+                  />
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </Reveal>
+    </section>
   );
 }
 
@@ -847,7 +978,7 @@ export default function Home() {
       >
         <Link href="/" className="nav-brand">sarthak mehta</Link>
         <div className="nav-links">
-          {['About', 'Work', 'Experience', 'Connect'].map((l) => (
+          {['About', 'Work', 'Experience', 'Process', 'Connect'].map((l) => (
             <a key={l} href={`#${l.toLowerCase()}`} className="nav-link">{l}</a>
           ))}
         </div>
@@ -1044,6 +1175,11 @@ export default function Home() {
 
         {/* ── TIMELINE ── */}
         <TimelineSection items={dynamicTimelineItems} />
+
+        <div className="section-divider-line" />
+
+        {/* ── WORKFLOW / METHODOLOGY (withhoney style) ── */}
+        <WorkflowSection />
 
         <div className="section-divider-line" />
 
