@@ -660,31 +660,49 @@ function PrinciplesSection() {
   }, [px, py]);
 
   return (
-    <section className="principles-dark" onMouseMove={onSectionMove}>
-      {/* Section heading */}
-      <div className="section" style={{ paddingBottom: '48px' }}>
-        <Reveal>
-          <div className="section-label">How I work</div>
-        </Reveal>
-        <Reveal delay={0.05}>
-          <h2 className="section-title">My principles.</h2>
-        </Reveal>
-      </div>
+    <section className="principles-section" onMouseMove={onSectionMove} id="principles">
+      {/* Giant Marquee Header */}
+      <Reveal>
+        <div className="principles-marquee-wrap">
+          <Marquee speed={45}>
+            <div className="principles-marquee-row">
+              {['CORE PRINCIPLES', 'CORE PRINCIPLES', 'CORE PRINCIPLES', 'CORE PRINCIPLES'].map((text, i) => (
+                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '28px', paddingRight: '28px' }}>
+                  <span className="principles-marquee-text">{text}</span>
+                  <span className="principles-marquee-dot" />
+                </span>
+              ))}
+            </div>
+          </Marquee>
+        </div>
+      </Reveal>
 
-      {/* The list */}
-      <div className="principles-full-list">
-        {principles.map((p, i) => (
-          <div
-            key={p.num}
-            className="principle-row"
-            onMouseEnter={() => setHovIdx(i)}
-            onMouseLeave={() => setHovIdx(null)}
-          >
-            <span className="principle-row-num">{p.num}.</span>
-            <span className="principle-row-text">{p.text}</span>
+      {/* Subtitle Description */}
+      <Reveal delay={0.05}>
+        <p className="principles-subtitle">
+          Rules exist to keep standards high and engineering sharp. Here is my personal code — inspired by visionaries, scientists, and relentless builders.
+        </p>
+      </Reveal>
+
+      {/* Main Principles Rounded Card Container */}
+      <Reveal delay={0.1}>
+        <div className="principles-card-container">
+          <div className="principles-list">
+            {principles.map((p, i) => (
+              <div
+                key={p.num}
+                className="principle-card-row"
+                onMouseEnter={() => setHovIdx(i)}
+                onMouseLeave={() => setHovIdx(null)}
+                data-hover="true"
+              >
+                <span className="principle-card-num">{p.num}.</span>
+                <span className="principle-card-text">{p.text}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      </Reveal>
 
       {/* Floating portrait tooltip */}
       <AnimatePresence>
