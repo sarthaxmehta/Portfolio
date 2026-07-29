@@ -705,8 +705,8 @@ function PrinciplesSection() {
   const spy = useSpring(py, { stiffness: 220, damping: 20 });
 
   const onSectionMove = useCallback((e: React.MouseEvent) => {
-    px.set(e.clientX - 10);
-    py.set(e.clientY - 42);
+    px.set(e.clientX + 16);
+    py.set(e.clientY - 36);
   }, [px, py]);
 
   return (
@@ -771,38 +771,27 @@ function PrinciplesSection() {
       <AnimatePresence>
         {hovIdx !== null && (
           <motion.div
-            className="floating-portrait-hud"
+            className="floating-portrait-clean"
             style={{ left: 0, top: 0, x: spx, y: spy }}
-            initial={{ opacity: 0, scale: 0.82, rotate: -6 }}
-            animate={{ opacity: 1, scale: 1, rotate: -3 }}
-            exit={{ opacity: 0, scale: 0.85, rotate: 0 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, scale: 0.9, y: 4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 4 }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Corner Brackets */}
-            <div className="hud-corner-tl" style={{ width: '6px', height: '6px', top: '4px', left: '4px' }} />
-            <div className="hud-corner-tr" style={{ width: '6px', height: '6px', top: '4px', right: '4px' }} />
-            <div className="hud-corner-bl" style={{ width: '6px', height: '6px', bottom: '4px', left: '4px' }} />
-            <div className="hud-corner-br" style={{ width: '6px', height: '6px', bottom: '4px', right: '4px' }} />
-
-            <div className="portrait-img-frame">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={principles[hovIdx].img}
-                alt={principles[hovIdx].person}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (target.src !== principles[hovIdx].fallbackImg) {
-                    target.src = principles[hovIdx].fallbackImg;
-                  }
-                }}
-              />
-              <div className="portrait-img-scanline" />
-            </div>
-
-            <div className="floating-portrait-info">
-              <div className="portrait-badge">● ARCHIVE PORTRAIT</div>
-              <div className="floating-portrait-name">{principles[hovIdx].person}</div>
-              <div className="floating-portrait-role">{principles[hovIdx].role}</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={principles[hovIdx].img}
+              alt={principles[hovIdx].person}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.src !== principles[hovIdx].fallbackImg) {
+                  target.src = principles[hovIdx].fallbackImg;
+                }
+              }}
+            />
+            <div className="floating-portrait-text">
+              <span className="portrait-name">{principles[hovIdx].person}</span>
+              <span className="portrait-meta">{principles[hovIdx].role}</span>
             </div>
           </motion.div>
         )}
