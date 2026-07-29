@@ -173,7 +173,14 @@ export default function SecureAdminPlatform() {
   // Check auth session on mount
   useEffect(() => {
     setMounted(true);
+    document.body.style.cursor = 'auto';
+    document.documentElement.style.cursor = 'auto';
     verifySession();
+
+    return () => {
+      document.body.style.cursor = '';
+      document.documentElement.style.cursor = '';
+    };
   }, []);
 
   const verifySession = async () => {
@@ -580,6 +587,17 @@ export default function SecureAdminPlatform() {
   if (!isAuthenticated) {
     return (
       <div style={{ minHeight: '100vh', background: '#040404', color: '#F2F2F0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <style jsx global>{`
+          body, html, *, *::before, *::after {
+            cursor: auto !important;
+          }
+          button, a, input[type="submit"] {
+            cursor: pointer !important;
+          }
+          input[type="password"] {
+            cursor: text !important;
+          }
+        `}</style>
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -686,6 +704,17 @@ export default function SecureAdminPlatform() {
   // --- AUTHENTICATED ADMIN PLATFORM DASHBOARD ---
   return (
     <div style={{ minHeight: '100vh', background: '#040404', color: '#F2F2F0', fontFamily: 'var(--font-body)', paddingBottom: '60px' }}>
+      <style jsx global>{`
+        body, html, *, *::before, *::after {
+          cursor: auto !important;
+        }
+        button, a, select, input[type="checkbox"], input[type="submit"], input[type="button"], input[type="range"] {
+          cursor: pointer !important;
+        }
+        input[type="text"], input[type="password"], input[type="email"], input[type="url"], textarea {
+          cursor: text !important;
+        }
+      `}</style>
       
       {/* Toast Notification Floating */}
       <AnimatePresence>
