@@ -939,15 +939,21 @@ export default function Home() {
               id: p.id || p.title.toLowerCase().replace(/\s/g, '-'),
               num: p.num || String(i + 1).padStart(2, '0'),
               title: p.title,
-              desc: p.desc || p.description,
-              tags: typeof p.tags === 'string' ? p.tags.split(',').map((t: string) => t.trim()) : p.tags,
+              desc: p.desc || p.description || '',
+              tags: Array.isArray(p.tags)
+                ? p.tags
+                : typeof p.tags === 'string'
+                ? p.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+                : [],
               url: p.githubUrl || p.projectUrl || 'https://github.com/sarthaxmehta',
               architecture: p.architecture || '',
-              contributions: contribs,
+              contributions: Array.isArray(contribs) ? contribs : [],
               challenge: p.challenge || '',
             };
           });
           setProjectData(mapped);
+        } else {
+          setProjectData(staticProjects);
         }
 
         if (expRes.success && expRes.experiences && expRes.experiences.length > 0) {
@@ -1250,7 +1256,7 @@ export default function Home() {
                   <h3 className="project-title">{p.title}</h3>
                   <p className="project-desc">{p.desc}</p>
                   <div className="project-tags">
-                    {p.tags.slice(0, 4).map((t) => <span key={t} className="project-tag">{t}</span>)}
+                    {(p.tags || []).slice(0, 4).map((t) => <span key={t} className="project-tag">{t}</span>)}
                   </div>
                 </TiltCard>
               </motion.div>
