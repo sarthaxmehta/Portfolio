@@ -121,71 +121,121 @@ const principles = [
     num: '001',
     text: 'SHIP THINGS THAT MATTER.',
     person: 'Steve Jobs',
-    role: '// Apple · NeXT',
-    img: '/portraits/visionary.png',
+    role: '// (1955 – 2011)',
+    img: '/portraits/steve_jobs.jpg',
+    fallbackImg: '/portraits/visionary.png',
   },
   {
     num: '002',
     text: 'HAVE A POINT OF VIEW.',
     person: 'Steve Jobs',
-    role: '// Apple · NeXT',
-    img: '/portraits/visionary.png',
+    role: '// (1955 – 2011)',
+    img: '/portraits/steve_jobs.jpg',
+    fallbackImg: '/portraits/visionary.png',
   },
   {
     num: '003',
     text: 'TAKE NO SHORTCUTS.',
     person: 'Kobe Bryant',
-    role: '// 1978 – 2020',
-    img: '/portraits/athlete.png',
+    role: '// (1978 – 2020)',
+    img: '/portraits/kobe_bryant.jpg',
+    fallbackImg: '/portraits/athlete.png',
   },
   {
     num: '004',
     text: 'BE ORIGINAL.',
     person: 'Pablo Picasso',
-    role: '// 1881 – 1973',
-    img: '/portraits/artist.png',
+    role: '// (1881 – 1973)',
+    img: '/portraits/pablo_picasso.jpg',
+    fallbackImg: '/portraits/artist.png',
   },
   {
     num: '005',
     text: "IF YOU CAN'T BE ORIGINAL, BE BETTER THAN ORIGINAL.",
     person: 'C.S. Lewis',
-    role: '// 1898 – 1963',
-    img: '/portraits/scholar.png',
+    role: '// (1898 – 1963)',
+    img: '/portraits/cs_lewis.jpg',
+    fallbackImg: '/portraits/scholar.png',
   },
   {
     num: '006',
-    text: "DON'T SHIP JUNK.",
+    text: "DON'T TAKE NO SHIT.",
     person: 'Jeff Bezos',
-    role: '// Amazon · Blue Origin',
-    img: '/portraits/ceo.png',
+    role: '// (1964 – Present)',
+    img: '/portraits/jeff_bezos.jpg',
+    fallbackImg: '/portraits/ceo.png',
   },
   {
     num: '007',
-    text: "MOVE AT STARTUP SPEED EVEN IF YOU AREN'T ONE.",
-    person: 'Sam Altman',
-    role: '// OpenAI · Y Combinator',
-    img: '/portraits/ceo.png',
+    text: 'GREATNESS IS GOOD COMPOUNDED OVER TIME.',
+    person: 'Warren Buffett',
+    role: '// (1930 – Present)',
+    img: '/portraits/warren_buffett.jpg',
+    fallbackImg: '/portraits/ceo.png',
   },
   {
     num: '008',
-    text: 'EVERY PIXEL IS A DECISION. MAKE IT COUNT.',
-    person: 'Jony Ive',
-    role: '// Apple Design',
-    img: '/portraits/visionary.png',
+    text: "IT'S NOT CREATIVE UNLESS YOU DO SOMETHING THAT SCARES YOU.",
+    person: 'Alfred Hitchcock',
+    role: '// (1899 – 1980)',
+    img: '/portraits/alfred_hitchcock.jpg',
+    fallbackImg: '/portraits/artist.png',
   },
   {
     num: '009',
-    text: 'THE BEST DOCUMENTATION IS WORKING CODE.',
-    person: 'Richard Feynman',
-    role: '// 1918 – 1988',
-    img: '/portraits/physicist.png',
+    text: "BE YOUR CLIENT'S MOST LOYAL CUSTOMER.",
+    person: 'Warren Buffett',
+    role: '// (1930 – Present)',
+    img: '/portraits/warren_buffett.jpg',
+    fallbackImg: '/portraits/ceo.png',
   },
   {
     num: '010',
+    text: "MOVE AT STARTUP SPEED EVEN IF YOU AREN'T ONE.",
+    person: 'Sam Altman',
+    role: '// (1985 – Present)',
+    img: '/portraits/sam_altman.jpg',
+    fallbackImg: '/portraits/ceo.png',
+  },
+  {
+    num: '011',
     text: 'SOLVE THE HARDEST PROBLEM FIRST.',
     person: 'Richard Feynman',
-    role: '// 1918 – 1988',
-    img: '/portraits/physicist.png',
+    role: '// (1918 – 1988)',
+    img: '/portraits/richard_feynman.jpg',
+    fallbackImg: '/portraits/physicist.png',
+  },
+  {
+    num: '012',
+    text: 'EVERY PIXEL IS A DECISION. MAKE IT COUNT.',
+    person: 'Jony Ive',
+    role: '// (1967 – Present)',
+    img: '/portraits/jony_ive.jpg',
+    fallbackImg: '/portraits/visionary.png',
+  },
+  {
+    num: '013',
+    text: 'THE BEST DOCUMENTATION IS WORKING CODE.',
+    person: 'Linus Torvalds',
+    role: '// (1969 – Present)',
+    img: '/portraits/linus_torvalds.jpg',
+    fallbackImg: '/portraits/physicist.png',
+  },
+  {
+    num: '014',
+    text: 'SIMPLICITY IS A PREREQUISITE FOR RELIABILITY.',
+    person: 'Edsger W. Dijkstra',
+    role: '// (1930 – 2002)',
+    img: '/portraits/dijkstra.jpg',
+    fallbackImg: '/portraits/scholar.png',
+  },
+  {
+    num: '015',
+    text: 'TAKE YOUR WORK SERIOUSLY, YOURSELF LESS SO.',
+    person: 'Richard Feynman',
+    role: '// (1918 – 1988)',
+    img: '/portraits/richard_feynman.jpg',
+    fallbackImg: '/portraits/physicist.png',
   },
 ];
 
@@ -277,16 +327,16 @@ function CustomCursor() {
   const cy = useMotionValue(-200);
   const ringX = useSpring(cx, { stiffness: 420, damping: 26 });
   const ringY = useSpring(cy, { stiffness: 420, damping: 26 });
-  const dotX  = useSpring(cx, { stiffness: 900, damping: 32 });
-  const dotY  = useSpring(cy, { stiffness: 900, damping: 32 });
+  const dotX = useSpring(cx, { stiffness: 900, damping: 32 });
+  const dotY = useSpring(cy, { stiffness: 900, damping: 32 });
   const [hover, setHover] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(
-        window.matchMedia('(max-width: 768px)').matches || 
-        ('ontouchstart' in window) || 
+        window.matchMedia('(max-width: 768px)').matches ||
+        ('ontouchstart' in window) ||
         navigator.maxTouchPoints > 0
       );
     };
@@ -655,8 +705,8 @@ function PrinciplesSection() {
   const spy = useSpring(py, { stiffness: 220, damping: 20 });
 
   const onSectionMove = useCallback((e: React.MouseEvent) => {
-    px.set(e.clientX + 24);
-    py.set(e.clientY - 80);
+    px.set(e.clientX - 10);
+    py.set(e.clientY - 42);
   }, [px, py]);
 
   return (
@@ -665,14 +715,14 @@ function PrinciplesSection() {
       <Reveal>
         <div className="principles-top-bar">
           <span>[ 07 / 09 ]</span>
-          <span>ENGINEERING CODE</span>
+          <span>PRINCIPLES</span>
         </div>
       </Reveal>
 
       {/* Giant Marquee Header */}
       <Reveal delay={0.03}>
         <div className="principles-marquee-wrap">
-          <Marquee speed={45}>
+          <Marquee speed={40}>
             <div className="principles-marquee-row">
               {['CORE PRINCIPLES', 'CORE PRINCIPLES', 'CORE PRINCIPLES', 'CORE PRINCIPLES'].map((text, i) => (
                 <span key={i} style={{ display: 'inline-flex', alignItems: 'center' }}>
@@ -732,6 +782,12 @@ function PrinciplesSection() {
             <img
               src={principles[hovIdx].img}
               alt={principles[hovIdx].person}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.src !== principles[hovIdx].fallbackImg) {
+                  target.src = principles[hovIdx].fallbackImg;
+                }
+              }}
             />
             <div className="floating-portrait-info">
               <div className="floating-portrait-name">{principles[hovIdx].person}</div>
@@ -839,7 +895,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [projectData, setProjectData] = useState(staticProjects);
   const [activeProject, setActiveProject] = useState<typeof staticProjects[0] | null>(null);
-  
+
   const heroRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
   const [vantaEffect, setVantaEffect] = useState<any>(null);
@@ -878,7 +934,7 @@ export default function Home() {
             let contribs = [];
             try {
               if (p.contributions) contribs = typeof p.contributions === 'string' ? JSON.parse(p.contributions) : p.contributions;
-            } catch {}
+            } catch { }
             return {
               id: p.id || p.title.toLowerCase().replace(/\s/g, '-'),
               num: p.num || String(i + 1).padStart(2, '0'),
@@ -897,7 +953,7 @@ export default function Home() {
         if (expRes.success && expRes.experiences && expRes.experiences.length > 0) {
           const mappedExp = expRes.experiences.map((exp: any) => {
             let bullets = [];
-            try { if (exp.bulletPoints) bullets = JSON.parse(exp.bulletPoints); } catch {}
+            try { if (exp.bulletPoints) bullets = JSON.parse(exp.bulletPoints); } catch { }
             return {
               date: `${exp.startDate} — ${exp.current ? 'Present' : exp.endDate || ''}`,
               title: exp.title,
@@ -1038,7 +1094,7 @@ export default function Home() {
 
           <h1 className="hero-name">
             <HeroNameLine text="Sarthak" delay={0.5} />
-            <HeroNameLine text="Mehta"   delay={0.65} />
+            <HeroNameLine text="Mehta" delay={0.65} />
           </h1>
 
           <motion.div className="hero-separator"
@@ -1225,124 +1281,124 @@ export default function Home() {
           <div className="contact-container-interactive">
             <Reveal><div className="section-label">Get in touch</div></Reveal>
 
-          <div className="contact-grid">
-            <div>
-              <Reveal delay={0.05}>
-                <h2 className="contact-headline">Let's<br />connect.</h2>
-                <p className="contact-sub">
-                  Whether you want to collaborate on a project, talk about AI, or just say
-                  hi — I'd love to hear from you.
-                </p>
-              </Reveal>
-              <Reveal delay={0.1}>
-                <div className="social-links">
-                  {[
-                    { label: 'GitHub', href: 'https://github.com/sarthaxmehta', icon: 'GH' },
-                    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/sarthak-mehta-698457310/', icon: 'in' },
-                    { label: 'sarthakm.cs.24@nitj.ac.in', href: 'mailto:sarthakm.cs.24@nitj.ac.in', icon: '@' },
-                  ].map((s) => (
-                    <a key={s.label} href={s.href}
-                      target={s.href.startsWith('mailto') ? undefined : '_blank'}
-                      rel={s.href.startsWith('mailto') ? undefined : 'noopener noreferrer'}
-                      className="social-link" data-hover="true"
-                    >
-                      <span className="social-icon" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>{s.icon}</span>
-                      {s.label}
-                    </a>
-                  ))}
-                </div>
+            <div className="contact-grid">
+              <div>
+                <Reveal delay={0.05}>
+                  <h2 className="contact-headline">Let's<br />connect.</h2>
+                  <p className="contact-sub">
+                    Whether you want to collaborate on a project, talk about AI, or just say
+                    hi — I'd love to hear from you.
+                  </p>
+                </Reveal>
+                <Reveal delay={0.1}>
+                  <div className="social-links">
+                    {[
+                      { label: 'GitHub', href: 'https://github.com/sarthaxmehta', icon: 'GH' },
+                      { label: 'LinkedIn', href: 'https://www.linkedin.com/in/sarthak-mehta-698457310/', icon: 'in' },
+                      { label: 'sarthakm.cs.24@nitj.ac.in', href: 'mailto:sarthakm.cs.24@nitj.ac.in', icon: '@' },
+                    ].map((s) => (
+                      <a key={s.label} href={s.href}
+                        target={s.href.startsWith('mailto') ? undefined : '_blank'}
+                        rel={s.href.startsWith('mailto') ? undefined : 'noopener noreferrer'}
+                        className="social-link" data-hover="true"
+                      >
+                        <span className="social-icon" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>{s.icon}</span>
+                        {s.label}
+                      </a>
+                    ))}
+                  </div>
 
-                <div style={{ marginTop: '48px' }}>
-                  <div className="section-label" style={{ marginBottom: '24px' }}>FAQ</div>
-                  <FaqSection />
+                  <div style={{ marginTop: '48px' }}>
+                    <div className="section-label" style={{ marginBottom: '24px' }}>FAQ</div>
+                    <FaqSection />
+                  </div>
+                </Reveal>
+              </div>
+
+              <Reveal delay={0.1}>
+                <div className="contact-form form-card">
+                  {submitStatus ? (
+                    <div className="success-state">
+                      <div className="success-icon">✓</div>
+                      <div className="success-title">Message received.</div>
+                      <p className="success-body">
+                        Thanks, {formData.name}. I'll get back to you at{' '}
+                        <strong style={{ color: 'var(--text-1)' }}>{formData.email}</strong> soon.
+                      </p>
+                      <button className="btn-secondary" style={{ marginTop: '8px' }} data-hover="true"
+                        onClick={() => { setSubmitStatus(null); setFormData({ name: '', email: '', company: '', budget: 'Just saying hello 👋', timeline: 'Developer / Engineer', message: '' }); }}
+                      >
+                        Send another
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label className="form-label">Name *</label>
+                          <input type="text" required value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="form-input" placeholder="Your name" />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Email *</label>
+                          <input type="email" required value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            className="form-input" placeholder="your@email.com" />
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Organization / School</label>
+                        <input type="text" value={formData.company}
+                          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                          className="form-input" placeholder="Where are you from? (optional)" />
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label className="form-label">Reason for reaching out</label>
+                          <select value={formData.budget}
+                            onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                            className="form-select"
+                          >
+                            <option>Just saying hello 👋</option>
+                            <option>Technical collaboration 🤝</option>
+                            <option>NIT Jalandhar discussion 🎓</option>
+                            <option>General Q&A or chat 💻</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Your affiliation</label>
+                          <select value={formData.timeline}
+                            onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
+                            className="form-select"
+                          >
+                            <option>Developer / Engineer</option>
+                            <option>Researcher / Student</option>
+                            <option>Recruiter / Tech Manager</option>
+                            <option>Tech Enthusiast</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Message *</label>
+                        <textarea required rows={5} value={formData.message}
+                          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                          className="form-textarea" placeholder="What's on your mind?" />
+                      </div>
+
+                      <button type="submit" disabled={isSubmitting} className="form-submit" data-hover="true">
+                        {isSubmitting ? 'Sending…' : 'Send message →'}
+                      </button>
+                    </form>
+                  )}
                 </div>
               </Reveal>
             </div>
-
-            <Reveal delay={0.1}>
-              <div className="contact-form form-card">
-                {submitStatus ? (
-                  <div className="success-state">
-                    <div className="success-icon">✓</div>
-                    <div className="success-title">Message received.</div>
-                    <p className="success-body">
-                      Thanks, {formData.name}. I'll get back to you at{' '}
-                      <strong style={{ color: 'var(--text-1)' }}>{formData.email}</strong> soon.
-                    </p>
-                    <button className="btn-secondary" style={{ marginTop: '8px' }} data-hover="true"
-                      onClick={() => { setSubmitStatus(null); setFormData({ name: '', email: '', company: '', budget: 'Just saying hello 👋', timeline: 'Developer / Engineer', message: '' }); }}
-                    >
-                      Send another
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label className="form-label">Name *</label>
-                        <input type="text" required value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="form-input" placeholder="Your name" />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Email *</label>
-                        <input type="email" required value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="form-input" placeholder="your@email.com" />
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Organization / School</label>
-                      <input type="text" value={formData.company}
-                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                        className="form-input" placeholder="Where are you from? (optional)" />
-                    </div>
-
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label className="form-label">Reason for reaching out</label>
-                        <select value={formData.budget}
-                          onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                          className="form-select"
-                        >
-                          <option>Just saying hello 👋</option>
-                          <option>Technical collaboration 🤝</option>
-                          <option>NIT Jalandhar discussion 🎓</option>
-                          <option>General Q&A or chat 💻</option>
-                        </select>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Your affiliation</label>
-                        <select value={formData.timeline}
-                          onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
-                          className="form-select"
-                        >
-                          <option>Developer / Engineer</option>
-                          <option>Researcher / Student</option>
-                          <option>Recruiter / Tech Manager</option>
-                          <option>Tech Enthusiast</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Message *</label>
-                      <textarea required rows={5} value={formData.message}
-                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        className="form-textarea" placeholder="What's on your mind?" />
-                    </div>
-
-                    <button type="submit" disabled={isSubmitting} className="form-submit" data-hover="true">
-                      {isSubmitting ? 'Sending…' : 'Send message →'}
-                    </button>
-                  </form>
-                )}
-              </div>
-            </Reveal>
           </div>
-        </div>
-      </section>
+        </section>
 
         {/* ── FOOTER ── */}
         <footer className="footer">
@@ -1354,10 +1410,10 @@ export default function Home() {
               <span className="footer-copy">© 2026 Sarthak Mehta. All rights reserved.</span>
               <div className="footer-link-group">
                 {[
-                  { label: 'GitHub',   href: 'https://github.com/sarthaxmehta' },
+                  { label: 'GitHub', href: 'https://github.com/sarthaxmehta' },
                   { label: 'LinkedIn', href: 'https://www.linkedin.com/in/sarthak-mehta-698457310/' },
-                  { label: 'Email',    href: 'mailto:sarthakm.cs.24@nitj.ac.in' },
-                  { label: 'Admin',    href: '/manager' },
+                  { label: 'Email', href: 'mailto:sarthakm.cs.24@nitj.ac.in' },
+                  { label: 'Admin', href: '/manager' },
                 ].map((l) => (
                   <a key={l.label} href={l.href}
                     target={l.href.startsWith('http') ? '_blank' : undefined}

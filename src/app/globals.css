@@ -1597,9 +1597,9 @@ ol {
 
 .principles-marquee-text {
   font-family: var(--font-display);
-  font-size: clamp(64px, 9.5vw, 130px);
-  font-weight: 800;
-  letter-spacing: -0.04em;
+  font-size: clamp(64px, 9.5vw, 50px);
+  font-weight: 750;
+  letter-spacing: -0.01em;
   color: #FFFFFF;
   text-transform: uppercase;
   line-height: 1;
@@ -1616,7 +1616,7 @@ ol {
 
 .principles-subtitle {
   text-align: center;
-  max-width: 640px;
+  max-width: 10000px;
   margin: 0 auto 64px;
   font-family: var(--font-body);
   font-size: 13px;
@@ -1626,13 +1626,13 @@ ol {
 
 /* Rounded Card Container (exact match: #111115, 36px radius, padding 64px 72px) */
 .principles-card-container {
-  max-width: 1040px;
+  max-width: 1500px;
   margin: 0 auto;
-  background: #111115;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #191919;
+  border: 1px solid rgb(0, 0, 0);
   border-radius: 36px;
   padding: 64px 72px;
-  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 32px 90px rgba(134, 40, 0, 0.85);
 }
 
 @media (max-width: 768px) {
@@ -1645,7 +1645,7 @@ ol {
 .principles-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .principle-card-row {
@@ -1659,7 +1659,7 @@ ol {
 
 .principle-card-num {
   font-family: var(--font-mono);
-  font-size: clamp(13px, 1.35vw, 16px);
+  font-size: clamp(13px, 1.35vw, 36px);
   color: rgba(242, 242, 240, 0.32);
   flex-shrink: 0;
   transition: color 0.2s ease;
@@ -1668,7 +1668,7 @@ ol {
 
 .principle-card-text {
   font-family: var(--font-mono);
-  font-size: clamp(13px, 1.35vw, 16px);
+  font-size: clamp(13px, 1.35vw, 36px);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1677,7 +1677,8 @@ ol {
   line-height: 1.5;
 }
 
-.num-dot, .end-dot {
+.num-dot,
+.end-dot {
   color: inherit;
   transition: color 0.2s ease;
 }
@@ -2151,10 +2152,34 @@ ol {
   border-color: #FF4C24;
   pointer-events: none;
 }
-.hud-corner-tl { top: 6px; left: 6px; border-top: 2px solid #FF4C24; border-left: 2px solid #FF4C24; }
-.hud-corner-tr { top: 6px; right: 6px; border-top: 2px solid #FF4C24; border-right: 2px solid #FF4C24; }
-.hud-corner-bl { bottom: 6px; left: 6px; border-bottom: 2px solid #FF4C24; border-left: 2px solid #FF4C24; }
-.hud-corner-br { bottom: 6px; right: 6px; border-bottom: 2px solid #FF4C24; border-right: 2px solid #FF4C24; }
+
+.hud-corner-tl {
+  top: 6px;
+  left: 6px;
+  border-top: 2px solid #FF4C24;
+  border-left: 2px solid #FF4C24;
+}
+
+.hud-corner-tr {
+  top: 6px;
+  right: 6px;
+  border-top: 2px solid #FF4C24;
+  border-right: 2px solid #FF4C24;
+}
+
+.hud-corner-bl {
+  bottom: 6px;
+  left: 6px;
+  border-bottom: 2px solid #FF4C24;
+  border-left: 2px solid #FF4C24;
+}
+
+.hud-corner-br {
+  bottom: 6px;
+  right: 6px;
+  border-bottom: 2px solid #FF4C24;
+  border-right: 2px solid #FF4C24;
+}
 
 .workflow-phase-num {
   font-family: var(--font-mono);
