@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Particles, ParticlesProvider, useParticlesProvider } from '@tsparticles/react';
+import { loadSlim } from '@tsparticles/slim';
+
 import {
   adminLoginAction,
   adminLogoutAction,
@@ -35,189 +38,458 @@ import {
   addInquiryNote,
 } from '../../actions/inquiry';
 
-// Data Types
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface Project {
-  id: string;
-  num: string | null;
-  title: string;
-  desc: string;
-  tags: string;
-  imageUrl: string;
-  projectUrl: string | null;
-  githubUrl: string | null;
-  architecture: string | null;
-  contributions: string | null;
-  challenge: string | null;
-  featured: boolean;
-  order: number;
-  createdAt: Date;
+  id: string; num: string | null; title: string; desc: string; tags: string;
+  imageUrl: string; projectUrl: string | null; githubUrl: string | null;
+  architecture: string | null; contributions: string | null; challenge: string | null;
+  featured: boolean; order: number; createdAt: Date;
 }
-
 interface Experience {
-  id: string;
-  title: string;
-  organization: string;
-  location: string | null;
-  type: string;
-  startDate: string;
-  endDate: string | null;
-  current: boolean;
-  description: string | null;
-  bulletPoints: string | null;
-  technologies: string | null;
-  order: number;
-  createdAt: Date;
+  id: string; title: string; organization: string; location: string | null;
+  type: string; startDate: string; endDate: string | null; current: boolean;
+  description: string | null; bulletPoints: string | null; technologies: string | null;
+  order: number; createdAt: Date;
 }
-
 interface Skill {
-  id: string;
-  name: string;
-  category: string;
-  proficiency: number;
-  featured: boolean;
-  order: number;
-  createdAt: Date;
+  id: string; name: string; category: string; proficiency: number;
+  featured: boolean; order: number; createdAt: Date;
 }
-
 interface Inquiry {
-  id: string;
-  name: string;
-  email: string;
-  company: string | null;
-  budget: string;
-  timeline: string;
-  message: string;
-  status: string;
-  notes: string | null;
-  createdAt: Date;
+  id: string; name: string; email: string; company: string | null; budget: string;
+  timeline: string; message: string; status: string; notes: string | null; createdAt: Date;
+}
+type Tab = 'overview' | 'experiences' | 'projects' | 'skills' | 'inquiries' | 'security';
+
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const T = {
+  bg: '#050507',
+  surface: '#0C0C10',
+  card: '#12121A',
+  card2: '#1A1A24',
+  border: 'rgba(255,255,255,0.08)',
+  borderHover: 'rgba(255,255,255,0.18)',
+  accent: '#FF4C24',
+  accent2: '#FF6B47',
+  cyan: '#00D8FF',
+  violet: '#7B61FF',
+  green: '#4ADE80',
+  yellow: '#FBBF24',
+  text1: '#F2F2F0',
+  text2: 'rgba(242,242,240,0.72)',
+  text3: 'rgba(242,242,240,0.44)',
+  fontMono: "'Space Mono', monospace",
+  fontDisplay: "'Syne', sans-serif",
+  fontBody: "'Inter', sans-serif",
+};
+
+// ─── Sidebar navigation items ─────────────────────────────────────────────────
+const NAV_ITEMS: { id: Tab; label: string; icon: string }[] = [
+  { id: 'overview', label: 'Overview', icon: '⬡' },
+  { id: 'experiences', label: 'Experience', icon: '◈' },
+  { id: 'projects', label: 'Projects', icon: '◻' },
+  { id: 'skills', label: 'Skills Matrix', icon: '◎' },
+  { id: 'inquiries', label: 'Inbox', icon: '◇' },
+  { id: 'security', label: 'Security', icon: '◐' },
+];
+
+// ─── Particles config ─────────────────────────────────────────────────────────
+const PARTICLES_OPTIONS: any = {
+  background: { color: { value: 'transparent' } },
+  fpsLimit: 60,
+  particles: {
+    number: { value: 60, density: { enable: true, area: 900 } },
+    color: { value: ['#FF4C24', '#00D8FF', '#7B61FF'] },
+    links: {
+      enable: true, distance: 140,
+      color: '#FF4C24', opacity: 0.12, width: 1,
+    },
+    move: {
+      enable: true, speed: 0.4,
+      outModes: { default: 'bounce' },
+    },
+    opacity: { value: { min: 0.2, max: 0.5 } },
+    size: { value: { min: 1, max: 2.5 } },
+    shape: { type: 'circle' },
+  },
+  detectRetina: true,
+};
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function GlassCard({ children, style, className, onClick }: {
+  children: React.ReactNode; style?: React.CSSProperties;
+  className?: string; onClick?: () => void;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: T.card,
+        border: `1px solid ${T.border}`,
+        borderRadius: 16,
+        backdropFilter: 'blur(20px)',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
 }
 
-export default function SecureAdminPlatform() {
+function StatCard({ label, value, sub, color, icon }: {
+  label: string; value: string | number; sub?: string;
+  color?: string; icon?: string;
+}) {
+  return (
+    <GlassCard style={{ padding: '24px 28px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+        <span style={{ fontSize: 11, fontFamily: T.fontMono, color: T.text3, textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+          {label}
+        </span>
+        {icon && <span style={{ fontSize: 18, opacity: 0.7 }}>{icon}</span>}
+      </div>
+      <div style={{ fontSize: 42, fontFamily: T.fontDisplay, fontWeight: 800, letterSpacing: '-2px', color: color || T.text1, lineHeight: 1 }}>
+        {value}
+      </div>
+      {sub && (
+        <div style={{ fontSize: 12, fontFamily: T.fontMono, color: color ? `${color}99` : T.text3, marginTop: 8 }}>
+          {sub}
+        </div>
+      )}
+    </GlassCard>
+  );
+}
+
+function Badge({ status }: { status: string }) {
+  const map: Record<string, { bg: string; color: string }> = {
+    pending: { bg: 'rgba(251,191,36,0.15)', color: '#FBBF24' },
+    contacted: { bg: 'rgba(74,222,128,0.15)', color: '#4ADE80' },
+    archived: { bg: 'rgba(255,255,255,0.08)', color: T.text3 },
+    starred: { bg: 'rgba(0,216,255,0.15)', color: '#00D8FF' },
+    Internship: { bg: 'rgba(255,76,36,0.15)', color: '#FF4C24' },
+    Education: { bg: 'rgba(123,97,255,0.15)', color: '#7B61FF' },
+    Work: { bg: 'rgba(0,216,255,0.15)', color: '#00D8FF' },
+    Leadership: { bg: 'rgba(74,222,128,0.15)', color: '#4ADE80' },
+  };
+  const s = map[status] || { bg: 'rgba(255,255,255,0.08)', color: T.text3 };
+  return (
+    <span style={{
+      background: s.bg, color: s.color, borderRadius: 20,
+      padding: '3px 10px', fontSize: 10, fontFamily: T.fontMono,
+      textTransform: 'uppercase', letterSpacing: '1px', whiteSpace: 'nowrap',
+    }}>
+      {status}
+    </span>
+  );
+}
+
+function AdminInput({ label, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: 10, fontFamily: T.fontMono, color: T.text3, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>
+        {label}
+      </label>
+      <input
+        {...props}
+        style={{
+          width: '100%', background: T.surface, border: `1px solid ${T.border}`,
+          borderRadius: 10, padding: '11px 14px', color: T.text1,
+          fontFamily: props.type === 'password' ? T.fontMono : T.fontBody,
+          fontSize: 14, outline: 'none', transition: 'border-color 0.2s',
+          boxSizing: 'border-box',
+          ...(props.style || {}),
+        }}
+        onFocus={(e) => { e.currentTarget.style.borderColor = T.accent; }}
+        onBlur={(e) => { e.currentTarget.style.borderColor = T.border; }}
+      />
+    </div>
+  );
+}
+
+function AdminTextArea({ label, ...props }: { label: string } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: 10, fontFamily: T.fontMono, color: T.text3, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>
+        {label}
+      </label>
+      <textarea
+        {...props}
+        style={{
+          width: '100%', background: T.surface, border: `1px solid ${T.border}`,
+          borderRadius: 10, padding: '11px 14px', color: T.text1,
+          fontFamily: T.fontBody, fontSize: 14, outline: 'none',
+          transition: 'border-color 0.2s', resize: 'vertical', boxSizing: 'border-box',
+          ...(props.style || {}),
+        }}
+        onFocus={(e) => { e.currentTarget.style.borderColor = T.accent; }}
+        onBlur={(e) => { e.currentTarget.style.borderColor = T.border; }}
+      />
+    </div>
+  );
+}
+
+function AdminSelect({ label, children, ...props }: { label: string; children: React.ReactNode } & React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: 10, fontFamily: T.fontMono, color: T.text3, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>
+        {label}
+      </label>
+      <select
+        {...props}
+        style={{
+          width: '100%', background: T.surface, border: `1px solid ${T.border}`,
+          borderRadius: 10, padding: '11px 14px', color: T.text1,
+          fontFamily: T.fontBody, fontSize: 14, outline: 'none',
+          transition: 'border-color 0.2s', boxSizing: 'border-box',
+        }}
+      >
+        {children}
+      </select>
+    </div>
+  );
+}
+
+function SectionHeader({ title, sub, action }: { title: string; sub?: string; action?: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28 }}>
+      <div>
+        <h2 style={{ fontFamily: T.fontDisplay, fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', color: T.text1, margin: 0 }}>
+          {title}
+        </h2>
+        {sub && <p style={{ color: T.text3, fontSize: 13, marginTop: 6, fontFamily: T.fontBody }}>{sub}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function PrimaryBtn({ children, onClick, type, small, danger, style }: {
+  children: React.ReactNode; onClick?: () => void; type?: 'submit' | 'button' | 'reset';
+  small?: boolean; danger?: boolean; style?: React.CSSProperties;
+}) {
+  const bg = danger ? '#EF4444' : T.accent;
+  return (
+    <button
+      type={type || 'button'}
+      onClick={onClick}
+      style={{
+        background: bg, color: '#fff', border: 'none', borderRadius: 10,
+        padding: small ? '8px 16px' : '12px 22px',
+        fontSize: small ? 12 : 13, fontWeight: 600, fontFamily: T.fontMono,
+        letterSpacing: '0.5px', boxShadow: `0 4px 16px ${bg}40`,
+        transition: 'transform 0.15s, box-shadow 0.15s, background 0.15s',
+        ...style,
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${bg}50`; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 4px 16px ${bg}40`; }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function GhostBtn({ children, onClick, type, small, style }: {
+  children: React.ReactNode; onClick?: () => void; type?: 'submit' | 'button' | 'reset';
+  small?: boolean; style?: React.CSSProperties;
+}) {
+  return (
+    <button
+      type={type || 'button'}
+      onClick={onClick}
+      style={{
+        background: 'transparent', color: T.text2, border: `1px solid ${T.border}`,
+        borderRadius: 10, padding: '10px 18px', fontSize: 13,
+        fontFamily: T.fontMono, transition: 'border-color 0.2s, color 0.2s',
+        ...style,
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text1; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.text2; }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ─── Modal Shell ──────────────────────────────────────────────────────────────
+function AdminModal({ isOpen, onClose, title, subtitle, children, wide }: {
+  isOpen: boolean; onClose: () => void; title: string; subtitle?: string;
+  children: React.ReactNode; wide?: boolean;
+}) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    if (isOpen) window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isOpen, onClose]);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(20px)', zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+          }}
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.94, y: 16, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0.94, y: 16, opacity: 0 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+            style={{
+              width: '100%', maxWidth: wide ? 780 : 580,
+              maxHeight: '90vh', overflowY: 'auto',
+              background: T.surface,
+              border: `1px solid rgba(255,76,36,0.3)`,
+              borderRadius: 20,
+              boxShadow: '0 32px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,76,36,0.1)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+              padding: '28px 32px 20px',
+              borderBottom: `1px solid ${T.border}`,
+              position: 'sticky', top: 0, background: T.surface, zIndex: 1,
+            }}>
+              <div>
+                <div style={{ fontSize: 10, fontFamily: T.fontMono, color: T.accent, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 6 }}>
+                  Admin Command Center
+                </div>
+                <h3 style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 800, color: T.text1, margin: 0 }}>{title}</h3>
+                {subtitle && <p style={{ color: T.text3, fontSize: 13, marginTop: 4 }}>{subtitle}</p>}
+              </div>
+              <button
+                onClick={onClose}
+                style={{
+                  width: 36, height: 36, borderRadius: '50%', background: T.card,
+                  border: `1px solid ${T.border}`, color: T.text2, fontSize: 18,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, transition: 'background 0.2s, color 0.2s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#2a2a36'; e.currentTarget.style.color = T.text1; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = T.card; e.currentTarget.style.color = T.text2; }}
+              >
+                ✕
+              </button>
+            </div>
+            {/* Modal Body */}
+            <div style={{ padding: '28px 32px 32px' }}>
+              {children}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ─── Main Component (inner, consumed by wrapper) ──────────────────────────────
+function SecureAdminPlatform() {
   const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'experiences' | 'projects' | 'skills' | 'inquiries' | 'security'>('overview');
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [clock, setClock] = useState('');
 
-  // Auth Form State
+  // Auth
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Data Loading & Content State
+  // Data
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
 
-  // Toast Notifications
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  // Toast
+  const [toasts, setToasts] = useState<{ id: string; message: string; type: 'success' | 'error' }[]>([]);
 
-  // Filter States
-  const [inquiryFilter, setInquiryFilter] = useState<'all' | 'pending' | 'contacted' | 'starred' | 'archived'>('all');
-  const [skillCategoryFilter, setSkillCategoryFilter] = useState<string>('all');
+  // Filters
+  const [inquiryFilter, setInquiryFilter] = useState<string>('all');
 
-  // Modal Dialog States
-  const [activeModal, setActiveModal] = useState<'project' | 'experience' | 'skill' | 'inquiry' | null>(null);
-  const [editingItem, setEditingItem] = useState<any | null>(null);
+  // Modals
+  const [activeModal, setActiveModal] = useState<'project' | 'experience' | 'skill' | null>(null);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
 
-  // Form State for Modals
+  // Project form
   const [projectForm, setProjectForm] = useState({
-    num: '01',
-    title: '',
-    desc: '',
-    tags: '',
-    imageUrl: '/projects/placeholder.png',
-    projectUrl: '',
-    githubUrl: '',
-    architecture: '',
-    contributions: [''],
-    challenge: '',
-    featured: false,
-    order: 0,
+    num: '01', title: '', desc: '', tags: '', imageUrl: '/projects/placeholder.png',
+    projectUrl: '', githubUrl: '', architecture: '', contributions: [''],
+    challenge: '', featured: false, order: 0,
   });
 
+  // Experience form
   const [expForm, setExpForm] = useState({
-    title: '',
-    organization: '',
-    location: '',
-    type: 'Work',
-    startDate: '',
-    endDate: '',
-    current: false,
-    description: '',
-    bulletPoints: [''],
-    technologies: '',
-    order: 0,
+    title: '', organization: '', location: '', type: 'Internship',
+    startDate: '', endDate: '', current: false, description: '',
+    bulletPoints: [''], technologies: '', order: 0,
   });
 
-  const [skillForm, setSkillForm] = useState({
-    name: '',
-    category: 'Programming',
-    proficiency: 85,
-    featured: true,
-    order: 0,
-  });
+  // Skill form
+  const [skillForm, setSkillForm] = useState({ name: '', category: 'Programming', proficiency: 85, featured: true, order: 0 });
 
-  const [passcodeForm, setPasscodeForm] = useState({
-    currentPass: '',
-    newPass: '',
-    confirmPass: '',
-  });
+  // Security form
+  const [passForm, setPassForm] = useState({ current: '', next: '', confirm: '' });
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  };
+  // Note editing
+  const [editingNote, setEditingNote] = useState('');
 
-  // Check auth session on mount
+  // Particles readiness state comes from useParticlesProvider (populated by outer ParticlesProvider)
+  // No local init needed here — handled at export wrapper below
+  const { loaded: particlesReady } = useParticlesProvider();
+
+  // Mount + body class + clock
   useEffect(() => {
     setMounted(true);
-    document.body.style.cursor = 'auto';
-    document.documentElement.style.cursor = 'auto';
+    document.body.classList.add('manager-active');
     verifySession();
-
-    return () => {
-      document.body.style.cursor = '';
-      document.documentElement.style.cursor = '';
+    const tick = () => {
+      const now = new Date();
+      setClock(now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => {
+      clearInterval(interval);
+      document.body.classList.remove('manager-active');
+    };
+  }, []);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts(prev => [...prev.slice(-3), { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4200);
   }, []);
 
   const verifySession = async () => {
     try {
       const res = await checkAdminSessionAction();
       setIsAuthenticated(res.authenticated);
-      if (res.authenticated) {
-        fetchAllData();
-      }
-    } catch {
-      setIsAuthenticated(false);
-    }
+      if (res.authenticated) fetchAllData();
+    } catch { setIsAuthenticated(false); }
   };
 
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
-      const [projRes, expRes, skillRes, inqRes] = await Promise.all([
-        getProjects(),
-        getExperiences(),
-        getSkills(),
-        getInquiries(),
-      ]);
+      const [pR, eR, sR, iR] = await Promise.all([getProjects(), getExperiences(), getSkills(), getInquiries()]);
+      if (pR.success && pR.projects) setProjects(pR.projects as any);
+      if (eR.success && eR.experiences) setExperiences(eR.experiences as any);
+      if (sR.success && sR.skills) setSkills(sR.skills as any);
+      if (iR.success && iR.inquiries) setInquiries(iR.inquiries as any);
+    } catch { showToast('Failed to sync data.', 'error'); }
+    finally { setLoading(false); }
+  }, [showToast]);
 
-      if (projRes.success && projRes.projects) setProjects(projRes.projects as any);
-      if (expRes.success && expRes.experiences) setExperiences(expRes.experiences as any);
-      if (skillRes.success && skillRes.skills) setSkills(skillRes.skills as any);
-      if (inqRes.success && inqRes.inquiries) setInquiries(inqRes.inquiries as any);
-    } catch (err) {
-      console.error('Error fetching admin data:', err);
-      showToast('Failed to load some dashboard data.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Login handler
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!passcode) return;
@@ -228,1459 +500,986 @@ export default function SecureAdminPlatform() {
       if (res.success) {
         setIsAuthenticated(true);
         setPasscode('');
-        showToast('Authenticated successfully as Administrator.');
         fetchAllData();
-      } else {
-        setAuthError(res.error || 'Authentication failed.');
-      }
-    } catch (err: any) {
-      setAuthError('Error communicating with server.');
-    } finally {
-      setAuthLoading(false);
-    }
+      } else { setAuthError(res.error || 'Authentication failed.'); }
+    } catch { setAuthError('Connection error. Try again.'); }
+    finally { setAuthLoading(false); }
   };
 
-  // Logout handler
   const handleLogout = async () => {
     await adminLogoutAction();
     setIsAuthenticated(false);
-    showToast('Logged out of Admin Command Center.');
+    showToast('Session terminated. See you soon.', 'error');
   };
 
-  // Change passcode handler
-  const handleChangePasscode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passcodeForm.newPass !== passcodeForm.confirmPass) {
-      showToast('New passcodes do not match.', 'error');
-      return;
-    }
-    try {
-      const res = await updateAdminPasscodeAction(passcodeForm.currentPass, passcodeForm.newPass);
-      if (res.success) {
-        showToast('Admin passcode updated successfully!');
-        setPasscodeForm({ currentPass: '', newPass: '', confirmPass: '' });
-      } else {
-        showToast(res.error || 'Failed to update passcode.', 'error');
-      }
-    } catch {
-      showToast('Error updating passcode.', 'error');
-    }
-  };
-
-  // --- PROJECT ACTIONS ---
-  const openProjectModal = (project?: Project) => {
-    if (project) {
-      setEditingItem(project);
-      let parsedContribs = [''];
-      try {
-        if (project.contributions) parsedContribs = JSON.parse(project.contributions);
-      } catch {}
+  // ── Project handlers ──────────────────────────────────────────────────────
+  const openProjectModal = (p?: Project) => {
+    if (p) {
+      setEditingItem(p);
+      let c: string[] = [''];
+      try { if (p.contributions) c = JSON.parse(p.contributions); } catch {}
       setProjectForm({
-        num: project.num || '01',
-        title: project.title,
-        desc: project.desc,
-        tags: project.tags,
-        imageUrl: project.imageUrl,
-        projectUrl: project.projectUrl || '',
-        githubUrl: project.githubUrl || '',
-        architecture: project.architecture || '',
-        contributions: parsedContribs.length ? parsedContribs : [''],
-        challenge: project.challenge || '',
-        featured: project.featured,
-        order: project.order,
+        num: p.num || '01', title: p.title, desc: p.desc, tags: p.tags,
+        imageUrl: p.imageUrl, projectUrl: p.projectUrl || '', githubUrl: p.githubUrl || '',
+        architecture: p.architecture || '', contributions: c.length ? c : [''],
+        challenge: p.challenge || '', featured: p.featured, order: p.order,
       });
     } else {
       setEditingItem(null);
-      setProjectForm({
-        num: `0${projects.length + 1}`,
-        title: '',
-        desc: '',
-        tags: '',
-        imageUrl: '/projects/placeholder.png',
-        projectUrl: '',
-        githubUrl: '',
-        architecture: '',
-        contributions: [''],
-        challenge: '',
-        featured: false,
-        order: projects.length + 1,
-      });
+      setProjectForm({ num: `0${projects.length + 1}`, title: '', desc: '', tags: '', imageUrl: '/projects/placeholder.png', projectUrl: '', githubUrl: '', architecture: '', contributions: [''], challenge: '', featured: false, order: projects.length + 1 });
     }
     setActiveModal('project');
   };
 
-  const handleSaveProject = async (e: React.FormEvent) => {
+  const saveProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    const contribsFiltered = projectForm.contributions.filter(c => c.trim() !== '');
+    const contribs = projectForm.contributions.filter(c => c.trim());
     try {
-      if (editingItem) {
-        const res = await updateProject(editingItem.id, {
-          ...projectForm,
-          contributions: contribsFiltered,
-        });
-        if (res.success) {
-          showToast('Project updated successfully!');
-          setActiveModal(null);
-          fetchAllData();
-        } else {
-          showToast(res.error || 'Failed to update project.', 'error');
-        }
-      } else {
-        const res = await createProject({
-          ...projectForm,
-          contributions: contribsFiltered,
-        });
-        if (res.success) {
-          showToast('Project created successfully!');
-          setActiveModal(null);
-          fetchAllData();
-        } else {
-          showToast(res.error || 'Failed to create project.', 'error');
-        }
-      }
-    } catch {
-      showToast('Error saving project.', 'error');
-    }
-  };
-
-  const handleDeleteProject = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete project "${title}"?`)) return;
-    try {
-      const res = await deleteProject(id);
+      const payload = { ...projectForm, contributions: contribs };
+      const res = editingItem ? await updateProject(editingItem.id, payload) : await createProject(payload);
       if (res.success) {
-        showToast('Project deleted.');
-        fetchAllData();
-      } else {
-        showToast(res.error || 'Failed to delete.', 'error');
-      }
-    } catch {
-      showToast('Error deleting project.', 'error');
-    }
+        showToast(editingItem ? 'Project updated!' : 'Project created!');
+        setActiveModal(null); fetchAllData();
+      } else { showToast(res.error || 'Failed.', 'error'); }
+    } catch { showToast('Error saving project.', 'error'); }
   };
 
-  const handleToggleFeaturedProject = async (id: string, current: boolean) => {
-    try {
-      const res = await toggleProjectFeatured(id, !current);
-      if (res.success) {
-        showToast(`Project featured status set to ${!current}`);
-        fetchAllData();
-      }
-    } catch {
-      showToast('Error toggling featured status.', 'error');
-    }
+  const deleteProj = async (id: string, title: string) => {
+    if (!confirm(`Delete "${title}"?`)) return;
+    const res = await deleteProject(id);
+    if (res.success) { showToast('Project deleted.'); fetchAllData(); }
+    else showToast(res.error || 'Failed.', 'error');
   };
 
-  // --- EXPERIENCE ACTIONS ---
-  const openExperienceModal = (exp?: Experience) => {
+  const toggleFeatured = async (id: string, featured: boolean) => {
+    const res = await toggleProjectFeatured(id, !featured);
+    if (res.success) { showToast(`Featured: ${!featured}`); fetchAllData(); }
+  };
+
+  // ── Experience handlers ───────────────────────────────────────────────────
+  const openExpModal = (exp?: Experience) => {
     if (exp) {
       setEditingItem(exp);
-      let parsedBullets = [''];
-      try {
-        if (exp.bulletPoints) parsedBullets = JSON.parse(exp.bulletPoints);
-      } catch {}
+      let b: string[] = [''];
+      try { if (exp.bulletPoints) b = JSON.parse(exp.bulletPoints); } catch {}
       setExpForm({
-        title: exp.title,
-        organization: exp.organization,
-        location: exp.location || '',
-        type: exp.type || 'Work',
-        startDate: exp.startDate,
-        endDate: exp.endDate || '',
-        current: exp.current,
-        description: exp.description || '',
-        bulletPoints: parsedBullets.length ? parsedBullets : [''],
-        technologies: exp.technologies || '',
-        order: exp.order,
+        title: exp.title, organization: exp.organization, location: exp.location || '',
+        type: exp.type, startDate: exp.startDate, endDate: exp.endDate || '',
+        current: exp.current, description: exp.description || '',
+        bulletPoints: b.length ? b : [''], technologies: exp.technologies || '', order: exp.order,
       });
     } else {
       setEditingItem(null);
-      setExpForm({
-        title: '',
-        organization: '',
-        location: '',
-        type: 'Work',
-        startDate: '',
-        endDate: '',
-        current: false,
-        description: '',
-        bulletPoints: [''],
-        technologies: '',
-        order: experiences.length + 1,
-      });
+      setExpForm({ title: '', organization: '', location: '', type: 'Internship', startDate: '', endDate: '', current: false, description: '', bulletPoints: [''], technologies: '', order: experiences.length + 1 });
     }
     setActiveModal('experience');
   };
 
-  const handleSaveExperience = async (e: React.FormEvent) => {
+  const saveExp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const bulletsFiltered = expForm.bulletPoints.filter(b => b.trim() !== '');
+    const bullets = expForm.bulletPoints.filter(b => b.trim());
     try {
-      if (editingItem) {
-        const res = await updateExperience(editingItem.id, {
-          ...expForm,
-          bulletPoints: bulletsFiltered,
-        });
-        if (res.success) {
-          showToast('Experience entry updated!');
-          setActiveModal(null);
-          fetchAllData();
-        } else {
-          showToast(res.error || 'Failed to update experience.', 'error');
-        }
-      } else {
-        const res = await createExperience({
-          ...expForm,
-          bulletPoints: bulletsFiltered,
-        });
-        if (res.success) {
-          showToast('New experience entry added!');
-          setActiveModal(null);
-          fetchAllData();
-        } else {
-          showToast(res.error || 'Failed to create experience.', 'error');
-        }
-      }
-    } catch {
-      showToast('Error saving experience.', 'error');
-    }
-  };
-
-  const handleDeleteExperience = async (id: string, title: string) => {
-    if (!confirm(`Delete experience item "${title}"?`)) return;
-    try {
-      const res = await deleteExperience(id);
+      const payload = { ...expForm, bulletPoints: bullets };
+      const res = editingItem ? await updateExperience(editingItem.id, payload) : await createExperience(payload);
       if (res.success) {
-        showToast('Experience entry deleted.');
-        fetchAllData();
-      } else {
-        showToast(res.error || 'Failed to delete experience.', 'error');
-      }
-    } catch {
-      showToast('Error deleting experience.', 'error');
-    }
+        showToast(editingItem ? 'Experience updated!' : 'Experience added!');
+        setActiveModal(null); fetchAllData();
+      } else showToast(res.error || 'Failed.', 'error');
+    } catch { showToast('Error saving experience.', 'error'); }
   };
 
-  // --- SKILLS ACTIONS ---
-  const openSkillModal = (skill?: Skill) => {
-    if (skill) {
-      setEditingItem(skill);
-      setSkillForm({
-        name: skill.name,
-        category: skill.category,
-        proficiency: skill.proficiency,
-        featured: skill.featured,
-        order: skill.order,
-      });
+  const deleteExp = async (id: string, title: string) => {
+    if (!confirm(`Delete "${title}"?`)) return;
+    const res = await deleteExperience(id);
+    if (res.success) { showToast('Deleted.'); fetchAllData(); }
+    else showToast(res.error || 'Failed.', 'error');
+  };
+
+  // ── Skill handlers ────────────────────────────────────────────────────────
+  const openSkillModal = (s?: Skill) => {
+    if (s) {
+      setEditingItem(s);
+      setSkillForm({ name: s.name, category: s.category, proficiency: s.proficiency, featured: s.featured, order: s.order });
     } else {
       setEditingItem(null);
-      setSkillForm({
-        name: '',
-        category: 'Programming',
-        proficiency: 85,
-        featured: true,
-        order: skills.length + 1,
-      });
+      setSkillForm({ name: '', category: 'Programming', proficiency: 85, featured: true, order: skills.length + 1 });
     }
     setActiveModal('skill');
   };
 
-  const handleSaveSkill = async (e: React.FormEvent) => {
+  const saveSkill = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (editingItem) {
-        const res = await updateSkill(editingItem.id, skillForm);
-        if (res.success) {
-          showToast('Skill updated!');
-          setActiveModal(null);
-          fetchAllData();
-        } else {
-          showToast(res.error || 'Failed to update skill.', 'error');
-        }
-      } else {
-        const res = await createSkill(skillForm);
-        if (res.success) {
-          showToast('New skill added!');
-          setActiveModal(null);
-          fetchAllData();
-        } else {
-          showToast(res.error || 'Failed to create skill.', 'error');
-        }
-      }
-    } catch {
-      showToast('Error saving skill.', 'error');
-    }
+      const res = editingItem ? await updateSkill(editingItem.id, skillForm) : await createSkill(skillForm);
+      if (res.success) {
+        showToast(editingItem ? 'Skill updated!' : 'Skill added!');
+        setActiveModal(null); fetchAllData();
+      } else showToast(res.error || 'Failed.', 'error');
+    } catch { showToast('Error.', 'error'); }
   };
 
-  const handleDeleteSkill = async (id: string, name: string) => {
+  const deleteSkillItem = async (id: string, name: string) => {
     if (!confirm(`Delete skill "${name}"?`)) return;
-    try {
-      const res = await deleteSkill(id);
-      if (res.success) {
-        showToast('Skill deleted.');
-        fetchAllData();
-      }
-    } catch {
-      showToast('Error deleting skill.', 'error');
-    }
+    const res = await deleteSkill(id);
+    if (res.success) { showToast('Skill removed.'); fetchAllData(); }
   };
 
-  // --- INQUIRY ACTIONS ---
-  const handleUpdateInquiryStatus = async (id: string, status: string) => {
-    try {
-      const res = await updateInquiryStatus(id, status);
-      if (res.success) {
-        showToast(`Status updated to ${status}`);
-        fetchAllData();
-        if (selectedInquiry && selectedInquiry.id === id) {
-          setSelectedInquiry({ ...selectedInquiry, status });
-        }
-      }
-    } catch {
-      showToast('Error updating status.', 'error');
-    }
+  // ── Inquiry handlers ──────────────────────────────────────────────────────
+  const setInquiryStatus = async (id: string, status: string) => {
+    const res = await updateInquiryStatus(id, status);
+    if (res.success) { showToast(`Marked as ${status}`); fetchAllData(); }
   };
 
-  const handleDeleteInquiry = async (id: string) => {
-    if (!confirm('Delete this inquiry record?')) return;
-    try {
-      const res = await deleteInquiry(id);
-      if (res.success) {
-        showToast('Inquiry deleted.');
-        if (selectedInquiry?.id === id) setSelectedInquiry(null);
-        fetchAllData();
-      }
-    } catch {
-      showToast('Error deleting inquiry.', 'error');
-    }
+  const deleteInq = async (id: string) => {
+    if (!confirm('Delete this inquiry?')) return;
+    const res = await deleteInquiry(id);
+    if (res.success) { showToast('Inquiry deleted.'); setSelectedInquiry(null); fetchAllData(); }
   };
 
-  const handleSaveInquiryNote = async (id: string, notes: string) => {
-    try {
-      const res = await addInquiryNote(id, notes);
-      if (res.success) {
-        showToast('Saved admin notes.');
-        fetchAllData();
-      }
-    } catch {
-      showToast('Error saving note.', 'error');
-    }
+  const saveNote = async (id: string, notes: string) => {
+    const res = await addInquiryNote(id, notes);
+    if (res.success) { showToast('Note saved.'); fetchAllData(); }
   };
 
-  // Filtered inquiries
-  const filteredInquiries = inquiries.filter(i => {
-    if (inquiryFilter === 'all') return true;
-    return i.status === inquiryFilter;
-  });
+  // ── Computed ──────────────────────────────────────────────────────────────
+  const pendingCount = inquiries.filter(i => i.status === 'pending').length;
+  const filteredInquiries = inquiries.filter(i => inquiryFilter === 'all' || i.status === inquiryFilter);
+  const skillsByCategory = skills.reduce<Record<string, Skill[]>>((acc, s) => {
+    if (!acc[s.category]) acc[s.category] = [];
+    acc[s.category].push(s);
+    return acc;
+  }, {});
+  const categoryColors: Record<string, string> = {
+    'Programming': T.accent, 'Frameworks': T.violet, 'AI/ML': T.cyan, 'Databases': '#4ADE80', 'Tools': '#FBBF24',
+  };
 
-  const pendingInquiriesCount = inquiries.filter(i => i.status === 'pending').length;
-
+  // ── Loading / Mount gate ──────────────────────────────────────────────────
   if (!mounted || isAuthenticated === null) {
     return (
-      <div style={{ minHeight: '100vh', background: '#040404', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#FF4C24', fontFamily: 'var(--font-mono)', letterSpacing: '2px' }}>
-          INITIALIZING MEHTA OS SECURITY GATEWAY...
+      <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 48, height: 48, border: `2px solid ${T.accent}`, borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 20px' }} />
+          <div style={{ color: T.accent, fontFamily: T.fontMono, fontSize: 11, letterSpacing: '3px', textTransform: 'uppercase' }}>
+            Initializing Security Gateway
+          </div>
         </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
-  // --- UNAUTHENTICATED PASSCODE GATE ---
+  // ── Auth Gate ─────────────────────────────────────────────────────────────
   if (!isAuthenticated) {
     return (
-      <div style={{ minHeight: '100vh', background: '#040404', color: '#F2F2F0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-        <style jsx global>{`
-          body, html, *, *::before, *::after {
-            cursor: auto !important;
-          }
-          button, a, input[type="submit"] {
-            cursor: pointer !important;
-          }
-          input[type="password"] {
-            cursor: text !important;
-          }
-        `}</style>
+      <div style={{ minHeight: '100vh', background: T.bg, color: T.text1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', overflow: 'hidden' }}>
+        {/* Particle bg */}
+        {particlesReady && (
+          <Particles id="auth-particles" options={{ ...PARTICLES_OPTIONS, particles: { ...PARTICLES_OPTIONS.particles, number: { value: 40 } } }} style={{ position: 'absolute', inset: 0 }} />
+        )}
+
+        {/* Ambient glows */}
+        <div style={{ position: 'absolute', top: '20%', left: '15%', width: 300, height: 300, background: `radial-gradient(circle, rgba(255,76,36,0.08) 0%, transparent 70%)`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '20%', right: '15%', width: 250, height: 250, background: `radial-gradient(circle, rgba(123,97,255,0.07) 0%, transparent 70%)`, pointerEvents: 'none' }} />
+
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, y: 20, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            width: '100%',
-            maxWidth: '440px',
-            background: '#0E0E0E',
-            border: '1px solid rgba(255, 76, 36, 0.3)',
-            borderRadius: '20px',
-            padding: '36px 32px',
-            boxShadow: '0 24px 60px rgba(0,0,0,0.8), 0 0 30px rgba(255, 76, 36, 0.1)',
-            position: 'relative',
-            overflow: 'hidden',
+            width: '100%', maxWidth: 440, position: 'relative', zIndex: 2,
+            background: 'rgba(12,12,16,0.95)',
+            border: '1px solid rgba(255,76,36,0.25)',
+            borderRadius: 24,
+            padding: '40px 36px',
+            boxShadow: '0 32px 80px rgba(0,0,0,0.8), 0 0 40px rgba(255,76,36,0.08)',
+            backdropFilter: 'blur(24px)',
           }}
         >
-          {/* Ambient Glow accent */}
-          <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'radial-gradient(circle, rgba(255,76,36,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FF4C24', boxShadow: '0 0 8px #FF4C24' }} />
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#FF4C24', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              MEHTA OS // ADMIN COMMAND CENTER
-            </span>
+          {/* Logo strip */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${T.accent}, ${T.violet})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#fff', fontFamily: T.fontDisplay }}>
+              SM
+            </div>
+            <div>
+              <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 14, color: T.text1 }}>Sarthak Mehta</div>
+              <div style={{ fontFamily: T.fontMono, fontSize: 9, color: T.accent, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Admin Command Center</div>
+            </div>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#EF4444', animation: 'pulse 2s ease-in-out infinite' }} />
+              <span style={{ fontFamily: T.fontMono, fontSize: 9, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '1px' }}>LOCKED</span>
+            </div>
           </div>
 
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 700, marginBottom: '8px', letterSpacing: '-0.5px' }}>
+          <h1 style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 8, lineHeight: 1.1 }}>
             Access Verification
           </h1>
-          <p style={{ fontSize: '14px', color: 'rgba(242, 242, 240, 0.6)', marginBottom: '28px', lineHeight: '1.5' }}>
-            This platform is strictly restricted. Enter your master administrator passcode to authenticate session.
+          <p style={{ fontSize: 13, color: T.text3, marginBottom: 32, lineHeight: 1.6 }}>
+            Restricted zone. Enter your master administrator passcode to establish a secure session.
           </p>
 
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242, 242, 240, 0.7)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-                Master Passcode
-              </label>
-              <input
-                type="password"
-                required
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                placeholder="Enter passcode..."
-                style={{
-                  width: '100%',
-                  background: '#161616',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  color: '#F2F2F0',
-                  fontSize: '16px',
-                  fontFamily: 'var(--font-mono)',
-                  outline: 'none',
-                  transition: 'border 0.2s',
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#FF4C24'}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)'}
-              />
-            </div>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <AdminInput
+              label="Master Passcode"
+              type="password"
+              required
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value)}
+              placeholder="••••••••••"
+            />
 
-            {authError && (
-              <div style={{ background: 'rgba(255, 76, 36, 0.1)', border: '1px solid rgba(255, 76, 36, 0.4)', borderRadius: '8px', padding: '10px 14px', color: '#FF6B47', fontSize: '13px', marginBottom: '20px' }}>
-                ⚠️ {authError}
-              </div>
-            )}
+            <AnimatePresence>
+              {authError && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                  style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '10px 14px', color: '#F87171', fontSize: 13, fontFamily: T.fontMono }}
+                >
+                  ⚠ {authError}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            <button
-              type="submit"
-              disabled={authLoading}
-              style={{
-                width: '100%',
-                background: '#FF4C24',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '10px',
-                padding: '14px',
-                fontSize: '14px',
-                fontWeight: 600,
-                fontFamily: 'var(--font-mono)',
-                letterSpacing: '1px',
-                cursor: authLoading ? 'wait' : 'pointer',
-                boxShadow: '0 4px 14px rgba(255, 76, 36, 0.35)',
-                transition: 'transform 0.15s, background 0.15s',
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#FF6B47'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#FF4C24'}
-            >
-              {authLoading ? 'VERIFYING CREDENTIALS...' : 'AUTHENTICATE & ENTER →'}
-            </button>
+            <PrimaryBtn type="submit" style={{ width: '100%', padding: '14px', justifyContent: 'center', display: 'flex' }}>
+              {authLoading ? 'Authenticating...' : 'Authenticate & Enter →'}
+            </PrimaryBtn>
           </form>
 
-          <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: 'rgba(242,242,240,0.4)', fontFamily: 'var(--font-mono)' }}>Default PIN: sarthak2026</span>
-            <Link href="/" style={{ fontSize: '12px', color: '#FF4C24', textDecoration: 'none', fontFamily: 'var(--font-mono)' }}>
-              ← Return Home
-            </Link>
+          <div style={{ marginTop: 28, paddingTop: 24, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 11, color: T.text3, fontFamily: T.fontMono }}>Default: sarthak2026</span>
+            <Link href="/" style={{ fontSize: 11, color: T.accent, fontFamily: T.fontMono, textDecoration: 'none' }}>← Public Site</Link>
           </div>
         </motion.div>
+
+        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
       </div>
     );
   }
 
-  // --- AUTHENTICATED ADMIN PLATFORM DASHBOARD ---
+  // ── Sidebar width ─────────────────────────────────────────────────────────
+  const SIDEBAR_W = sidebarCollapsed ? 72 : 240;
+
+  // ── MAIN ADMIN DASHBOARD ──────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: '#040404', color: '#F2F2F0', fontFamily: 'var(--font-body)', paddingBottom: '60px' }}>
-      <style jsx global>{`
-        body, html, *, *::before, *::after {
-          cursor: auto !important;
-        }
-        button, a, select, input[type="checkbox"], input[type="submit"], input[type="button"], input[type="range"] {
-          cursor: pointer !important;
-        }
-        input[type="text"], input[type="password"], input[type="email"], input[type="url"], textarea {
-          cursor: text !important;
-        }
-      `}</style>
-      
-      {/* Toast Notification Floating */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, x: '-50%' }}
-            animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: -20, x: '-50%' }}
-            style={{
-              position: 'fixed',
-              top: '24px',
-              left: '50%',
-              zIndex: 9999,
-              background: toast.type === 'success' ? '#161616' : '#2A0E0A',
-              border: `1px solid ${toast.type === 'success' ? '#FF4C24' : '#FF3333'}`,
-              borderRadius: '12px',
-              padding: '12px 24px',
-              color: '#F2F2F0',
-              fontSize: '14px',
-              fontFamily: 'var(--font-mono)',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}
-          >
-            <span>{toast.type === 'success' ? '⚡' : '⚠️'}</span>
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div style={{ minHeight: '100vh', background: T.bg, color: T.text1, display: 'flex', fontFamily: T.fontBody }}>
 
-      {/* TOP HEADER NAV BAR */}
-      <header
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-          background: 'rgba(14, 14, 14, 0.85)',
-          backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          padding: '16px 32px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Link href="/" style={{ textDecoration: 'none' }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '18px', color: '#F2F2F0', letterSpacing: '-0.5px' }}>
-              sarthak mehta <span style={{ color: '#FF4C24' }}>// admin</span>
-            </span>
-          </Link>
-          <span style={{ background: 'rgba(255,76,36,0.15)', border: '1px solid rgba(255,76,36,0.4)', borderRadius: '20px', padding: '4px 10px', fontSize: '11px', color: '#FF4C24', fontFamily: 'var(--font-mono)' }}>
-            ● LIVE SESSION
-          </span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Link href="/" target="_blank" style={{ color: 'rgba(242,242,240,0.7)', textDecoration: 'none', fontSize: '13px', fontFamily: 'var(--font-mono)' }}>
-            View Public Site ↗
-          </Link>
-          <button
-            onClick={handleLogout}
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: '8px',
-              padding: '8px 16px',
-              color: '#F2F2F0',
-              fontSize: '12px',
-              fontFamily: 'var(--font-mono)',
-              cursor: 'pointer',
-              transition: 'background 0.2s',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 76, 36, 0.2)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
-          >
-            Logout 🔒
-          </button>
-        </div>
-      </header>
-
-      {/* ADMIN NAVIGATION TABS */}
-      <nav style={{ padding: '24px 32px 0 32px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', gap: '8px', overflowX: 'auto' }}>
-          {[
-            { id: 'overview', label: '📊 Overview' },
-            { id: 'experiences', label: `💼 Experiences (${experiences.length})` },
-            { id: 'projects', label: `🚀 Projects (${projects.length})` },
-            { id: 'skills', label: `⚡ Skills Matrix (${skills.length})` },
-            { id: 'inquiries', label: `📬 Inquiries (${inquiries.length})`, badge: pendingInquiriesCount },
-            { id: 'security', label: '🔒 Security & Settings' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+      {/* ── TOAST STACK ── */}
+      <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <AnimatePresence>
+          {toasts.map(t => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, x: 40, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 40, scale: 0.9 }}
               style={{
-                background: activeTab === tab.id ? 'rgba(255, 76, 36, 0.15)' : 'transparent',
-                color: activeTab === tab.id ? '#FF4C24' : 'rgba(242, 242, 240, 0.65)',
-                border: 'none',
-                borderBottom: activeTab === tab.id ? '2px solid #FF4C24' : '2px solid transparent',
-                padding: '12px 18px',
-                fontSize: '14px',
-                fontFamily: 'var(--font-mono)',
-                fontWeight: activeTab === tab.id ? 600 : 400,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.2s',
+                background: t.type === 'success' ? T.card : 'rgba(30,10,10,0.97)',
+                border: `1px solid ${t.type === 'success' ? 'rgba(74,222,128,0.4)' : 'rgba(239,68,68,0.4)'}`,
+                borderRadius: 12, padding: '12px 20px',
+                fontSize: 13, fontFamily: T.fontMono,
+                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                display: 'flex', alignItems: 'center', gap: 10,
+                maxWidth: 320,
               }}
             >
-              {tab.label}
-              {tab.badge ? (
-                <span style={{ background: '#FF4C24', color: '#FFF', borderRadius: '10px', padding: '2px 6px', fontSize: '10px', fontWeight: 700 }}>
-                  {tab.badge}
-                </span>
-              ) : null}
-            </button>
+              <span>{t.type === 'success' ? '✓' : '✗'}</span>
+              {t.message}
+            </motion.div>
           ))}
+        </AnimatePresence>
+      </div>
+
+      {/* ── SIDEBAR ── */}
+      <aside style={{
+        width: SIDEBAR_W, minHeight: '100vh', background: T.surface,
+        borderRight: `1px solid ${T.border}`,
+        display: 'flex', flexDirection: 'column',
+        position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100,
+        transition: 'width 0.3s cubic-bezier(0.16,1,0.3,1)',
+        overflow: 'hidden',
+      }}>
+        {/* Logo */}
+        <div style={{ padding: '24px 16px 20px', borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+              background: `linear-gradient(135deg, ${T.accent}, ${T.violet})`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 14, fontWeight: 800, color: '#fff', fontFamily: T.fontDisplay,
+            }}>SM</div>
+            {!sidebarCollapsed && (
+              <div style={{ overflow: 'hidden' }}>
+                <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap' }}>Sarthak Mehta</div>
+                <div style={{ fontSize: 9, fontFamily: T.fontMono, color: T.accent, textTransform: 'uppercase', letterSpacing: '1px' }}>Admin Platform</div>
+              </div>
+            )}
+          </div>
         </div>
-      </nav>
 
-      {/* MAIN CONTAINER */}
-      <main style={{ maxWidth: '1280px', margin: '32px auto', padding: '0 32px' }}>
-        
-        {/* --- TAB 1: OVERVIEW --- */}
-        {activeTab === 'overview' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', marginBottom: '24px' }}>
-              Command Telemetry
-            </h2>
-
-            {/* Stat Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '36px' }}>
-              <div style={{ background: '#0E0E0E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '24px' }}>
-                <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.5)', marginBottom: '8px' }}>TOTAL PROJECTS</div>
-                <div style={{ fontSize: '36px', fontFamily: 'var(--font-display)', fontWeight: 700, color: '#F2F2F0' }}>{projects.length}</div>
-                <div style={{ fontSize: '12px', color: '#FF4C24', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>
-                  {projects.filter(p => p.featured).length} Featured Projects
-                </div>
-              </div>
-
-              <div style={{ background: '#0E0E0E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '24px' }}>
-                <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.5)', marginBottom: '8px' }}>WORK & EDUCATION</div>
-                <div style={{ fontSize: '36px', fontFamily: 'var(--font-display)', fontWeight: 700, color: '#F2F2F0' }}>{experiences.length}</div>
-                <div style={{ fontSize: '12px', color: '#FF4C24', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>
-                  {experiences.filter(e => e.current).length} Active Role(s)
-                </div>
-              </div>
-
-              <div style={{ background: '#0E0E0E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '24px' }}>
-                <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.5)', marginBottom: '8px' }}>TECHNICAL SKILLS</div>
-                <div style={{ fontSize: '36px', fontFamily: 'var(--font-display)', fontWeight: 700, color: '#F2F2F0' }}>{skills.length}</div>
-                <div style={{ fontSize: '12px', color: '#FF4C24', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>Across 5 Categories</div>
-              </div>
-
-              <div style={{ background: '#0E0E0E', border: '1px solid rgba(255,76,36,0.3)', borderRadius: '16px', padding: '24px', boxShadow: '0 0 20px rgba(255,76,36,0.08)' }}>
-                <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.5)', marginBottom: '8px' }}>INCOMING INQUIRIES</div>
-                <div style={{ fontSize: '36px', fontFamily: 'var(--font-display)', fontWeight: 700, color: '#FF4C24' }}>{inquiries.length}</div>
-                <div style={{ fontSize: '12px', color: '#F2F2F0', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>
-                  {pendingInquiriesCount} Pending Review
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions & Diagnostics */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-              <div style={{ background: '#0E0E0E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '24px' }}>
-                <h3 style={{ fontSize: '18px', fontFamily: 'var(--font-display)', marginBottom: '16px' }}>⚡ Quick Management</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <button onClick={() => openProjectModal()} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px', padding: '14px', color: '#F2F2F0', textAlign: 'left', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
-                    + Create New Project Entry
-                  </button>
-                  <button onClick={() => openExperienceModal()} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px', padding: '14px', color: '#F2F2F0', textAlign: 'left', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
-                    + Add Experience / Role
-                  </button>
-                  <button onClick={() => openSkillModal()} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px', padding: '14px', color: '#F2F2F0', textAlign: 'left', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
-                    + Register Skill Item
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ background: '#0E0E0E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '24px' }}>
-                <h3 style={{ fontSize: '18px', fontFamily: 'var(--font-display)', marginBottom: '16px' }}>🛡️ System Diagnostics</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <span>Database Engine:</span>
-                    <span style={{ color: '#FF4C24' }}>SQLite (Prisma ORM)</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <span>Authorization Model:</span>
-                    <span style={{ color: '#FF4C24' }}>HMAC Token + HTTP Cookie</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <span>Environment:</span>
-                    <span style={{ color: '#F2F2F0' }}>{process.env.NODE_ENV || 'development'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Last Sync:</span>
-                    <span style={{ color: 'rgba(242,242,240,0.5)' }}>{new Date().toLocaleTimeString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* --- TAB 2: EXPERIENCES --- */}
-        {activeTab === 'experiences' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px' }}>Experience & Education</h2>
-                <p style={{ color: 'rgba(242,242,240,0.6)', fontSize: '14px' }}>Manage work internships, education, and career timeline milestones.</p>
-              </div>
+        {/* Nav items */}
+        <nav style={{ flex: 1, padding: '16px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {NAV_ITEMS.map(item => {
+            const isActive = activeTab === item.id;
+            const hasBadge = item.id === 'inquiries' && pendingCount > 0;
+            return (
               <button
-                onClick={() => openExperienceModal()}
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                title={sidebarCollapsed ? item.label : undefined}
                 style={{
-                  background: '#FF4C24',
-                  color: '#FFF',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '12px 20px',
-                  fontWeight: 600,
-                  fontFamily: 'var(--font-mono)',
-                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: sidebarCollapsed ? '12px 16px' : '11px 14px',
+                  borderRadius: 10, border: 'none',
+                  background: isActive ? `rgba(255,76,36,0.12)` : 'transparent',
+                  color: isActive ? T.accent : T.text2,
+                  transition: 'all 0.2s',
+                  position: 'relative',
+                  justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                  boxShadow: isActive ? `inset 1px 0 0 ${T.accent}, inset 0 0 0 1px rgba(255,76,36,0.15)` : 'none',
                 }}
+                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = T.text1; } }}
+                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.text2; } }}
               >
-                + Add Experience
+                <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+                {!sidebarCollapsed && (
+                  <>
+                    <span style={{ fontSize: 13, fontWeight: 500, fontFamily: T.fontBody, whiteSpace: 'nowrap', flex: 1, textAlign: 'left' }}>{item.label}</span>
+                    {hasBadge && (
+                      <span style={{ background: T.accent, color: '#fff', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 700, fontFamily: T.fontMono }}>
+                        {pendingCount}
+                      </span>
+                    )}
+                  </>
+                )}
+                {sidebarCollapsed && hasBadge && (
+                  <span style={{ position: 'absolute', top: 6, right: 8, width: 8, height: 8, borderRadius: '50%', background: T.accent }} />
+                )}
               </button>
+            );
+          })}
+        </nav>
+
+        {/* Bottom: collapse + live clock */}
+        <div style={{ padding: '16px 10px', borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
+          {!sidebarCollapsed && (
+            <div style={{ fontFamily: T.fontMono, fontSize: 11, color: T.text3, textAlign: 'center', marginBottom: 12, letterSpacing: '1px' }}>
+              {clock}
+            </div>
+          )}
+          <button
+            onClick={() => setSidebarCollapsed(c => !c)}
+            style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border}`, borderRadius: 8, color: T.text3, fontSize: 12, fontFamily: T.fontMono, transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = T.text1; e.currentTarget.style.borderColor = T.borderHover; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = T.text3; e.currentTarget.style.borderColor = T.border; }}
+          >
+            {sidebarCollapsed ? '→' : '← Collapse'}
+          </button>
+        </div>
+      </aside>
+
+      {/* ── MAIN CONTENT ── */}
+      <div style={{ flex: 1, marginLeft: SIDEBAR_W, transition: 'margin-left 0.3s cubic-bezier(0.16,1,0.3,1)', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+
+        {/* Top Header */}
+        <header style={{
+          position: 'sticky', top: 0, zIndex: 50,
+          background: 'rgba(5,5,7,0.9)', backdropFilter: 'blur(24px)',
+          borderBottom: `1px solid ${T.border}`,
+          padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <div>
+            <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 16 }}>
+              {NAV_ITEMS.find(n => n.id === activeTab)?.icon} {NAV_ITEMS.find(n => n.id === activeTab)?.label}
+            </div>
+            <div style={{ fontSize: 11, fontFamily: T.fontMono, color: T.text3, marginTop: 2 }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {/* Live session indicator */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 20, padding: '6px 14px' }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80', animation: 'pulse 2s ease-in-out infinite' }} />
+              <span style={{ fontFamily: T.fontMono, fontSize: 10, color: '#4ADE80', textTransform: 'uppercase', letterSpacing: '1px' }}>Live Session</span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {experiences.map((exp) => {
-                let bullets: string[] = [];
-                try { if (exp.bulletPoints) bullets = JSON.parse(exp.bulletPoints); } catch {}
+            <a href="/" target="_blank" style={{ fontSize: 12, fontFamily: T.fontMono, color: T.text3, textDecoration: 'none', padding: '8px 14px', border: `1px solid ${T.border}`, borderRadius: 8, transition: 'all 0.2s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text1; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.text3; }}>
+              ↗ Public Site
+            </a>
 
-                return (
-                  <div
-                    key={exp.id}
-                    style={{
-                      background: '#0E0E0E',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '16px',
-                      padding: '24px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: '24px',
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                        <span style={{ background: 'rgba(255,76,36,0.15)', color: '#FF4C24', borderRadius: '6px', padding: '2px 8px', fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>
-                          {exp.type}
-                        </span>
-                        <span style={{ color: 'rgba(242,242,240,0.5)', fontSize: '13px', fontFamily: 'var(--font-mono)' }}>
-                          {exp.startDate} — {exp.current ? 'Present' : exp.endDate}
-                        </span>
-                        {exp.location && (
-                          <span style={{ color: 'rgba(242,242,240,0.4)', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
-                            📍 {exp.location}
-                          </span>
-                        )}
-                      </div>
+            <button
+              onClick={handleLogout}
+              style={{ fontSize: 12, fontFamily: T.fontMono, color: '#EF4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '8px 14px', transition: 'all 0.2s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.2)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+            >
+              Logout
+            </button>
+          </div>
+        </header>
 
-                      <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-display)', marginBottom: '4px' }}>{exp.title}</h3>
-                      <div style={{ fontSize: '15px', color: '#FF4C24', marginBottom: '12px', fontFamily: 'var(--font-mono)' }}>
-                        {exp.organization}
-                      </div>
+        {/* Page Body */}
+        <main style={{ flex: 1, padding: '32px', maxWidth: 1200, width: '100%', alignSelf: 'center', boxSizing: 'border-box' }}>
 
-                      {exp.description && (
-                        <p style={{ color: 'rgba(242,242,240,0.8)', fontSize: '14px', marginBottom: '12px' }}>{exp.description}</p>
-                      )}
+          {/* ─────────── OVERVIEW ─────────── */}
+          {activeTab === 'overview' && (
+            <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+              {/* Particle background for overview */}
+              {particlesReady && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+                  <Particles id="overview-particles" options={PARTICLES_OPTIONS} />
+                </div>
+              )}
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ marginBottom: 32 }}>
+                  <h1 style={{ fontFamily: T.fontDisplay, fontSize: 36, fontWeight: 800, letterSpacing: '-1px', marginBottom: 8 }}>
+                    Command Telemetry
+                  </h1>
+                  <p style={{ color: T.text3, fontSize: 14 }}>Real-time overview of your portfolio platform</p>
+                </div>
 
-                      {bullets.length > 0 && (
-                        <ul style={{ paddingLeft: '20px', color: 'rgba(242,242,240,0.7)', fontSize: '13px', lineHeight: '1.6', marginBottom: '12px' }}>
-                          {bullets.map((b, i) => (
-                            <li key={i}>{b}</li>
-                          ))}
-                        </ul>
-                      )}
+                {/* Stats Row */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+                  <StatCard label="Total Projects" value={projects.length} sub={`${projects.filter(p => p.featured).length} featured`} color={T.accent} icon="🚀" />
+                  <StatCard label="Experiences" value={experiences.length} sub={`${experiences.filter(e => e.current).length} active role(s)`} color={T.violet} icon="💼" />
+                  <StatCard label="Skills Registered" value={skills.length} sub="Across 5 categories" color={T.cyan} icon="⚡" />
+                  <StatCard label="Inbox Messages" value={inquiries.length} sub={pendingCount > 0 ? `${pendingCount} awaiting response` : 'All handled'} color={pendingCount > 0 ? T.yellow : T.green} icon="📬" />
+                </div>
 
-                      {exp.technologies && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '12px' }}>
-                          {exp.technologies.split(',').map((tech) => (
-                            <span key={tech} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '3px 8px', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.8)' }}>
-                              {tech.trim()}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <button
-                        onClick={() => openExperienceModal(exp)}
-                        style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.15)', color: '#F2F2F0', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                      >
-                        Edit ✏️
-                      </button>
-                      <button
-                        onClick={() => handleDeleteExperience(exp.id, exp.title)}
-                        style={{ background: 'rgba(255,50,50,0.1)', border: '1px solid rgba(255,50,50,0.3)', color: '#FF5555', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                      >
-                        Delete 🗑️
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
-        {/* --- TAB 3: PROJECTS --- */}
-        {activeTab === 'projects' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px' }}>Projects Repository</h2>
-                <p style={{ color: 'rgba(242,242,240,0.6)', fontSize: '14px' }}>Manage portfolio projects, tech stacks, architecture details, and featured highlights.</p>
-              </div>
-              <button
-                onClick={() => openProjectModal()}
-                style={{
-                  background: '#FF4C24',
-                  color: '#FFF',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '12px 20px',
-                  fontWeight: 600,
-                  fontFamily: 'var(--font-mono)',
-                  cursor: 'pointer',
-                }}
-              >
-                + Create Project
-              </button>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px' }}>
-              {projects.map((p) => {
-                let contribs: string[] = [];
-                try { if (p.contributions) contribs = JSON.parse(p.contributions); } catch {}
-
-                return (
-                  <div
-                    key={p.id}
-                    style={{
-                      background: '#0E0E0E',
-                      border: p.featured ? '1px solid rgba(255,76,36,0.4)' : '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '16px',
-                      padding: '24px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      position: 'relative',
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                        <span style={{ fontSize: '14px', fontFamily: 'var(--font-mono)', color: '#FF4C24' }}>{p.num || '01'}</span>
+                {/* Quick actions + System info */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                  <GlassCard style={{ padding: 24 }}>
+                    <h3 style={{ fontFamily: T.fontDisplay, fontSize: 16, fontWeight: 700, marginBottom: 16 }}>⚡ Quick Actions</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {[
+                        { label: '+ New Project', tab: 'projects' as Tab, action: () => { setActiveTab('projects'); setTimeout(() => openProjectModal(), 100); } },
+                        { label: '+ Add Experience', tab: 'experiences' as Tab, action: () => { setActiveTab('experiences'); setTimeout(() => openExpModal(), 100); } },
+                        { label: '+ Register Skill', tab: 'skills' as Tab, action: () => { setActiveTab('skills'); setTimeout(() => openSkillModal(), 100); } },
+                        { label: '→ Review Inbox', tab: 'inquiries' as Tab, action: () => setActiveTab('inquiries') },
+                      ].map(item => (
                         <button
-                          onClick={() => handleToggleFeaturedProject(p.id, p.featured)}
+                          key={item.label}
+                          onClick={item.action}
                           style={{
-                            background: p.featured ? 'rgba(255,76,36,0.2)' : 'rgba(255,255,255,0.06)',
-                            border: `1px solid ${p.featured ? '#FF4C24' : 'rgba(255,255,255,0.15)'}`,
-                            borderRadius: '20px',
-                            padding: '4px 10px',
-                            fontSize: '11px',
-                            color: p.featured ? '#FF4C24' : 'rgba(242,242,240,0.6)',
-                            fontFamily: 'var(--font-mono)',
-                            cursor: 'pointer',
+                            background: T.card2, border: `1px solid ${T.border}`, borderRadius: 10,
+                            padding: '12px 16px', color: T.text2, textAlign: 'left', fontSize: 13,
+                            fontFamily: T.fontMono, transition: 'all 0.2s',
                           }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = T.accent; e.currentTarget.style.color = T.text1; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.text2; }}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </GlassCard>
+
+                  <GlassCard style={{ padding: 24 }}>
+                    <h3 style={{ fontFamily: T.fontDisplay, fontSize: 16, fontWeight: 700, marginBottom: 16 }}>🛡 System Diagnostics</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {[
+                        { k: 'Database', v: 'SQLite · Prisma ORM v7', color: T.green },
+                        { k: 'Auth Model', v: 'HMAC-SHA256 · Cookie Session', color: T.cyan },
+                        { k: 'Framework', v: 'Next.js 16 · App Router', color: T.violet },
+                        { k: 'Session Clock', v: clock, color: T.text2 },
+                        { k: 'Environment', v: typeof window !== 'undefined' ? 'Client Active' : 'SSR', color: T.yellow },
+                      ].map(({ k, v, color }) => (
+                        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: T.fontMono, paddingBottom: 10, borderBottom: `1px solid ${T.border}` }}>
+                          <span style={{ color: T.text3 }}>{k}</span>
+                          <span style={{ color }}>{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </GlassCard>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ─────────── EXPERIENCES ─────────── */}
+          {activeTab === 'experiences' && (
+            <motion.div key="experiences" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+              <SectionHeader
+                title="Experience & Education"
+                sub="Manage work history, internships, academic roles, and career milestones displayed on the public timeline."
+                action={<PrimaryBtn onClick={() => openExpModal()}>+ Add Entry</PrimaryBtn>}
+              />
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {experiences.map((exp, i) => {
+                  let bullets: string[] = [];
+                  try { if (exp.bulletPoints) bullets = JSON.parse(exp.bulletPoints); } catch {}
+                  return (
+                    <GlassCard key={exp.id} style={{ padding: '24px 28px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+                            <Badge status={exp.type} />
+                            <span style={{ fontFamily: T.fontMono, fontSize: 11, color: T.text3 }}>
+                              {exp.startDate} — {exp.current ? 'Present' : exp.endDate}
+                            </span>
+                            {exp.current && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: T.fontMono, fontSize: 10, color: T.green }}>
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block', animation: 'pulse 2s ease-in-out infinite' }} />
+                                Active
+                              </span>
+                            )}
+                          </div>
+                          <h3 style={{ fontFamily: T.fontDisplay, fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{exp.title}</h3>
+                          <div style={{ fontSize: 14, color: T.accent, fontFamily: T.fontMono, marginBottom: 10 }}>{exp.organization}{exp.location ? ` · ${exp.location}` : ''}</div>
+                          {exp.description && <p style={{ fontSize: 13, color: T.text2, lineHeight: 1.6, marginBottom: 12 }}>{exp.description}</p>}
+                          {bullets.length > 0 && (
+                            <ul style={{ paddingLeft: 18, margin: '0 0 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                              {bullets.map((b, bi) => (
+                                <li key={bi} style={{ fontSize: 13, color: T.text3, lineHeight: 1.6 }}>{b}</li>
+                              ))}
+                            </ul>
+                          )}
+                          {exp.technologies && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                              {exp.technologies.split(',').map(t => (
+                                <span key={t} style={{ background: T.card2, border: `1px solid ${T.border}`, borderRadius: 6, padding: '3px 9px', fontSize: 10, fontFamily: T.fontMono, color: T.text2 }}>
+                                  {t.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                          <GhostBtn small onClick={() => openExpModal(exp)} style={{ fontSize: 12, padding: '7px 14px' }}>Edit ✏</GhostBtn>
+                          <PrimaryBtn small danger onClick={() => deleteExp(exp.id, exp.title)}>Delete</PrimaryBtn>
+                        </div>
+                      </div>
+                    </GlassCard>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ─────────── PROJECTS ─────────── */}
+          {activeTab === 'projects' && (
+            <motion.div key="projects" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+              <SectionHeader
+                title="Projects Repository"
+                sub="Create, edit, and manage all portfolio projects. Toggle featured status to highlight on the public site."
+                action={<PrimaryBtn onClick={() => openProjectModal()}>+ Create Project</PrimaryBtn>}
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 18 }}>
+                {projects.map(p => {
+                  let contribs: string[] = [];
+                  try { if (p.contributions) contribs = JSON.parse(p.contributions); } catch {}
+                  return (
+                    <GlassCard
+                      key={p.id}
+                      style={{
+                        padding: 24,
+                        display: 'flex', flexDirection: 'column', gap: 14,
+                        borderColor: p.featured ? 'rgba(255,76,36,0.35)' : T.border,
+                        boxShadow: p.featured ? '0 0 24px rgba(255,76,36,0.07)' : 'none',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <span style={{ fontFamily: T.fontMono, fontSize: 11, color: T.accent }}>{p.num || '—'}</span>
+                        <button
+                          onClick={() => toggleFeatured(p.id, p.featured)}
+                          style={{
+                            background: p.featured ? 'rgba(255,76,36,0.15)' : 'rgba(255,255,255,0.05)',
+                            border: `1px solid ${p.featured ? 'rgba(255,76,36,0.4)' : T.border}`,
+                            borderRadius: 20, padding: '3px 10px', fontSize: 10,
+                            color: p.featured ? T.accent : T.text3, fontFamily: T.fontMono,
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = T.accent; e.currentTarget.style.color = T.accent; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = p.featured ? 'rgba(255,76,36,0.4)' : T.border; e.currentTarget.style.color = p.featured ? T.accent : T.text3; }}
                         >
                           {p.featured ? '★ Featured' : '☆ Feature'}
                         </button>
                       </div>
 
-                      <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-display)', marginBottom: '8px' }}>{p.title}</h3>
-                      <p style={{ fontSize: '13px', color: 'rgba(242,242,240,0.7)', lineHeight: '1.5', marginBottom: '16px' }}>{p.desc}</p>
+                      <h3 style={{ fontFamily: T.fontDisplay, fontSize: 20, fontWeight: 700, letterSpacing: '-0.3px' }}>{p.title}</h3>
+                      <p style={{ fontSize: 13, color: T.text2, lineHeight: 1.6, flex: 1 }}>{p.desc}</p>
 
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-                        {p.tags.split(',').map((t) => (
-                          <span key={t} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '3px 8px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {p.tags.split(',').slice(0, 5).map(t => (
+                          <span key={t} style={{ background: T.card2, border: `1px solid ${T.border}`, borderRadius: 6, padding: '3px 9px', fontSize: 10, fontFamily: T.fontMono, color: T.text2 }}>
                             {t.trim()}
                           </span>
                         ))}
                       </div>
 
                       {p.architecture && (
-                        <div style={{ fontSize: '12px', background: '#141414', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '16px', color: 'rgba(242,242,240,0.7)' }}>
-                          <strong style={{ color: '#FF4C24' }}>Arch:</strong> {p.architecture}
+                        <div style={{ fontSize: 11, color: T.text3, fontFamily: T.fontMono, background: T.card2, padding: '8px 12px', borderRadius: 8, borderLeft: `3px solid ${T.accent}` }}>
+                          {p.architecture}
                         </div>
                       )}
-                    </div>
 
-                    <div style={{ display: 'flex', gap: '10px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                      <button
-                        onClick={() => openProjectModal(p)}
-                        style={{ flex: 1, background: '#161616', border: '1px solid rgba(255,255,255,0.15)', color: '#F2F2F0', borderRadius: '8px', padding: '8px', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                      >
-                        Edit Details ✏️
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProject(p.id, p.title)}
-                        style={{ background: 'rgba(255,50,50,0.1)', border: '1px solid rgba(255,50,50,0.3)', color: '#FF5555', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                      >
-                        Delete 🗑️
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
-        {/* --- TAB 4: SKILLS --- */}
-        {activeTab === 'skills' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px' }}>Technical Skills Matrix</h2>
-                <p style={{ color: 'rgba(242,242,240,0.6)', fontSize: '14px' }}>Manage programming languages, frameworks, AI/ML tools, and proficiency metrics.</p>
+                      <div style={{ display: 'flex', gap: 10, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+                        <GhostBtn onClick={() => openProjectModal(p)} style={{ flex: 1, justifyContent: 'center', display: 'flex', fontSize: 12, padding: '8px' }}>Edit ✏</GhostBtn>
+                        {p.githubUrl && (
+                          <a href={p.githubUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 14px', background: T.card2, border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 11, fontFamily: T.fontMono, color: T.text2, textDecoration: 'none' }}>
+                            GitHub ↗
+                          </a>
+                        )}
+                        <PrimaryBtn small danger onClick={() => deleteProj(p.id, p.title)} style={{ padding: '8px 12px' }}>🗑</PrimaryBtn>
+                      </div>
+                    </GlassCard>
+                  );
+                })}
               </div>
-              <button
-                onClick={() => openSkillModal()}
-                style={{
-                  background: '#FF4C24',
-                  color: '#FFF',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '12px 20px',
-                  fontWeight: 600,
-                  fontFamily: 'var(--font-mono)',
-                  cursor: 'pointer',
-                }}
-              >
-                + Register Skill
-              </button>
-            </div>
+            </motion.div>
+          )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-              {skills.map((skill) => (
-                <div
-                  key={skill.id}
-                  style={{
-                    background: '#0E0E0E',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '14px',
-                    padding: '18px 20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#FF4C24', textTransform: 'uppercase' }}>
-                        {skill.category}
-                      </span>
-                      <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.6)' }}>
-                        {skill.proficiency}%
-                      </span>
-                    </div>
+          {/* ─────────── SKILLS MATRIX ─────────── */}
+          {activeTab === 'skills' && (
+            <motion.div key="skills" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+              <SectionHeader
+                title="Technical Skills Matrix"
+                sub="Manage programming languages, frameworks, AI/ML tools, and proficiency metrics across categories."
+                action={<PrimaryBtn onClick={() => openSkillModal()}>+ Register Skill</PrimaryBtn>}
+              />
 
-                    <h4 style={{ fontSize: '18px', fontFamily: 'var(--font-display)', marginBottom: '12px' }}>{skill.name}</h4>
-
-                    {/* Progress Bar */}
-                    <div style={{ width: '100%', height: '6px', background: '#161616', borderRadius: '4px', overflow: 'hidden', marginBottom: '16px' }}>
-                      <div style={{ width: `${skill.proficiency}%`, height: '100%', background: '#FF4C24' }} />
-                    </div>
+              {Object.entries(skillsByCategory).map(([category, catSkills]) => (
+                <div key={category} style={{ marginBottom: 32 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: categoryColors[category] || T.accent }} />
+                    <span style={{ fontFamily: T.fontMono, fontSize: 11, color: categoryColors[category] || T.accent, textTransform: 'uppercase', letterSpacing: '2px' }}>
+                      {category}
+                    </span>
+                    <div style={{ flex: 1, height: 1, background: T.border }} />
+                    <span style={{ fontFamily: T.fontMono, fontSize: 10, color: T.text3 }}>{catSkills.length} skills</span>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => openSkillModal(skill)}
-                      style={{ flex: 1, background: '#161616', border: '1px solid rgba(255,255,255,0.15)', color: '#F2F2F0', borderRadius: '6px', padding: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                    >
-                      Edit ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSkill(skill.id, skill.name)}
-                      style={{ background: 'rgba(255,50,50,0.1)', border: '1px solid rgba(255,50,50,0.3)', color: '#FF5555', borderRadius: '6px', padding: '6px 10px', fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                    >
-                      Delete 🗑️
-                    </button>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+                    {catSkills.map(skill => (
+                      <GlassCard key={skill.id} style={{ padding: '16px 20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                          <h4 style={{ fontFamily: T.fontDisplay, fontSize: 16, fontWeight: 700 }}>{skill.name}</h4>
+                          <span style={{ fontFamily: T.fontMono, fontSize: 13, color: categoryColors[skill.category] || T.accent, fontWeight: 700 }}>
+                            {skill.proficiency}%
+                          </span>
+                        </div>
+
+                        {/* Proficiency bar */}
+                        <div style={{ height: 5, background: T.card2, borderRadius: 4, overflow: 'hidden', marginBottom: 14 }}>
+                          <motion.div
+                            initial={{ width: 0 }} animate={{ width: `${skill.proficiency}%` }}
+                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                            style={{ height: '100%', background: `linear-gradient(90deg, ${categoryColors[skill.category] || T.accent}, ${categoryColors[skill.category] || T.accent}99)`, borderRadius: 4 }}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <GhostBtn onClick={() => openSkillModal(skill)} style={{ flex: 1, justifyContent: 'center', display: 'flex', fontSize: 11, padding: '6px 10px' }}>Edit</GhostBtn>
+                          <PrimaryBtn small danger onClick={() => deleteSkillItem(skill.id, skill.name)} style={{ padding: '6px 12px', fontSize: 11 }}>✕</PrimaryBtn>
+                        </div>
+                      </GlassCard>
+                    ))}
                   </div>
                 </div>
               ))}
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {/* --- TAB 5: INQUIRIES HUB --- */}
-        {activeTab === 'inquiries' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px' }}>Inquiries Command Hub</h2>
-                <p style={{ color: 'rgba(242,242,240,0.6)', fontSize: '14px' }}>View and respond to client and collaboration contact submissions.</p>
-              </div>
+          {/* ─────────── INQUIRIES HUB ─────────── */}
+          {activeTab === 'inquiries' && (
+            <motion.div key="inquiries" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+              <SectionHeader
+                title="Inquiries Command Hub"
+                sub={`${inquiries.length} total messages · ${pendingCount} pending response`}
+                action={
+                  <div style={{ display: 'flex', gap: 6, background: T.card, padding: 4, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                    {['all', 'pending', 'contacted', 'archived'].map(f => (
+                      <button
+                        key={f}
+                        onClick={() => setInquiryFilter(f)}
+                        style={{
+                          background: inquiryFilter === f ? T.accent : 'transparent',
+                          color: inquiryFilter === f ? '#fff' : T.text3,
+                          border: 'none', borderRadius: 7,
+                          padding: '6px 14px', fontSize: 11, fontFamily: T.fontMono,
+                          textTransform: 'capitalize', transition: 'all 0.2s',
+                        }}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                }
+              />
 
-              {/* Status Filter Buttons */}
-              <div style={{ display: 'flex', gap: '6px', background: '#0E0E0E', padding: '4px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                {['all', 'pending', 'contacted', 'archived'].map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setInquiryFilter(f as any)}
-                    style={{
-                      background: inquiryFilter === f ? '#FF4C24' : 'transparent',
-                      color: inquiryFilter === f ? '#FFF' : 'rgba(242,242,240,0.6)',
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      fontFamily: 'var(--font-mono)',
-                      textTransform: 'capitalize',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {filteredInquiries.length === 0 ? (
-                <div style={{ background: '#0E0E0E', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: '16px', padding: '48px', textAlign: 'center', color: 'rgba(242,242,240,0.5)', fontFamily: 'var(--font-mono)' }}>
-                  No inquiry submissions found for status "{inquiryFilter}".
-                </div>
-              ) : (
-                filteredInquiries.map((inq) => (
-                  <div
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {filteredInquiries.length === 0 ? (
+                  <GlassCard style={{ padding: '60px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
+                    <div style={{ color: T.text3, fontFamily: T.fontMono, fontSize: 13 }}>No messages for "{inquiryFilter}"</div>
+                  </GlassCard>
+                ) : filteredInquiries.map(inq => (
+                  <GlassCard
                     key={inq.id}
                     style={{
-                      background: '#0E0E0E',
-                      border: inq.status === 'pending' ? '1px solid rgba(255,76,36,0.4)' : '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '14px',
                       padding: '20px 24px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      gap: '20px',
+                      borderColor: inq.status === 'pending' ? 'rgba(251,191,36,0.3)' : T.border,
+                      boxShadow: inq.status === 'pending' ? '0 0 20px rgba(251,191,36,0.05)' : 'none',
                     }}
                   >
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                        <span style={{ background: inq.status === 'pending' ? '#FF4C24' : '#222', color: '#FFF', borderRadius: '4px', padding: '2px 8px', fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>
-                          {inq.status}
-                        </span>
-                        <span style={{ fontSize: '14px', fontWeight: 600, color: '#F2F2F0' }}>{inq.name}</span>
-                        <span style={{ fontSize: '13px', color: '#FF4C24', fontFamily: 'var(--font-mono)' }}>({inq.email})</span>
-                        {inq.company && <span style={{ fontSize: '12px', color: 'rgba(242,242,240,0.5)', fontFamily: 'var(--font-mono)' }}>• {inq.company}</span>}
-                      </div>
-
-                      <p style={{ fontSize: '14px', color: 'rgba(242,242,240,0.85)', lineHeight: '1.5', marginBottom: '10px' }}>
-                        "{inq.message}"
-                      </p>
-
-                      <div style={{ display: 'flex', gap: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.5)' }}>
-                        <span>Topic/Role: {inq.timeline}</span>
-                        <span>Reason: {inq.budget}</span>
-                        <span>Date: {new Date(inq.createdAt).toLocaleDateString()}</span>
-                      </div>
-
-                      {inq.notes && (
-                        <div style={{ marginTop: '10px', padding: '8px 12px', background: '#161616', borderRadius: '6px', borderLeft: '3px solid #FF4C24', fontSize: '12px', color: 'rgba(242,242,240,0.7)', fontFamily: 'var(--font-mono)' }}>
-                          <strong>Admin Note:</strong> {inq.notes}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                          <Badge status={inq.status} />
+                          <span style={{ fontWeight: 600, fontSize: 14 }}>{inq.name}</span>
+                          <a href={`mailto:${inq.email}`} style={{ color: T.accent, fontSize: 13, fontFamily: T.fontMono, textDecoration: 'none' }}>{inq.email}</a>
+                          {inq.company && <span style={{ color: T.text3, fontSize: 12, fontFamily: T.fontMono }}>· {inq.company}</span>}
                         </div>
-                      )}
+                        <p style={{ fontSize: 14, color: T.text2, lineHeight: 1.6, marginBottom: 10 }}>
+                          "{inq.message.length > 160 ? inq.message.slice(0, 160) + '...' : inq.message}"
+                        </p>
+                        <div style={{ display: 'flex', gap: 16, fontSize: 11, fontFamily: T.fontMono, color: T.text3 }}>
+                          <span>Topic: {inq.timeline}</span>
+                          <span>Category: {inq.budget}</span>
+                          <span>{new Date(inq.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        {inq.notes && (
+                          <div style={{ marginTop: 10, padding: '8px 12px', background: T.card2, borderRadius: 8, borderLeft: `3px solid ${T.violet}`, fontSize: 12, color: T.text2, fontFamily: T.fontMono }}>
+                            📝 {inq.notes}
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                        <PrimaryBtn small onClick={() => setSelectedInquiry(inq)} style={{ padding: '7px 14px', fontSize: 11 }}>Inspect 🔍</PrimaryBtn>
+                        <GhostBtn small onClick={() => setInquiryStatus(inq.id, inq.status === 'contacted' ? 'pending' : 'contacted')} style={{ padding: '7px 14px', fontSize: 11 }}>
+                          {inq.status === 'contacted' ? 'Unmark' : '✓ Contacted'}
+                        </GhostBtn>
+                        <PrimaryBtn small danger onClick={() => deleteInq(inq.id)} style={{ padding: '7px 12px', fontSize: 11 }}>🗑</PrimaryBtn>
+                      </div>
                     </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <button
-                        onClick={() => setSelectedInquiry(inq)}
-                        style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.15)', color: '#F2F2F0', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                      >
-                        Inspect 🔍
-                      </button>
-                      <button
-                        onClick={() => handleUpdateInquiryStatus(inq.id, inq.status === 'contacted' ? 'pending' : 'contacted')}
-                        style={{ background: 'rgba(255,76,36,0.1)', border: '1px solid rgba(255,76,36,0.3)', color: '#FF4C24', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                      >
-                        {inq.status === 'contacted' ? 'Mark Pending' : 'Mark Contacted ✓'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteInquiry(inq.id)}
-                        style={{ background: 'rgba(255,50,50,0.1)', border: '1px solid rgba(255,50,50,0.3)', color: '#FF5555', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                      >
-                        Delete 🗑️
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* --- TAB 6: SECURITY & SETTINGS --- */}
-        {activeTab === 'security' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', marginBottom: '24px' }}>
-              Security & Platform Settings
-            </h2>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
-              <div style={{ background: '#0E0E0E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '28px' }}>
-                <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-display)', marginBottom: '16px' }}>🔑 Update Master Passcode</h3>
-                <p style={{ fontSize: '13px', color: 'rgba(242,242,240,0.6)', marginBottom: '20px', lineHeight: '1.5' }}>
-                  Change the master secret PIN required to log into the Admin Command Center.
-                </p>
-
-                <form onSubmit={handleChangePasscode}>
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>
-                      CURRENT PASSCODE
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={passcodeForm.currentPass}
-                      onChange={(e) => setPasscodeForm({ ...passcodeForm, currentPass: e.target.value })}
-                      style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px 14px', color: '#FFF', fontFamily: 'var(--font-mono)' }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>
-                      NEW PASSCODE
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={passcodeForm.newPass}
-                      onChange={(e) => setPasscodeForm({ ...passcodeForm, newPass: e.target.value })}
-                      style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px 14px', color: '#FFF', fontFamily: 'var(--font-mono)' }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '24px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>
-                      CONFIRM NEW PASSCODE
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={passcodeForm.confirmPass}
-                      onChange={(e) => setPasscodeForm({ ...passcodeForm, confirmPass: e.target.value })}
-                      style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px 14px', color: '#FFF', fontFamily: 'var(--font-mono)' }}
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    style={{ background: '#FF4C24', color: '#FFF', border: 'none', borderRadius: '8px', padding: '12px 20px', fontWeight: 600, fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                  >
-                    Update Master Passcode
-                  </button>
-                </form>
+                  </GlassCard>
+                ))}
               </div>
-
-              <div style={{ background: '#0E0E0E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '28px' }}>
-                <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-display)', marginBottom: '16px' }}>💾 Database Operations</h3>
-                <p style={{ fontSize: '13px', color: 'rgba(242,242,240,0.6)', marginBottom: '20px', lineHeight: '1.5' }}>
-                  Refresh local SQLite database models or re-seed default dataset.
-                </p>
-
-                <button
-                  onClick={() => fetchAllData()}
-                  style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', color: '#F2F2F0', borderRadius: '8px', padding: '12px', fontSize: '13px', fontFamily: 'var(--font-mono)', cursor: 'pointer', marginBottom: '12px' }}
-                >
-                  🔄 Force Sync Database Cache
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-      </main>
-
-      {/* --- MODAL DIALOGS --- */}
-      <AnimatePresence>
-        {activeModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100vw',
-              height: '100vh',
-              background: 'rgba(0,0,0,0.85)',
-              backdropFilter: 'blur(10px)',
-              zIndex: 1000,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '24px',
-            }}
-            onClick={() => setActiveModal(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 10 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 10 }}
-              style={{
-                width: '100%',
-                maxWidth: '640px',
-                maxHeight: '90vh',
-                overflowY: 'auto',
-                background: '#0E0E0E',
-                border: '1px solid rgba(255, 76, 36, 0.4)',
-                borderRadius: '20px',
-                padding: '32px',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.9)',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* MODAL: PROJECT */}
-              {activeModal === 'project' && (
-                <form onSubmit={handleSaveProject}>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', marginBottom: '20px' }}>
-                    {editingItem ? 'Edit Project Entry' : 'Create New Project'}
-                  </h2>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '16px', marginBottom: '16px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>NUM (#)</label>
-                      <input type="text" value={projectForm.num} onChange={(e) => setProjectForm({ ...projectForm, num: e.target.value })} style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF', fontFamily: 'var(--font-mono)' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>PROJECT TITLE *</label>
-                      <input type="text" required value={projectForm.title} onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })} style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }} />
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>SHORT DESCRIPTION *</label>
-                    <textarea required rows={3} value={projectForm.desc} onChange={(e) => setProjectForm({ ...projectForm, desc: e.target.value })} style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF', resize: 'vertical' }} />
-                  </div>
-
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>TAGS (COMMA SEPARATED) *</label>
-                    <input type="text" required value={projectForm.tags} onChange={(e) => setProjectForm({ ...projectForm, tags: e.target.value })} placeholder="Next.js, React, PyTorch" style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF', fontFamily: 'var(--font-mono)' }} />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>GITHUB URL</label>
-                      <input type="url" value={projectForm.githubUrl} onChange={(e) => setProjectForm({ ...projectForm, githubUrl: e.target.value })} placeholder="https://github.com/..." style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF', fontFamily: 'var(--font-mono)' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>LIVE DEMO URL</label>
-                      <input type="url" value={projectForm.projectUrl} onChange={(e) => setProjectForm({ ...projectForm, projectUrl: e.target.value })} placeholder="https://..." style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF', fontFamily: 'var(--font-mono)' }} />
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>SYSTEM ARCHITECTURE SUMMARY</label>
-                    <input type="text" value={projectForm.architecture} onChange={(e) => setProjectForm({ ...projectForm, architecture: e.target.value })} placeholder="e.g. Next.js 16 + SQLite via Prisma ORM..." style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }} />
-                  </div>
-
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>ENGINEERING CHALLENGE & SOLUTION</label>
-                    <textarea rows={2} value={projectForm.challenge} onChange={(e) => setProjectForm({ ...projectForm, challenge: e.target.value })} style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }} />
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    <input type="checkbox" id="feat" checked={projectForm.featured} onChange={(e) => setProjectForm({ ...projectForm, featured: e.target.checked })} style={{ accentColor: '#FF4C24', width: '18px', height: '18px' }} />
-                    <label htmlFor="feat" style={{ fontSize: '14px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}>Mark as Featured Project</label>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                    <button type="button" onClick={() => setActiveModal(null)} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.15)', color: '#FFF', borderRadius: '8px', padding: '10px 20px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}>Cancel</button>
-                    <button type="submit" style={{ background: '#FF4C24', border: 'none', color: '#FFF', borderRadius: '8px', padding: '10px 24px', fontWeight: 600, fontFamily: 'var(--font-mono)', cursor: 'pointer' }}>Save Project</button>
-                  </div>
-                </form>
-              )}
-
-              {/* MODAL: EXPERIENCE */}
-              {activeModal === 'experience' && (
-                <form onSubmit={handleSaveExperience}>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', marginBottom: '20px' }}>
-                    {editingItem ? 'Edit Experience Entry' : 'Add Experience / Role'}
-                  </h2>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>ROLE / DEGREE TITLE *</label>
-                      <input type="text" required value={expForm.title} onChange={(e) => setExpForm({ ...expForm, title: e.target.value })} style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>ORGANIZATION / UNIVERSITY *</label>
-                      <input type="text" required value={expForm.organization} onChange={(e) => setExpForm({ ...expForm, organization: e.target.value })} style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }} />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>TYPE</label>
-                      <select value={expForm.type} onChange={(e) => setExpForm({ ...expForm, type: e.target.value })} style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }}>
-                        <option value="Work">Work</option>
-                        <option value="Internship">Internship</option>
-                        <option value="Education">Education</option>
-                        <option value="Leadership">Leadership</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>START DATE *</label>
-                      <input type="text" required value={expForm.startDate} onChange={(e) => setExpForm({ ...expForm, startDate: e.target.value })} placeholder="Jan 2026" style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>END DATE</label>
-                      <input type="text" value={expForm.endDate} onChange={(e) => setExpForm({ ...expForm, endDate: e.target.value })} placeholder="Feb 2026 / Present" disabled={expForm.current} style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }} />
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>TECHNOLOGIES (COMMA SEPARATED)</label>
-                    <input type="text" value={expForm.technologies} onChange={(e) => setExpForm({ ...expForm, technologies: e.target.value })} placeholder="PyTorch, QGIS, GEE" style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF', fontFamily: 'var(--font-mono)' }} />
-                  </div>
-
-                  <div style={{ marginBottom: '24px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>OVERVIEW DESCRIPTION</label>
-                    <textarea rows={3} value={expForm.description} onChange={(e) => setExpForm({ ...expForm, description: e.target.value })} style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }} />
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                    <button type="button" onClick={() => setActiveModal(null)} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.15)', color: '#FFF', borderRadius: '8px', padding: '10px 20px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}>Cancel</button>
-                    <button type="submit" style={{ background: '#FF4C24', border: 'none', color: '#FFF', borderRadius: '8px', padding: '10px 24px', fontWeight: 600, fontFamily: 'var(--font-mono)', cursor: 'pointer' }}>Save Experience</button>
-                  </div>
-                </form>
-              )}
-
-              {/* MODAL: SKILL */}
-              {activeModal === 'skill' && (
-                <form onSubmit={handleSaveSkill}>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', marginBottom: '20px' }}>
-                    {editingItem ? 'Edit Skill' : 'Register Skill'}
-                  </h2>
-
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>SKILL NAME *</label>
-                    <input type="text" required value={skillForm.name} onChange={(e) => setSkillForm({ ...skillForm, name: e.target.value })} placeholder="PyTorch / Next.js" style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }} />
-                  </div>
-
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>CATEGORY *</label>
-                    <select value={skillForm.category} onChange={(e) => setSkillForm({ ...skillForm, category: e.target.value })} style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF' }}>
-                      <option value="Programming">Programming</option>
-                      <option value="Frameworks">Frameworks</option>
-                      <option value="AI/ML">AI/ML</option>
-                      <option value="Databases">Databases</option>
-                      <option value="Tools">Tools</option>
-                    </select>
-                  </div>
-
-                  <div style={{ marginBottom: '24px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>
-                      PROFICIENCY LEVEL ({skillForm.proficiency}%)
-                    </label>
-                    <input type="range" min="10" max="100" value={skillForm.proficiency} onChange={(e) => setSkillForm({ ...skillForm, proficiency: parseInt(e.target.value, 10) })} style={{ width: '100%', accentColor: '#FF4C24' }} />
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                    <button type="button" onClick={() => setActiveModal(null)} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.15)', color: '#FFF', borderRadius: '8px', padding: '10px 20px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}>Cancel</button>
-                    <button type="submit" style={{ background: '#FF4C24', border: 'none', color: '#FFF', borderRadius: '8px', padding: '10px 24px', fontWeight: 600, fontFamily: 'var(--font-mono)', cursor: 'pointer' }}>Save Skill</button>
-                  </div>
-                </form>
-              )}
-
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
 
-      {/* --- INQUIRY INSPECTION MODAL --- */}
-      <AnimatePresence>
+          {/* ─────────── SECURITY ─────────── */}
+          {activeTab === 'security' && (
+            <motion.div key="security" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+              <SectionHeader title="Security & Platform Settings" sub="Manage authentication credentials, session configuration, and database utilities." />
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                {/* Passcode updater */}
+                <GlassCard style={{ padding: 28 }}>
+                  <h3 style={{ fontFamily: T.fontDisplay, fontSize: 18, fontWeight: 700, marginBottom: 8 }}>🔑 Update Master Passcode</h3>
+                  <p style={{ fontSize: 13, color: T.text3, marginBottom: 24, lineHeight: 1.6 }}>
+                    Change the admin passcode used to access this platform. Must be at least 6 characters.
+                  </p>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (passForm.next !== passForm.confirm) { showToast('Passwords do not match.', 'error'); return; }
+                    const res = await updateAdminPasscodeAction(passForm.current, passForm.next);
+                    if (res.success) { showToast('Passcode updated!'); setPassForm({ current: '', next: '', confirm: '' }); }
+                    else showToast(res.error || 'Failed.', 'error');
+                  }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <AdminInput label="Current Passcode" type="password" required value={passForm.current} onChange={e => setPassForm(p => ({ ...p, current: e.target.value }))} />
+                    <AdminInput label="New Passcode" type="password" required value={passForm.next} onChange={e => setPassForm(p => ({ ...p, next: e.target.value }))} />
+                    <AdminInput label="Confirm New Passcode" type="password" required value={passForm.confirm} onChange={e => setPassForm(p => ({ ...p, confirm: e.target.value }))} />
+                    <PrimaryBtn type="submit">Update Passcode</PrimaryBtn>
+                  </form>
+                </GlassCard>
+
+                {/* Database utils */}
+                <GlassCard style={{ padding: 28 }}>
+                  <h3 style={{ fontFamily: T.fontDisplay, fontSize: 18, fontWeight: 700, marginBottom: 8 }}>💾 Database Operations</h3>
+                  <p style={{ fontSize: 13, color: T.text3, marginBottom: 24, lineHeight: 1.6 }}>
+                    Manage the SQLite database — force-sync cache, verify seeded data, or trigger a manual refresh.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <GhostBtn onClick={() => { fetchAllData(); showToast('Database synced!'); }} style={{ width: '100%', justifyContent: 'center', display: 'flex', padding: '12px' }}>
+                      🔄 Force Sync Cache
+                    </GhostBtn>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 8 }}>
+                      <div style={{ background: T.card2, borderRadius: 10, padding: '14px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 24, fontFamily: T.fontDisplay, fontWeight: 800, color: T.accent }}>{projects.length}</div>
+                        <div style={{ fontSize: 10, fontFamily: T.fontMono, color: T.text3, marginTop: 4 }}>PROJECTS</div>
+                      </div>
+                      <div style={{ background: T.card2, borderRadius: 10, padding: '14px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 24, fontFamily: T.fontDisplay, fontWeight: 800, color: T.violet }}>{experiences.length}</div>
+                        <div style={{ fontSize: 10, fontFamily: T.fontMono, color: T.text3, marginTop: 4 }}>EXPERIENCES</div>
+                      </div>
+                      <div style={{ background: T.card2, borderRadius: 10, padding: '14px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 24, fontFamily: T.fontDisplay, fontWeight: 800, color: T.cyan }}>{skills.length}</div>
+                        <div style={{ fontSize: 10, fontFamily: T.fontMono, color: T.text3, marginTop: 4 }}>SKILLS</div>
+                      </div>
+                      <div style={{ background: T.card2, borderRadius: 10, padding: '14px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 24, fontFamily: T.fontDisplay, fontWeight: 800, color: T.yellow }}>{inquiries.length}</div>
+                        <div style={{ fontSize: 10, fontFamily: T.fontMono, color: T.text3, marginTop: 4 }}>INQUIRIES</div>
+                      </div>
+                    </div>
+                  </div>
+                </GlassCard>
+              </div>
+            </motion.div>
+          )}
+
+        </main>
+      </div>
+
+      {/* ─── MODALS ─── */}
+
+      {/* Project Modal */}
+      <AdminModal isOpen={activeModal === 'project'} onClose={() => setActiveModal(null)} title={editingItem ? 'Edit Project' : 'Create New Project'} subtitle="Fill in project details, tags, architecture, and contributions." wide>
+        <form onSubmit={saveProject} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: 16 }}>
+            <AdminInput label="Number" value={projectForm.num} onChange={e => setProjectForm(p => ({ ...p, num: e.target.value }))} />
+            <AdminInput label="Project Title *" required value={projectForm.title} onChange={e => setProjectForm(p => ({ ...p, title: e.target.value }))} />
+          </div>
+          <AdminTextArea label="Short Description *" required rows={3} value={projectForm.desc} onChange={e => setProjectForm(p => ({ ...p, desc: e.target.value }))} />
+          <AdminInput label="Tags (comma-separated) *" required placeholder="Next.js, PyTorch, SQLite" value={projectForm.tags} onChange={e => setProjectForm(p => ({ ...p, tags: e.target.value }))} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <AdminInput label="GitHub URL" type="url" placeholder="https://github.com/..." value={projectForm.githubUrl} onChange={e => setProjectForm(p => ({ ...p, githubUrl: e.target.value }))} />
+            <AdminInput label="Live Demo URL" type="url" placeholder="https://..." value={projectForm.projectUrl} onChange={e => setProjectForm(p => ({ ...p, projectUrl: e.target.value }))} />
+          </div>
+          <AdminInput label="System Architecture" placeholder="Next.js 16 + SQLite via Prisma..." value={projectForm.architecture} onChange={e => setProjectForm(p => ({ ...p, architecture: e.target.value }))} />
+          <AdminTextArea label="Engineering Challenge & Solution" rows={2} value={projectForm.challenge} onChange={e => setProjectForm(p => ({ ...p, challenge: e.target.value }))} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <input type="checkbox" id="pfeat" checked={projectForm.featured} onChange={e => setProjectForm(p => ({ ...p, featured: e.target.checked }))} style={{ accentColor: T.accent, width: 16, height: 16 }} />
+            <label htmlFor="pfeat" style={{ fontSize: 13, color: T.text2 }}>Mark as Featured Project</label>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+            <GhostBtn onClick={() => setActiveModal(null)}>Cancel</GhostBtn>
+            <PrimaryBtn type="submit">{editingItem ? 'Save Changes' : 'Create Project'}</PrimaryBtn>
+          </div>
+        </form>
+      </AdminModal>
+
+      {/* Experience Modal */}
+      <AdminModal isOpen={activeModal === 'experience'} onClose={() => setActiveModal(null)} title={editingItem ? 'Edit Experience' : 'Add Experience / Role'} subtitle="Add a work experience, internship, or academic milestone.">
+        <form onSubmit={saveExp} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <AdminInput label="Role / Degree Title *" required value={expForm.title} onChange={e => setExpForm(p => ({ ...p, title: e.target.value }))} />
+            <AdminInput label="Organization / University *" required value={expForm.organization} onChange={e => setExpForm(p => ({ ...p, organization: e.target.value }))} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+            <AdminSelect label="Type" value={expForm.type} onChange={e => setExpForm(p => ({ ...p, type: e.target.value }))}>
+              <option>Internship</option>
+              <option>Work</option>
+              <option>Education</option>
+              <option>Leadership</option>
+            </AdminSelect>
+            <AdminInput label="Start Date *" required placeholder="Jan 2026" value={expForm.startDate} onChange={e => setExpForm(p => ({ ...p, startDate: e.target.value }))} />
+            <AdminInput label="End Date" placeholder="Feb 2026" value={expForm.endDate} onChange={e => setExpForm(p => ({ ...p, endDate: e.target.value }))} disabled={expForm.current} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <input type="checkbox" id="cur" checked={expForm.current} onChange={e => setExpForm(p => ({ ...p, current: e.target.checked }))} style={{ accentColor: T.green, width: 16, height: 16 }} />
+            <label htmlFor="cur" style={{ fontSize: 13, color: T.text2 }}>Currently Active Role</label>
+          </div>
+          <AdminInput label="Location" placeholder="Remote / City, Country" value={expForm.location} onChange={e => setExpForm(p => ({ ...p, location: e.target.value }))} />
+          <AdminInput label="Technologies (comma-separated)" placeholder="PyTorch, Google Earth Engine, QGIS" value={expForm.technologies} onChange={e => setExpForm(p => ({ ...p, technologies: e.target.value }))} />
+          <AdminTextArea label="Overview Description" rows={3} value={expForm.description} onChange={e => setExpForm(p => ({ ...p, description: e.target.value }))} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+            <GhostBtn onClick={() => setActiveModal(null)}>Cancel</GhostBtn>
+            <PrimaryBtn type="submit">{editingItem ? 'Save Changes' : 'Add Experience'}</PrimaryBtn>
+          </div>
+        </form>
+      </AdminModal>
+
+      {/* Skill Modal */}
+      <AdminModal isOpen={activeModal === 'skill'} onClose={() => setActiveModal(null)} title={editingItem ? 'Edit Skill' : 'Register Skill'} subtitle="Set proficiency level and category for this technical skill.">
+        <form onSubmit={saveSkill} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <AdminInput label="Skill Name *" required placeholder="PyTorch / Next.js / QGIS" value={skillForm.name} onChange={e => setSkillForm(p => ({ ...p, name: e.target.value }))} />
+          <AdminSelect label="Category *" value={skillForm.category} onChange={e => setSkillForm(p => ({ ...p, category: e.target.value }))}>
+            <option>Programming</option>
+            <option>Frameworks</option>
+            <option>AI/ML</option>
+            <option>Databases</option>
+            <option>Tools</option>
+          </AdminSelect>
+          <div>
+            <label style={{ display: 'block', fontSize: 10, fontFamily: T.fontMono, color: T.text3, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 10 }}>
+              Proficiency — {skillForm.proficiency}%
+            </label>
+            <input
+              type="range" min={10} max={100} value={skillForm.proficiency}
+              onChange={e => setSkillForm(p => ({ ...p, proficiency: parseInt(e.target.value) }))}
+              style={{ width: '100%', accentColor: categoryColors[skillForm.category] || T.accent }}
+            />
+            {/* Preview bar */}
+            <div style={{ height: 6, background: T.card2, borderRadius: 4, overflow: 'hidden', marginTop: 10 }}>
+              <div style={{ width: `${skillForm.proficiency}%`, height: '100%', background: categoryColors[skillForm.category] || T.accent, borderRadius: 4, transition: 'width 0.2s' }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+            <GhostBtn onClick={() => setActiveModal(null)}>Cancel</GhostBtn>
+            <PrimaryBtn type="submit">{editingItem ? 'Save Changes' : 'Register Skill'}</PrimaryBtn>
+          </div>
+        </form>
+      </AdminModal>
+
+      {/* Inquiry Inspect Modal */}
+      <AdminModal isOpen={!!selectedInquiry} onClose={() => setSelectedInquiry(null)} title="Inquiry Details" subtitle={selectedInquiry ? `From ${selectedInquiry.name} · ${new Date(selectedInquiry.createdAt).toLocaleDateString()}` : ''}>
         {selectedInquiry && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100vw',
-              height: '100vh',
-              background: 'rgba(0,0,0,0.85)',
-              backdropFilter: 'blur(10px)',
-              zIndex: 1000,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '24px',
-            }}
-            onClick={() => setSelectedInquiry(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
-              style={{
-                width: '100%',
-                maxWidth: '560px',
-                background: '#0E0E0E',
-                border: '1px solid rgba(255,76,36,0.4)',
-                borderRadius: '20px',
-                padding: '32px',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '22px', fontFamily: 'var(--font-display)' }}>Inquiry Details</h3>
-                <button onClick={() => setSelectedInquiry(null)} style={{ background: 'none', border: 'none', color: '#FFF', fontSize: '20px', cursor: 'pointer' }}>✕</button>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {[
+                { k: 'From', v: selectedInquiry.name },
+                { k: 'Email', v: selectedInquiry.email },
+                { k: 'Topic', v: selectedInquiry.timeline },
+                { k: 'Category', v: selectedInquiry.budget },
+                { k: 'Company', v: selectedInquiry.company || '—' },
+                { k: 'Status', v: selectedInquiry.status },
+              ].map(({ k, v }) => (
+                <div key={k} style={{ background: T.card2, borderRadius: 8, padding: '10px 14px' }}>
+                  <div style={{ fontSize: 10, fontFamily: T.fontMono, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 4 }}>{k}</div>
+                  <div style={{ fontSize: 13, color: T.text1 }}>{v}</div>
+                </div>
+              ))}
+            </div>
 
-              <div style={{ marginBottom: '16px', fontSize: '14px', fontFamily: 'var(--font-mono)' }}>
-                <div><strong style={{ color: '#FF4C24' }}>From:</strong> {selectedInquiry.name} ({selectedInquiry.email})</div>
-                {selectedInquiry.company && <div><strong style={{ color: '#FF4C24' }}>Org:</strong> {selectedInquiry.company}</div>}
-                <div><strong style={{ color: '#FF4C24' }}>Subject:</strong> {selectedInquiry.timeline} / {selectedInquiry.budget}</div>
-              </div>
+            <div style={{ background: T.card2, borderRadius: 12, padding: '16px 18px' }}>
+              <div style={{ fontSize: 10, fontFamily: T.fontMono, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Full Message</div>
+              <p style={{ fontSize: 14, color: T.text2, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{selectedInquiry.message}</p>
+            </div>
 
-              <div style={{ background: '#161616', borderRadius: '10px', padding: '16px', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px', whiteSpace: 'pre-wrap' }}>
-                {selectedInquiry.message}
-              </div>
+            <AdminTextArea
+              label="Admin Notes (auto-saved on blur)"
+              rows={2}
+              defaultValue={selectedInquiry.notes || ''}
+              onBlur={e => saveNote(selectedInquiry.id, e.target.value)}
+              placeholder="Internal notes about this contact..."
+            />
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(242,242,240,0.7)', marginBottom: '6px' }}>INTERNAL ADMIN NOTES</label>
-                <textarea
-                  rows={2}
-                  defaultValue={selectedInquiry.notes || ''}
-                  onBlur={(e) => handleSaveInquiryNote(selectedInquiry.id, e.target.value)}
-                  placeholder="Add notes about response status..."
-                  style={{ width: '100%', background: '#161616', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px', color: '#FFF', fontSize: '13px' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <a
-                  href={`mailto:${selectedInquiry.email}?subject=Re: Portfolio Inquiry (${selectedInquiry.timeline})`}
-                  style={{ background: '#FF4C24', color: '#FFF', textDecoration: 'none', borderRadius: '8px', padding: '10px 18px', fontSize: '13px', fontWeight: 600, fontFamily: 'var(--font-mono)' }}
-                >
-                  Send Email Reply ✉️
-                </a>
-                <button
-                  onClick={() => setSelectedInquiry(null)}
-                  style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.15)', color: '#FFF', borderRadius: '8px', padding: '10px 18px', fontSize: '13px', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+              <a
+                href={`mailto:${selectedInquiry.email}?subject=Re: Portfolio Inquiry`}
+                style={{ background: T.accent, color: '#fff', textDecoration: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 600, fontFamily: T.fontMono, boxShadow: `0 4px 16px ${T.accent}40` }}
+              >
+                ✉ Send Email Reply
+              </a>
+              <GhostBtn onClick={() => setSelectedInquiry(null)}>Close</GhostBtn>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </AdminModal>
 
+      {/* Global spinner keyframes */}
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+      `}</style>
     </div>
+  );
+}
+
+// ─── Particles init function ──────────────────────────────────────────────────
+async function particlesInit(engine: any) {
+  await loadSlim(engine);
+}
+
+// ─── Root export wraps in ParticlesProvider ───────────────────────────────────
+export default function SecureAdminPlatformWrapper() {
+  return (
+    <ParticlesProvider init={particlesInit}>
+      <SecureAdminPlatform />
+    </ParticlesProvider>
   );
 }

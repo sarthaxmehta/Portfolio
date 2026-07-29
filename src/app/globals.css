@@ -80,6 +80,30 @@ body {
   cursor: none !important;
 }
 
+/* ── ADMIN PAGE CURSOR OVERRIDE ─────────────────────────── */
+body.manager-active,
+body.manager-active *,
+body.manager-active *:hover {
+  cursor: auto !important;
+}
+body.manager-active button,
+body.manager-active a,
+body.manager-active [role="button"],
+body.manager-active select,
+body.manager-active input[type="range"],
+body.manager-active input[type="submit"],
+body.manager-active input[type="checkbox"] {
+  cursor: pointer !important;
+}
+body.manager-active input[type="text"],
+body.manager-active input[type="password"],
+body.manager-active input[type="email"],
+body.manager-active input[type="url"],
+body.manager-active input[type="number"],
+body.manager-active textarea {
+  cursor: text !important;
+}
+
 ::selection {
   background: var(--accent);
   color: #fff;
