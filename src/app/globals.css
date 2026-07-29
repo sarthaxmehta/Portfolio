@@ -60,12 +60,10 @@
 /* ── BASE ───────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
-  cursor: none;
   font-size: 16px;
 }
 
 body {
-  cursor: none;
   background: var(--bg);
   color: var(--text-1);
   font-family: var(--font-body);
@@ -75,34 +73,45 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-*,
-*:hover {
+/* Hide native cursor only when NOT on manager page */
+body:not(.manager-page),
+body:not(.manager-page) *,
+body:not(.manager-page) *:hover {
   cursor: none !important;
 }
 
-/* ── ADMIN PAGE CURSOR OVERRIDE ─────────────────────────── */
+/* ── ADMIN / MANAGER PAGE CURSOR RESTORATION ─────────────── */
+body.manager-page,
+body.manager-page *,
+body.manager-page *:hover,
 body.manager-active,
 body.manager-active *,
 body.manager-active *:hover {
   cursor: auto !important;
 }
+
+body.manager-page button,
+body.manager-page a,
+body.manager-page [role="button"],
+body.manager-page select,
+body.manager-page input[type="submit"],
+body.manager-page input[type="checkbox"],
 body.manager-active button,
 body.manager-active a,
 body.manager-active [role="button"],
 body.manager-active select,
-body.manager-active input[type="range"],
 body.manager-active input[type="submit"],
 body.manager-active input[type="checkbox"] {
   cursor: pointer !important;
 }
-body.manager-active input[type="text"],
-body.manager-active input[type="password"],
-body.manager-active input[type="email"],
-body.manager-active input[type="url"],
-body.manager-active input[type="number"],
+
+body.manager-page input,
+body.manager-page textarea,
+body.manager-active input,
 body.manager-active textarea {
   cursor: text !important;
 }
+
 
 ::selection {
   background: var(--accent);

@@ -11,6 +11,11 @@ const COOKIE_NAME = 'mehta_admin_session';
 // In-memory rate limiter for login attempts
 const loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
 
+export function clearAllLoginLockouts() {
+  loginAttempts.clear();
+}
+
+
 /**
  * Get active master passcode hash from DB or fallback
  */

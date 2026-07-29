@@ -200,11 +200,15 @@ export default function SecureAdminPlatform() {
   // Check auth session on mount
   useEffect(() => {
     setMounted(true);
+    document.body.classList.add('manager-page');
+    document.body.classList.add('manager-active');
     document.body.style.cursor = 'auto';
     document.documentElement.style.cursor = 'auto';
     verifySession();
 
     return () => {
+      document.body.classList.remove('manager-page');
+      document.body.classList.remove('manager-active');
       document.body.style.cursor = '';
       document.documentElement.style.cursor = '';
     };
