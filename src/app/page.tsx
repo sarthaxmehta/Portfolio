@@ -850,7 +850,7 @@ function TimelineSection({ items }: { items?: { date: string; title: string; sub
       <Reveal>
         <div className="section-label">Education &amp; experience</div>
       </Reveal>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '80px', alignItems: 'start' }}>
+      <div className="experience-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '80px', alignItems: 'start' }}>
         <Reveal delay={0.05}>
           <h2 className="section-title">Where I've<br />been.</h2>
         </Reveal>
